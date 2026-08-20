@@ -1,74 +1,39 @@
-/**
- * Design tokens - single source of truth for every color used in the app.
- *
- * Values are RGB triplets (not hex) so Tailwind's opacity modifiers work,
- * e.g. `bg-primary/10`. See tailwind.config.ts for how these map to
- * Tailwind color names.
- *
- * [data-theme='dark'] overrides the same variable names - components never
- * need to know which theme is active, they just use `bg-surface`,
- * `text-text-primary`, etc. and the right value follows automatically.
- */
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* Brand */
-  --color-primary: 15 39 71; /* #0F2747 - deep navy */
-  --color-secondary: 15 118 110; /* #0F766E - teal */
-  --color-accent: 56 189 248; /* #38BDF8 - sky blue */
-
-  /* Status */
-  --color-success: 22 163 74; /* #16A34A */
-  --color-warning: 217 119 6; /* #D97706 */
-  --color-error: 220 38 38; /* #DC2626 */
-
-  /* Light theme surfaces/text */
-  --color-background: 248 250 252; /* #F8FAFC */
-  --color-surface: 255 255 255; /* #FFFFFF */
+  --color-primary: 15 39 71;
+  --color-secondary: 15 118 110;
+  --color-accent: 56 189 248;
+  --color-success: 22 163 74;
+  --color-warning: 217 119 6;
+  --color-error: 220 38 38;
+  --color-background: 248 250 252;
+  --color-surface: 255 255 255;
   --color-surface-elevated: 255 255 255;
-  --color-text-primary: 15 23 42; /* #0F172A */
-  --color-text-secondary: 100 116 139; /* #64748B */
-  --color-border: 226 232 240; /* #E2E8F0 */
+  --color-text-primary: 15 23 42;
+  --color-text-secondary: 100 116 139;
+  --color-border: 226 232 240;
 }
-
 [data-theme='dark'] {
-  --color-background: 11 18 32; /* #0B1220 */
-  --color-surface: 17 28 46; /* #111C2E */
-  --color-surface-elevated: 23 35 56; /* #172338 */
-  --color-text-primary: 241 245 249; /* #F1F5F9 */
-  --color-text-secondary: 148 163 184; /* #94A3B8 */
-  --color-border: 36 50 71; /* #243247 */
-
-  /* Dark theme swaps the interactive/status colors for brighter,
-     higher-contrast variants against the dark surfaces - never the same
-     RGB values as light theme, per the design spec's "don't just invert
-     colors" requirement. */
-  --color-accent: 56 189 248; /* #38BDF8 - unchanged, already bright */
-  --color-secondary: 45 212 191; /* #2DD4BF */
-  --color-success: 34 197 94; /* #22C55E */
-  --color-warning: 245 158 11; /* #F59E0B */
-  --color-error: 248 113 113; /* #F87171 */
+  --color-background: 11 18 32;
+  --color-surface: 17 28 46;
+  --color-surface-elevated: 23 35 56;
+  --color-text-primary: 241 245 249;
+  --color-text-secondary: 148 163 184;
+  --color-border: 36 50 71;
+  --color-accent: 56 189 248;
+  --color-secondary: 45 212 191;
+  --color-success: 34 197 94;
+  --color-warning: 245 158 11;
+  --color-error: 248 113 113;
 }
-
-html,
-body,
-#__nuxt {
-  height: 100%;
-}
-
+html, body, #__nuxt { height: 100%; }
 body {
   background-color: rgb(var(--color-background));
   color: rgb(var(--color-text-primary));
   font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
-
-/* Visible keyboard focus everywhere - accessibility requirement, never
-   suppressed with outline:none without a replacement. */
-:focus-visible {
-  outline: 2px solid rgb(var(--color-accent));
-  outline-offset: 2px;
-}
+:focus-visible { outline: 2px solid rgb(var(--color-accent)); outline-offset: 2px; }

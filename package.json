@@ -12,7 +12,7 @@
   "dependencies": {
     "@pinia/nuxt": "^1.0.2",
     "@vue-leaflet/vue-leaflet": "^0.10.1",
-    "apexcharts": "^6.9.0",
+    "apexcharts": "^6.10.0",
     "leaflet": "^1.9.4",
     "lucide-vue-next": "^1.0.0",
     "nuxt": "^4.5.2",

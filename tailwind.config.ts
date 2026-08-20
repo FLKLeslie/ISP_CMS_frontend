@@ -1,11 +1,4 @@
 import type { Config } from 'tailwindcss'
-
-/**
- * Maps the CSS custom properties in assets/css/tokens.css to Tailwind
- * color utilities. `rgb(var(--x) / <alpha-value>)` is what enables opacity
- * modifiers (bg-primary/10, text-error/80, etc.) while still reading the
- * value from a CSS variable that changes per-theme.
- */
 export default <Partial<Config>>{
   darkMode: ['selector', '[data-theme="dark"]'],
   theme: {
@@ -24,15 +17,8 @@ export default <Partial<Config>>{
         'text-secondary': 'rgb(var(--color-text-secondary) / <alpha-value>)',
         border: 'rgb(var(--color-border) / <alpha-value>)',
       },
-      fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-      },
-      // A restrained radius scale - the spec explicitly warns against
-      // "excessive rounded cards", so we keep this modest rather than
-      // reaching for Tailwind's largest defaults everywhere.
-      borderRadius: {
-        card: '0.625rem',
-      },
+      fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
+      borderRadius: { card: '0.625rem' },
     },
   },
 }
