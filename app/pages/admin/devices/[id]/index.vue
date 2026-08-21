@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft, History } from 'lucide-vue-next'
+import { ArrowLeft, History, Settings } from 'lucide-vue-next'
 import type { DeviceLiveStatus, NetworkHealth } from '~/utils/deviceFormat'
 
 definePageMeta({ layout: 'admin' })
@@ -92,12 +92,20 @@ const linkStateLabel = computed(() => {
       <NuxtLink to="/admin/devices" class="inline-flex items-center gap-1 text-sm text-text-secondary hover:text-text-primary">
         <ArrowLeft class="h-4 w-4" /> Back to Devices
       </NuxtLink>
-      <NuxtLink
-        :to="`/admin/devices/${deviceId}/history`"
-        class="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
-      >
-        <History class="h-4 w-4" /> View History
-      </NuxtLink>
+      <div class="flex items-center gap-4">
+        <NuxtLink
+          :to="`/admin/devices/${deviceId}/configure`"
+          class="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
+        >
+          <Settings class="h-4 w-4" /> Configure
+        </NuxtLink>
+        <NuxtLink
+          :to="`/admin/devices/${deviceId}/history`"
+          class="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
+        >
+          <History class="h-4 w-4" /> View History
+        </NuxtLink>
+      </div>
     </div>
 
     <LoadingState v-if="pending && !device" :rows="6" />
