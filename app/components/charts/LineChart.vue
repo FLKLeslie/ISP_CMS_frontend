@@ -26,9 +26,7 @@ const chartOptions = computed(() => ({
     categories: props.categories,
     labels: {
       style: { colors: resolved.value === 'dark' ? '#94A3B8' : '#64748B' },
-      rotate: 0,
-      trim: false,
-      hideOverlappingLabels: false,
+      rotate: -45,
     },
     axisBorder: { show: false },
     axisTicks: { show: false },
@@ -64,4 +62,4 @@ const chartOptions = computed(() => ({
       :series="props.series"
     />
   </ClientOnly>
-</template> 
+</template>

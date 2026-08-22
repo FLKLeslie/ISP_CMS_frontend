@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft, ShieldAlert } from 'lucide-vue-next'
+import { ArrowLeft, RefreshCw, ShieldAlert } from 'lucide-vue-next'
 
 definePageMeta({ layout: 'admin' })
 
@@ -13,6 +13,38 @@ const { data: device, pending, error, refresh } = await useAsyncData(
   `admin-device-${deviceId}-configure`,
   () => getDevice(deviceId),
 )
+
+// --- Reboot Now (immediate REBOOT command) ---------------------------------
+// Separate from the scheduled auto_reboot config field below — this fires
+// an immediate REBOOT command through Node right now, rather than setting
+// a recurring schedule on the device itself.
+const showRebootConfirm = ref(false)
+const rebooting = ref(false)
+const rebootResult = ref<{ ok: boolean; message: string } | null>(null)
+
+async function handleConfirmedReboot() {
+  showRebootConfirm.value = false
+  rebooting.value = true
+  rebootResult.value = null
+  try {
+    const command = await createCommand({ device: deviceId, command_type: 'REBOOT' })
+    // Same honest-status pattern as the config-push flow below: a 201
+    // response only confirms the command record was CREATED, not that
+    // the device actually rebooted — command.status is Node's real
+    // delivery/confirmation result, and that's what gets shown here.
+    if (command.status === 'COMPLETED' || command.status === 'SENT') {
+      rebootResult.value = { ok: true, message: 'Reboot command sent successfully.' }
+    } else if (command.status === 'FAILED' || command.status === 'CANCELLED') {
+      rebootResult.value = { ok: false, message: `Reboot ${command.status.toLowerCase()} — Node did not confirm delivery.` }
+    } else {
+      rebootResult.value = { ok: true, message: 'Reboot queued — device may be offline; will apply once reachable.' }
+    }
+  } catch {
+    rebootResult.value = { ok: false, message: 'Could not send the reboot command. Try again.' }
+  } finally {
+    rebooting.value = false
+  }
+}
 
 // Scope note: only SSID and the scheduled-reboot fields are exposed here.
 // Wireless mode and static IP assignment are deliberately NOT editable
@@ -37,7 +69,7 @@ watch(device, (d) => {
   rebootTime.value = d.configuration.reboot_time ?? ''
 }, { immediate: true })
 
-const showConfirm = ref(false)
+const showConfigConfirm = ref(false)
 const sending = ref(false)
 const result = ref<{ ok: boolean; message: string } | null>(null)
 
@@ -55,8 +87,8 @@ const changedPayload = computed(() => {
 })
 const hasChanges = computed(() => Object.keys(changedPayload.value).length > 0)
 
-async function handleConfirmedSend() {
-  showConfirm.value = false
+async function handleConfirmedConfigSend() {
+  showConfigConfirm.value = false
   sending.value = true
   result.value = null
   try {
@@ -111,6 +143,25 @@ async function handleConfirmedSend() {
         <span v-if="device.configuration.updated_by_name"> · by {{ device.configuration.updated_by_name }}</span>
       </div>
 
+      <!-- Device Actions -->
+      <div class="rounded-card border border-border bg-surface p-5">
+        <h2 class="mb-3 text-sm font-semibold text-text-primary">Device Actions</h2>
+        <div class="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            :disabled="rebooting"
+            class="inline-flex items-center gap-1.5 rounded-card border border-error px-4 py-2 text-sm font-semibold text-error hover:bg-error/10 disabled:opacity-50"
+            @click="showRebootConfirm = true"
+          >
+            <RefreshCw class="h-4 w-4" /> {{ rebooting ? 'Sending…' : 'Reboot Now' }}
+          </button>
+          <p v-if="rebootResult" class="flex items-center gap-1.5 text-sm" :class="rebootResult.ok ? 'text-text-secondary' : 'text-error'">
+            <ShieldAlert v-if="!rebootResult.ok" class="h-4 w-4 shrink-0" />
+            {{ rebootResult.message }}
+          </p>
+        </div>
+      </div>
+
       <div class="space-y-4 rounded-card border border-border bg-surface p-5">
         <div>
           <label class="mb-1 block text-sm font-medium text-text-primary">Network Name (SSID)</label>
@@ -142,7 +193,7 @@ async function handleConfirmedSend() {
             type="button"
             :disabled="!hasChanges || sending"
             class="rounded-card bg-secondary px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
-            @click="showConfirm = true"
+            @click="showConfigConfirm = true"
           >
             {{ sending ? 'Sending…' : 'Send to Device' }}
           </button>
@@ -166,12 +217,22 @@ async function handleConfirmedSend() {
     </template>
 
     <ConfirmationDialog
-      :open="showConfirm"
+      :open="showConfigConfirm"
       title="Send this configuration to the device?"
       description="The device will apply this the next time it checks in. This may briefly interrupt its connection."
       confirm-label="Send"
-      @confirm="handleConfirmedSend"
-      @cancel="showConfirm = false"
+      @confirm="handleConfirmedConfigSend"
+      @cancel="showConfigConfirm = false"
+    />
+
+    <ConfirmationDialog
+      :open="showRebootConfirm"
+      title="Reboot this device now?"
+      description="The device will restart immediately. Its connection will briefly drop while it comes back up."
+      confirm-label="Reboot"
+      danger
+      @confirm="handleConfirmedReboot"
+      @cancel="showRebootConfirm = false"
     />
   </div>
 </template>
