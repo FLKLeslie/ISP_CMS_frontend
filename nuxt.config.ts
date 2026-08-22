@@ -5,6 +5,7 @@ export default defineNuxtConfig({
   modules: ['@nuxtjs/tailwindcss', '@pinia/nuxt'],
   imports: { dirs: ['composables/api'] },
   tailwindcss: { cssPath: '~/assets/css/tokens.css', configPath: 'tailwind.config.ts' },
+  css: ['leaflet/dist/leaflet.css'],
   components: [{ path: '~/components', pathPrefix: false }],
   app: {
     head: {

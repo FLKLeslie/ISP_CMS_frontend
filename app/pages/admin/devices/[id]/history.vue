@@ -1,84 +1,87 @@
 <script setup lang="ts">
 import { ArrowLeft } from 'lucide-vue-next'
-import { averageField, availabilityPercent, buildMetricBuckets, getBucketRangeStart } from '~/utils/metricsBucketing'
 
 definePageMeta({ layout: 'admin' })
 
 const route = useRoute()
 const deviceId = route.params.id as string
 
-const { getDevice, getDeviceMetrics } = useDevicesApi()
+const { getDevice, getDeviceMetricsSummary } = useDevicesApi()
 
 // Just for the page header (device name) — the heavy lifting here is the
-// metrics history below, not live status, so this page does NOT poll.
+// metrics summary below, not live status, so this page does NOT poll.
 const { data: device } = await useAsyncData(`admin-device-${deviceId}-header`, () => getDevice(deviceId))
 
-const metricsRange = ref<24 | 168>(24) // hours: 24h or 7d
-const { data: metricsData, pending, error, refresh } = await useAsyncData(
-  `admin-device-${deviceId}-metrics`,
-  () => getDeviceMetrics(deviceId, {
-    timestamp_after: getBucketRangeStart(metricsRange.value).toISOString(),
-    page_size: 2000,
-    ordering: 'timestamp',
-  }),
-  { watch: [metricsRange] },
+const range = ref<'24h' | '7d'>('24h')
+const { data: summary, pending, error, refresh } = await useAsyncData(
+  `admin-device-${deviceId}-metrics-summary`,
+  () => getDeviceMetricsSummary(deviceId, range.value),
+  { watch: [range] },
 )
-const rawMetrics = computed(() => metricsData.value?.results ?? [])
+const buckets = computed(() => summary.value?.buckets ?? [])
+const hasAnyData = computed(() => buckets.value.some((b) => b.sample_count > 0))
 
-// Turn the raw per-heartbeat samples into a small, fixed set of time
-// buckets BEFORE building chart series — this is what fixes the original
-// bug: previously every raw sample's own timestamp was used as an x-axis
-// label, so the 24h and 7-day views showed the same kind of "14:32, 14:41,
-// 14:53..." clock-time labels regardless of range, and a busy device
-// could produce hundreds of cramped, overlapping labels on the axis.
+// --- X-axis labels ---------------------------------------------------------
+// 24h view: 24 buckets, labelled every 2 hours. Anchored from the MOST
+// RECENT end backward (not from the oldest end forward) — with 24 points
+// and a label every 2, anchoring from the old end leaves the last (most
+// recent, most important) point unlabelled since 23 is odd. Anchoring
+// from the recent end guarantees index 23 always gets a label.
 //
-//   - 24h view  -> 12 buckets, 2 hours each, labelled by clock time
-//   - 7-day view -> 7 buckets, 1 per calendar day, labelled by date
+// Each label shows the bucket's END time, not its start — a bucket
+// covering 09:00-10:00 is labelled "10:00", since that's the point in
+// time its data is current AS OF, which is what actually answers "is
+// this up to date". Format is compact 24-hour "HH:00" (not 12-hour
+// AM/PM) specifically to avoid labels overlapping/garbling in a ~460px
+// chart card — 12-hour format ("08:00 PM") is visibly too wide for 12
+// labels in that space.
 //
-// Buckets always end at "now" and never extend into the future (see
-// buildMetricBuckets), and a bucket with no samples renders as a genuine
-// gap in the line rather than a fabricated zero.
-const buckets = computed(() => buildMetricBuckets(rawMetrics.value, metricsRange.value))
-const metricCategories = computed(() => buckets.value.map((b) => b.label))
+// 7-day view: 42 buckets (6 per day), a label only on the FIRST bucket of
+// each day, showing the date — the other 5 buckets of that day plot with
+// a blank label, per "keep X-axis labels clean by displaying mainly the
+// day/date rather than every bucket."
+function formatHourLabel(date: Date): string {
+  return `${String(date.getHours()).padStart(2, '0')}:00`
+}
+const metricCategories = computed(() => {
+  const n = buckets.value.length
+  return buckets.value.map((b, i) => {
+    const start = new Date(b.bucket_start)
+    if (range.value === '24h') {
+      const end = new Date(start.getTime() + b.bucket_hours * 3600_000)
+      // Anchor from the end: label i if (n-1-i) is a multiple of 2 —
+      // guarantees i = n-1 (the most recent bucket) is always labelled.
+      return (n - 1 - i) % 2 === 0 ? formatHourLabel(end) : ''
+    }
+    // 7d: 6 buckets/day — label only index 0, 6, 12, 18, 24, 30, 36 (the
+    // 00:00 bucket of each day).
+    return i % 6 === 0 ? start.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : ''
+  })
+})
 
-// Availability is now a real per-bucket percentage (% of that bucket's
-// heartbeats that reported link_state UP) rather than a raw 0/1 plotted
-// per sample — a meaningfully better approximation of uptime, though
-// still not a true time-weighted integral across the whole window (see
-// availabilityPercent's doc comment).
+// Availability's "no data" case is intentionally 0%, not a gap — the
+// backend computes it as received-samples / expected-samples, so zero
+// samples received genuinely means 0% available for that window. This is
+// different from CPU/RAM/rates below, where "no samples" means "unknown"
+// (null / a real gap), not "0%".
 const availabilitySeries = computed(() => [
-  { name: 'Availability', data: buckets.value.map((b) => availabilityPercent(b)) },
-])
-
-const rateSeries = computed(() => [
-  { name: 'RX Rate (Mbps)', data: buckets.value.map((b) => averageField(b, (m) => m.rx_rate)) },
-  { name: 'TX Rate (Mbps)', data: buckets.value.map((b) => averageField(b, (m) => m.tx_rate)) },
+  { name: 'Availability', data: buckets.value.map((b) => b.availability_percent) },
 ])
 
 const loadSeries = computed(() => [
-  { name: 'CPU %', data: buckets.value.map((b) => averageField(b, (m) => m.cpu_usage)) },
-  { name: 'RAM %', data: buckets.value.map((b) => averageField(b, (m) => m.ram_usage)) },
+  { name: 'CPU %', data: buckets.value.map((b) => b.avg_cpu_usage) },
+  { name: 'RAM %', data: buckets.value.map((b) => b.avg_ram_usage) },
 ])
 
-// Kept to two series (not four) per the "keep it compact" design brief —
-// errors and drops combined across RX+TX, and averaged per bucket like
-// everything else here (an "average error count per sample in this
-// bucket", not a running total).
+const rateSeries = computed(() => [
+  { name: 'RX Rate (Mbps)', data: buckets.value.map((b) => b.avg_rx_rate) },
+  { name: 'TX Rate (Mbps)', data: buckets.value.map((b) => b.avg_tx_rate) },
+])
+
 const issuesSeries = computed(() => [
-  {
-    name: 'Errors (RX+TX)',
-    data: buckets.value.map((b) => averageField(b, (m) => (m.rx_errors ?? 0) + (m.tx_errors ?? 0))),
-  },
-  {
-    name: 'Dropped (RX+TX)',
-    data: buckets.value.map((b) => averageField(b, (m) => (m.rx_dropped ?? 0) + (m.tx_dropped ?? 0))),
-  },
+  { name: 'Errors (RX+TX)', data: buckets.value.map((b) => b.sum_rx_errors + b.sum_tx_errors) },
+  { name: 'Dropped (RX+TX)', data: buckets.value.map((b) => b.sum_rx_dropped + b.sum_tx_dropped) },
 ])
-
-// Empty-state should reflect buckets having any data at all, not just
-// whether the raw fetch returned rows — with bucketing, it's the buckets
-// (not rawMetrics) that determine what's actually plottable.
-const hasAnyData = computed(() => buckets.value.some((b) => b.samples.length > 0))
 </script>
 
 <template>
@@ -93,24 +96,28 @@ const hasAnyData = computed(() => buckets.value.some((b) => b.samples.length > 0
         <button
           type="button"
           class="rounded-[0.4rem] px-3 py-1 text-sm font-medium"
-          :class="metricsRange === 24 ? 'bg-primary text-white' : 'text-text-secondary'"
-          @click="metricsRange = 24"
+          :class="range === '24h' ? 'bg-primary text-white' : 'text-text-secondary'"
+          @click="range = '24h'"
         >Last 24h</button>
         <button
           type="button"
           class="rounded-[0.4rem] px-3 py-1 text-sm font-medium"
-          :class="metricsRange === 168 ? 'bg-primary text-white' : 'text-text-secondary'"
-          @click="metricsRange = 168"
+          :class="range === '7d' ? 'bg-primary text-white' : 'text-text-secondary'"
+          @click="range = '7d'"
         >Last 7d</button>
       </div>
     </div>
 
-    <LoadingState v-if="pending" :rows="4" />
+    <!-- Only shows on the true first load, not on every range toggle —
+         keeps the chart DOM nodes mounted across toggles instead of
+         destroying/recreating them (avoids both a visual flicker and an
+         ApexCharts render race that throws "Element not found"). -->
+    <LoadingState v-if="pending && !hasAnyData" :rows="4" />
     <ErrorState v-else-if="error" @retry="refresh()" />
     <EmptyState
       v-else-if="!hasAnyData"
       title="No history yet"
-      description="This device hasn't reported enough samples in this time range."
+      description="This device hasn't completed a full hour/day of reporting in this range yet."
     />
     <div v-else class="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <div class="rounded-card border border-border bg-surface p-4">

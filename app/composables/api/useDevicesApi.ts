@@ -15,6 +15,7 @@ import type {
   DeviceDetail,
   DeviceListItem,
   DeviceMetric,
+  DeviceMetricSummary,
   DeviceWritePayload,
 } from '~/types/api/devices'
 
@@ -55,6 +56,17 @@ export function useDevicesApi() {
     return apiFetch<Paginated<DeviceMetric>>(`/api/devices/${id}/metrics/`, { params })
   }
 
+  // GET /api/devices/{id}/metrics/summary/?range=24h|7d — the History
+  // page's data source. Pre-aggregated at the database level (24 hourly
+  // buckets for '24h', 42 four-hourly buckets for '7d') — NOT the raw
+  // per-10-second samples. Use getDeviceMetrics() above instead if raw,
+  // unaggregated samples are ever needed for something else.
+  function getDeviceMetricsSummary(id: string, range: '24h' | '7d') {
+    return apiFetch<DeviceMetricSummary>(`/api/devices/${id}/metrics/summary/`, {
+      params: { range },
+    })
+  }
+
   // Convenience wrapper: fetch devices that DO have a pinned location, for
   // the admin device-map page. Filters server-side (has_location=true)
   // rather than pulling the full list and filtering client-side.
@@ -71,6 +83,7 @@ export function useDevicesApi() {
     updateDevice,
     deleteDevice,
     getDeviceMetrics,
+    getDeviceMetricsSummary,
     listDevicesWithLocation,
   }
 }

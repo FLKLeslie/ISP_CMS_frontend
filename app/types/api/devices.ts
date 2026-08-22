@@ -237,6 +237,33 @@ export interface UnregisteredDeviceSighting {
   updated_at: string
 }
 
+// ---------------------------------------------------------------------------
+// Aggregated metric bucket — GET /api/devices/{id}/metrics/summary/
+// Pre-aggregated at the database level (see devices/metrics_aggregation.py
+// on the backend): 24 hourly buckets for '24h', 42 four-hourly buckets
+// for '7d'. This is NOT the raw per-10-second DeviceMetric shape.
+// ---------------------------------------------------------------------------
+export interface DeviceMetricBucket {
+  bucket_start: string
+  bucket_hours: 1 | 4
+  avg_cpu_usage: number | null
+  avg_ram_usage: number | null
+  avg_rx_rate: number | null
+  avg_tx_rate: number | null
+  sum_rx_errors: number
+  sum_tx_errors: number
+  sum_rx_dropped: number
+  sum_tx_dropped: number
+  latest_uptime_seconds: number | null
+  sample_count: number
+  availability_percent: number
+}
+
+export interface DeviceMetricSummary {
+  range: '24h' | '7d'
+  buckets: DeviceMetricBucket[]
+}
+
 // Payload for POST/PUT/PATCH /api/devices/ — only `customer` and
 // `device_name` are actually required server-side; everything else may be
 // filled in later once the physical device starts communicating.
