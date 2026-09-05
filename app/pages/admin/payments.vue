@@ -67,7 +67,7 @@ const selectedSubscriptionId = ref('')
 watch(selectedCustomerId, () => { selectedSubscriptionId.value = '' })
 
 const amount = ref('')
-const method = ref<'CASH' | 'MTN_MOMO' | 'ORANGE_MONEY' | 'BANK'>('CASH')
+const method = ref<'CASH' | 'MTN_MOMO' | 'ORANGE_MONEY'>('CASH')
 const paymentDate = ref(new Date().toISOString().slice(0, 10))
 const renewSubscription = ref(true)
 const saving = ref(false)
@@ -110,11 +110,22 @@ async function handleRecordPayment() {
       <h1 class="text-2xl font-semibold text-text-primary">Payments</h1>
       <button
         type="button"
-        class="rounded-card bg-secondary px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+        class="btn-primary"
         @click="showForm = !showForm"
       >
         {{ showForm ? 'Cancel' : 'Record Payment' }}
       </button>
+    </div>
+
+    <!-- Deliberately visible marker for the two known gaps here, so
+         they're impossible to miss when it's time to wire them in - see
+         payments.services (backend) for the matching TODO comment block. -->
+    <div class="rounded-card border border-dashed border-warning/50 bg-warning/5 p-4 text-sm text-text-primary">
+      <p class="font-semibold text-warning">Coming soon - not yet wired in</p>
+      <ul class="mt-1.5 list-inside list-disc space-y-0.5 text-text-secondary">
+        <li>Real payment-gateway charging (MTN MoMo / Orange Money / bank) - every payment below is recorded directly, not yet charged through a gateway.</li>
+        <li>Automatically reconnecting a customer's device once a payment is confirmed - currently a manual/administrative step.</li>
+      </ul>
     </div>
 
     <!-- Record-payment form -->
@@ -178,7 +189,6 @@ async function handleRecordPayment() {
             <option value="CASH">Cash</option>
             <option value="MTN_MOMO">MTN MoMo</option>
             <option value="ORANGE_MONEY">Orange Money</option>
-            <option value="BANK">Bank transfer</option>
           </select>
         </div>
         <div>
@@ -201,7 +211,7 @@ async function handleRecordPayment() {
       <button
         type="submit"
         :disabled="saving"
-        class="rounded-card bg-secondary px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+        class="btn-primary"
       >
         {{ saving ? 'Recording…' : 'Record Payment' }}
       </button>
@@ -227,7 +237,6 @@ async function handleRecordPayment() {
         <option value="CASH">Cash</option>
         <option value="MTN_MOMO">MTN MoMo</option>
         <option value="ORANGE_MONEY">Orange Money</option>
-        <option value="BANK">Bank transfer</option>
       </select>
     </div>
 

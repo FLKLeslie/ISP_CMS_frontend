@@ -4,6 +4,17 @@
 import type { Paginated } from '~/types/api/common'
 import type { DeviceDetail, UnregisteredDeviceSighting } from '~/types/api/devices'
 
+// The 409 the backend returns when a Device already exists for this
+// sighting's MAC address (see devices.views.UnregisteredDeviceSightingViewSet.
+// register) - carries enough detail to show the admin a proper confirmation
+// before resubmitting with confirm_replace: true.
+export interface RegisterConflict {
+  existing_device_id: string
+  existing_device_name: string
+  existing_customer_name: string | null
+  existing_is_deleted: boolean
+}
+
 export function useUnregisteredDevicesApi() {
   // GET /api/unregistered-devices/ — defaults to no status filter server
   // side; pass { status: 'PENDING' } explicitly for the "needs review"
@@ -16,6 +27,14 @@ export function useUnregisteredDevicesApi() {
   // into a real Device (mac_address is filled in server-side from the
   // sighting itself, never re-typed by the admin) and returns the full
   // DeviceDetail for the newly created device.
+  //
+  // If a Device already exists for this MAC (almost always a leftover
+  // from an earlier attempt on this same sighting), the backend refuses
+  // with a 409 and a `conflict` payload (RegisterConflict) UNLESS
+  // `confirmReplace` is true, in which case it adopts/overwrites that
+  // existing device with the details given here. Callers should catch
+  // the 409, show the admin what's being overwritten, and only resubmit
+  // with confirmReplace: true once they've explicitly agreed.
   function registerSighting(
     id: string,
     payload: {
@@ -24,10 +43,11 @@ export function useUnregisteredDevicesApi() {
       access_point?: string | null
       notes?: string
     },
+    confirmReplace = false,
   ) {
     return apiFetch<DeviceDetail>(`/api/unregistered-devices/${id}/register/`, {
       method: 'POST',
-      body: payload,
+      body: { ...payload, confirm_replace: confirmReplace },
     })
   }
 

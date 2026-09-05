@@ -27,6 +27,8 @@ function typeTone(type: string) {
   if (type === 'SUBSCRIPTION') return 'info'
   if (type === 'PAYMENT') return 'success'
   if (type === 'ANNOUNCEMENT') return 'warning'
+  if (type === 'SUGGESTION') return 'info'
+  if (type === 'CUSTOMER') return 'neutral'
   return 'neutral' // GENERAL
 }
 
@@ -168,6 +170,8 @@ async function handleSend() {
       <option value="SUBSCRIPTION">Subscription</option>
       <option value="PAYMENT">Payment</option>
       <option value="ANNOUNCEMENT">Announcement</option>
+      <option value="SUGGESTION">Suggestion</option>
+      <option value="CUSTOMER">Customer</option>
       <option value="GENERAL">General</option>
     </select>
 
@@ -186,7 +190,7 @@ async function handleSend() {
         :rows="notifications"
         row-key="id"
       >
-        <template #cell-customer="{ row }">{{ row.customer_name }}</template>
+        <template #cell-customer="{ row }">{{ row.customer_name ?? 'All administrators' }}</template>
         <template #cell-type="{ row }">
           <StatusBadge :label="row.type" :tone="typeTone(row.type)" />
         </template>

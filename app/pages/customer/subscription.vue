@@ -8,12 +8,18 @@ const { data: subscriptionsData, pending: subscriptionsPending, error: subscript
 const { data: plansData, pending: plansPending, error: plansError, refresh: refreshPlans } = await useAsyncData('customer-plans', () => listPlans())
 const subscriptions = computed(() => subscriptionsData.value?.results ?? [])
 const currentSubscription = computed(() => subscriptions.value.find((s) => s.is_active) ?? null)
+// No active subscription, but the most recent one was blocked (CANCELLED)
+// rather than simply expired or never having existed - shown distinctly
+// on the Current tab, matching the dashboard's "blocked" treatment.
+const mostRecentSubscription = computed(() => subscriptions.value[0] ?? null)
+const isBlocked = computed(() => !currentSubscription.value && mostRecentSubscription.value?.status === 'CANCELLED')
 const plans = computed(() => plansData.value?.results.filter((p) => p.is_active) ?? [])
 const purchaseError = ref(''); const purchasing = ref<string | null>(null)
+const paymentMethod = ref<'MTN_MOMO' | 'ORANGE_MONEY'>('MTN_MOMO')
 async function handleSelectPlan(planId: string) {
   purchaseError.value = ''; purchasing.value = planId
-  try { await purchasePlan(planId, 'MTN_MOMO'); await refreshSubscriptions(); activeTab.value = 'current' }
-  catch { purchaseError.value = "Online plan purchases aren't available yet. Please contact an administrator to renew or change your plan." }
+  try { await purchasePlan(planId, paymentMethod.value); await refreshSubscriptions(); activeTab.value = 'current' }
+  catch (err: any) { purchaseError.value = err?.data?.detail || "Couldn't complete this purchase. Please try again." }
   finally { purchasing.value = null }
 }
 </script>
@@ -30,14 +36,30 @@ async function handleSelectPlan(planId: string) {
     <div v-if="activeTab === 'current'">
       <LoadingState v-if="subscriptionsPending" />
       <ErrorState v-else-if="subscriptionsError" @retry="refreshSubscriptions()" />
-      <SubscriptionCard v-else :plan-name="currentSubscription?.plan.name ?? null" :remaining-days="currentSubscription?.remaining_days ?? 0" :expiry-date="currentSubscription?.end_date ?? null" @renew="activeTab = 'plans'" />
+      <SubscriptionCard
+        v-else
+        :plan-name="isBlocked ? mostRecentSubscription?.plan.name ?? null : (currentSubscription?.plan.name ?? null)"
+        :remaining-days="currentSubscription?.remaining_days ?? 0"
+        :expiry-date="currentSubscription?.end_date ?? null"
+        :expires-at="currentSubscription?.expires_at ?? null"
+        :duration-days="currentSubscription?.plan.duration_days"
+        :blocked="isBlocked"
+        @renew="activeTab = 'plans'"
+      />
     </div>
     <div v-else-if="activeTab === 'plans'" class="space-y-4">
+      <div class="flex flex-wrap items-center gap-3 rounded-card border border-border bg-surface p-4">
+        <label for="payment_method" class="text-sm font-medium text-text-primary">Pay with</label>
+        <select id="payment_method" v-model="paymentMethod" class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
+          <option value="MTN_MOMO">MTN MoMo</option>
+          <option value="ORANGE_MONEY">Orange Money</option>
+        </select>
+      </div>
       <p v-if="purchaseError" role="alert" class="rounded-card border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">{{ purchaseError }}</p>
       <LoadingState v-if="plansPending" :rows="3" />
       <ErrorState v-else-if="plansError" @retry="refreshPlans()" />
       <EmptyState v-else-if="!plans.length" title="No plans available right now" />
-      <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <PlanCard v-for="plan in plans" :key="plan.id" :plan="plan" :current="currentSubscription?.plan.id === plan.id" @select="handleSelectPlan(plan.id)" />
       </div>
     </div>
@@ -56,7 +78,7 @@ async function handleSelectPlan(planId: string) {
               <td class="px-4 py-3 text-text-secondary">{{ formatDate(sub.start_date) }}</td>
               <td class="px-4 py-3 text-text-secondary">{{ formatDate(sub.end_date) }}</td>
               <td class="px-4 py-3 text-text-secondary">{{ formatCurrency(sub.amount_paid) }}</td>
-              <td class="px-4 py-3"><StatusBadge :label="sub.status" :tone="sub.status === 'ACTIVE' ? 'success' : sub.status === 'EXPIRED' ? 'neutral' : 'error'" /></td>
+              <td class="px-4 py-3"><StatusBadge :label="sub.status === 'CANCELLED' ? 'Blocked' : sub.status" :tone="sub.status === 'ACTIVE' ? 'success' : sub.status === 'EXPIRED' ? 'neutral' : 'error'" /></td>
             </tr>
           </tbody>
         </table>

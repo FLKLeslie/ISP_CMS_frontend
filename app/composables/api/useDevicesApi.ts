@@ -44,8 +44,36 @@ export function useDevicesApi() {
     return apiFetch<DeviceDetail>(`/api/devices/${id}/`, { method: 'PATCH', body: payload })
   }
 
+  // POST /api/devices/my-location/ (Customer only) - saves coordinates
+  // (typically from the browser's geolocation permission prompt) to the
+  // calling customer's linked device. The backend 400s with a friendly
+  // message if they aren't linked to any device yet.
+  function setMyLocation(latitude: number, longitude: number) {
+    return apiFetch<DeviceDetail>('/api/devices/my-location/', { method: 'POST', body: { latitude, longitude } })
+  }
+
   function deleteDevice(id: string) {
     return apiFetch<void>(`/api/devices/${id}/`, { method: 'DELETE' })
+  }
+
+  // Soft-delete/restore - distinct from Device.status (ACTIVE/INACTIVE/
+  // etc, a business/operational state). Deactivating drops the device out
+  // of the default listing entirely; restore brings it back.
+  function deactivateDevice(id: string) {
+    return apiFetch<DeviceDetail>(`/api/devices/${id}/deactivate/`, { method: 'POST' })
+  }
+  function restoreDevice(id: string) {
+    return apiFetch<DeviceDetail>(`/api/devices/${id}/restore/`, { method: 'POST' })
+  }
+
+  // Associate/remove an additional customer's access to this device -
+  // independent of the device's primary `customer`. See the
+  // DeviceCustomerAccess model on the backend.
+  function addDeviceUser(id: string, customerId: string) {
+    return apiFetch<DeviceDetail>(`/api/devices/${id}/add-user/`, { method: 'POST', body: { customer: customerId } })
+  }
+  function removeDeviceUser(id: string, customerId: string) {
+    return apiFetch<DeviceDetail>(`/api/devices/${id}/remove-user/`, { method: 'POST', body: { customer: customerId } })
   }
 
   // GET /api/devices/{id}/metrics/ — historical time-series samples for
@@ -82,6 +110,11 @@ export function useDevicesApi() {
     createDevice,
     updateDevice,
     deleteDevice,
+    deactivateDevice,
+    restoreDevice,
+    addDeviceUser,
+    removeDeviceUser,
+    setMyLocation,
     getDeviceMetrics,
     getDeviceMetricsSummary,
     listDevicesWithLocation,

@@ -2,7 +2,7 @@
 import { Check } from 'lucide-vue-next'
 import type { Plan } from '~/types/api/subscriptions'
 const props = defineProps<{ plan: Plan; current?: boolean; adminMode?: boolean }>()
-const emit = defineEmits<{ select: [plan: Plan] }>()
+const emit = defineEmits<{ select: [plan: Plan]; details: [plan: Plan] }>()
 </script>
 <template>
   <div class="flex flex-col rounded-card border p-5" :class="props.current ? 'border-secondary bg-secondary/5' : 'border-border bg-surface'">
@@ -18,11 +18,10 @@ const emit = defineEmits<{ select: [plan: Plan] }>()
     <div class="mb-4 flex items-center gap-2 text-sm text-text-secondary">
       <Check class="h-4 w-4 text-success" aria-hidden="true" />{{ props.plan.duration_days }}-day subscription period
     </div>
-    <button v-if="!props.adminMode" type="button" :disabled="props.current"
-      class="rounded-card px-4 py-2.5 text-sm font-semibold transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
-      :class="props.current ? 'bg-text-secondary/10 text-text-secondary' : 'bg-secondary text-white hover:opacity-90'"
-      @click="emit('select', props.plan)">
-      {{ props.current ? 'Current Plan' : 'Select Plan' }}
+    <button v-if="!props.adminMode" type="button" class="btn-primary" @click="emit('select', props.plan)">
+      {{ props.current ? 'Duplicate this plan' : 'Select Plan' }}
     </button>
+    <p v-if="props.current" class="mt-2 text-xs text-text-secondary">Buying it again adds another {{ props.plan.duration_days }} days after your current period ends.</p>
+    <button v-if="props.adminMode" type="button" class="btn-secondary" @click="emit('details', props.plan)">Details</button>
   </div>
 </template>

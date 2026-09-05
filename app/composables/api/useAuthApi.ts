@@ -7,8 +7,16 @@ export function useAuthApi() {
     return apiFetch<{ detail: string }>('/api/auth/logout/', { method: 'POST', body: { refresh } })
   }
   function fetchProfile() { return apiFetch<User>('/api/auth/profile/') }
-  function updateProfile(payload: Partial<Pick<User, 'first_name' | 'last_name' | 'phone_number'>>) {
-    return apiFetch<User>('/api/auth/profile/', { method: 'PUT', body: payload })
+  // Only phone_number is actually writable here - name/email are
+  // read-only on this endpoint (an administrator edits those; see
+  // useCustomersApi.updateCustomer). Uses PATCH since it's a partial update.
+  function updateProfile(payload: { phone_number: string }) {
+    return apiFetch<User>('/api/auth/profile/', { method: 'PATCH', body: payload })
   }
-  return { login, logout, fetchProfile, updateProfile }
+  function changePassword(oldPassword: string, newPassword: string) {
+    return apiFetch<{ detail: string }>('/api/auth/change-password/', {
+      method: 'POST', body: { old_password: oldPassword, new_password: newPassword },
+    })
+  }
+  return { login, logout, fetchProfile, updateProfile, changePassword }
 }

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { Bell } from 'lucide-vue-next'
+import { Bell, CreditCard, Megaphone, MessageSquare, Wifi } from 'lucide-vue-next'
 definePageMeta({ layout: 'customer' })
 const { listNotifications, markRead } = useNotificationsApi()
 const { data, pending, error, refresh } = await useAsyncData('customer-notifications', () => listNotifications({ ordering: '-created_at', page_size: 50 }))
 const notifications = computed(() => data.value?.results ?? [])
+const typeIcon: Record<string, typeof Bell> = { SUBSCRIPTION: Wifi, PAYMENT: CreditCard, ANNOUNCEMENT: Megaphone, SUGGESTION: MessageSquare, GENERAL: Bell }
 async function handleMarkRead(id: string) {
   const target = notifications.value.find((n) => n.id === id)
   if (target) target.is_read = true
@@ -19,7 +20,9 @@ async function handleMarkRead(id: string) {
     <ul v-else class="space-y-2">
       <li v-for="notification in notifications" :key="notification.id" class="flex items-start justify-between gap-4 rounded-card border p-4" :class="notification.is_read ? 'border-border bg-surface' : 'border-accent/30 bg-accent/5'">
         <div class="flex items-start gap-3">
-          <span v-if="!notification.is_read" class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-accent" aria-hidden="true" />
+          <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary/10 text-secondary">
+            <component :is="typeIcon[notification.type] ?? Bell" class="h-4 w-4" aria-hidden="true" />
+          </span>
           <div>
             <p class="text-sm font-medium text-text-primary">{{ notification.title }}</p>
             <p class="mt-0.5 text-sm text-text-secondary">{{ notification.message }}</p>

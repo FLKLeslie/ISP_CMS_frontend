@@ -1,17 +1,34 @@
 import type { Paginated } from '~/types/api/common'
-import type { Plan, Subscription } from '~/types/api/subscriptions'
+import type { Plan, PlanType, Subscription } from '~/types/api/subscriptions'
+
+export interface PlanWritePayload {
+  name: string; description: string; duration_days: number; price: string
+  is_active: boolean; plan_type: PlanType
+  // Required (non-empty) when plan_type is SPECIFIC, must be omitted/empty
+  // for GENERAL - enforced on the backend too (see plans/serializers.py).
+  eligible_customer_ids?: string[]
+}
 
 export function usePlansApi() {
   function listPlans(params: Record<string, string | number> = {}) {
     return apiFetch<Paginated<Plan>>('/api/plans/', { params: { page_size: 50, ...params } })
   }
-  function createPlan(payload: { name: string; description: string; duration_days: number; price: string; is_active: boolean }) {
+  function createPlan(payload: PlanWritePayload) {
     return apiFetch<Plan>('/api/plans/', { method: 'POST', body: payload })
   }
-  function updatePlan(id: string, payload: Partial<Parameters<typeof createPlan>[0]>) {
+  function updatePlan(id: string, payload: Partial<PlanWritePayload>) {
     return apiFetch<Plan>(`/api/plans/${id}/`, { method: 'PATCH', body: payload })
   }
-  return { listPlans, createPlan, updatePlan }
+  function deletePlan(id: string) {
+    return apiFetch<void>(`/api/plans/${id}/`, { method: 'DELETE' })
+  }
+  function deactivatePlan(id: string) {
+    return apiFetch<Plan>(`/api/plans/${id}/deactivate/`, { method: 'POST' })
+  }
+  function restorePlan(id: string) {
+    return apiFetch<Plan>(`/api/plans/${id}/restore/`, { method: 'POST' })
+  }
+  return { listPlans, createPlan, updatePlan, deletePlan, deactivatePlan, restorePlan }
 }
 
 export function useSubscriptionsApi() {
@@ -21,11 +38,33 @@ export function useSubscriptionsApi() {
   function createSubscription(payload: { customer: string; plan: string; start_date?: string; amount_paid?: string; status?: string }) {
     return apiFetch<Subscription>('/api/subscriptions/', { method: 'POST', body: payload })
   }
-  // NOT YET ON THE BACKEND - customers can't POST /api/subscriptions/ today
-  // (admin-only permission). Wired up so the UI is ready once a
-  // customer-permitted purchase endpoint exists.
-  function purchasePlan(planId: string, paymentMethod: string) {
+  // POST /api/subscriptions/purchase/ (Customer only) - buy or "duplicate"
+  // a plan via MTN MoMo or Orange Money only (no cash/bank online). With
+  // no payment gateway configured yet, the backend refuses with a 503 and
+  // a plain-language detail message ("contact an administrator for a
+  // direct subscription") rather than creating anything - callers should
+  // surface err.data?.detail as-is rather than assuming success.
+  function purchasePlan(planId: string, paymentMethod: 'MTN_MOMO' | 'ORANGE_MONEY') {
     return apiFetch<Subscription>('/api/subscriptions/purchase/', { method: 'POST', body: { plan: planId, payment_method: paymentMethod } })
   }
-  return { listSubscriptions, createSubscription, purchasePlan }
+  // POST /api/subscriptions/grant/ (Administrator only) - grants a plan
+  // directly to a customer, e.g. cash paid in person. Creates the
+  // Subscription AND a matching COMPLETED/CASH Payment in one call (an
+  // admin grant is treated as the same thing as a cash payment - see
+  // Payment.Method, there's no separate "direct" method), so it behaves
+  // exactly like a normal purchase in the customer's history. `amount`
+  // defaults to the plan's price and `start_date` to today when omitted.
+  function grantSubscription(payload: { customer: string; plan: string; amount?: string; start_date?: string }) {
+    return apiFetch<Subscription>('/api/subscriptions/grant/', { method: 'POST', body: payload })
+  }
+  // POST /api/subscriptions/{id}/deactivate/ (Administrator only) - cancels
+  // the subscription and alerts the customer their internet was
+  // disconnected. Frontend should confirm with the admin before calling
+  // this. Actually cutting the connection physically is a backend TODO
+  // (see devices.services.request_physical_disconnect) - this only
+  // updates records and sends the alert today.
+  function deactivateSubscription(id: string) {
+    return apiFetch<Subscription>(`/api/subscriptions/${id}/deactivate/`, { method: 'POST' })
+  }
+  return { listSubscriptions, createSubscription, purchasePlan, grantSubscription, deactivateSubscription }
 }

@@ -163,8 +163,11 @@ export interface DeviceCommand {
 // Lightweight shape returned by GET /api/devices/ (list action)
 export interface DeviceListItem {
   id: string
-  customer: string
-  customer_name: string
+  // Nullable - a device may have no primary/direct customer yet (see
+  // Device model docstring on the backend: primary `customer` is now
+  // separate from the full `associated_customers` M2M).
+  customer: string | null
+  customer_name: string | null
   access_point: string | null
   access_point_name: string | null
   device_name: string
@@ -177,11 +180,24 @@ export interface DeviceListItem {
   longitude: string | null
 }
 
+// One row of Device.associated_customers - a customer explicitly granted
+// access to a device, independent of whether they're also its primary
+// `customer`. See DeviceCustomerAccess on the backend.
+export interface DeviceCustomerAccess {
+  id: string
+  customer: string
+  customer_name: string
+  granted_by: string | null
+  granted_by_name: string | null
+  created_at: string
+}
+
 // Full shape returned by GET /api/devices/{id}/ (retrieve action) — nests
 // the full Customer/AccessPoint/Configuration/CurrentStatus objects.
 export interface DeviceDetail {
   id: string
-  customer: Customer
+  // Nullable - see DeviceListItem.customer above.
+  customer: Customer | null
   access_point: AccessPoint | null
   device_name: string
   network_device_id: string | null
@@ -196,6 +212,12 @@ export interface DeviceDetail {
   installation_date: string | null
   status: DeviceStatus
   last_seen: string | null
+  // Recency-aware: true only if the last heartbeat reported online AND
+  // it arrived recently (see Device.is_actually_online() on the
+  // backend) - null means this device has never sent a heartbeat at
+  // all. Prefer this over current_status.online, which is just the raw
+  // last-reported value and never resets on its own if heartbeats stop.
+  online: boolean | null
   notes: string
   // Nullable — same rationale as AccessPoint above: an admin pins the
   // device's physical location whenever they get around to it, never a
@@ -203,6 +225,9 @@ export interface DeviceDetail {
   latitude: string | null
   longitude: string | null
   location_label: string
+  associated_customers: DeviceCustomerAccess[]
+  is_deleted: boolean
+  deleted_at: string | null
   configuration: DeviceConfiguration | null
   current_status: DeviceCurrentStatus | null
   created_at: string
@@ -227,6 +252,12 @@ export interface UnregisteredDeviceSighting {
   // DeviceCurrentStatus but is untyped here since it's genuinely
   // best-effort/partial, unlike the fields on a registered device.
   last_sample: Record<string, unknown>
+  // Best-effort device hostname looked up automatically the first time
+  // this MAC was seen (via Node's device-info endpoint) - a suggestion to
+  // pre-fill the "Device name" field with when reviewing this sighting,
+  // never guaranteed accurate and blank if the lookup failed or the
+  // device didn't report a usable one.
+  detected_name: string
   status: SightingStatus
   resolved_device: string | null
   resolved_device_name: string | null
@@ -264,11 +295,13 @@ export interface DeviceMetricSummary {
   buckets: DeviceMetricBucket[]
 }
 
-// Payload for POST/PUT/PATCH /api/devices/ — only `customer` and
-// `device_name` are actually required server-side; everything else may be
-// filled in later once the physical device starts communicating.
+// Payload for POST/PUT/PATCH /api/devices/ — only `device_name` is
+// actually required server-side; `customer` is optional (a device may be
+// registered before any customer is linked - see the backend Device
+// model docstring) and everything else may be filled in later once the
+// physical device starts communicating.
 export interface DeviceWritePayload {
-  customer: string
+  customer?: string | null
   device_name: string
   access_point?: string | null
   network_device_id?: string | null

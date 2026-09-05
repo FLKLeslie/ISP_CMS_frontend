@@ -5,7 +5,7 @@ const emit = defineEmits<{ 'toggle-sidebar': []; logout: [] }>()
 const menuOpen = ref(false)
 </script>
 <template>
-  <header class="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-surface px-4 sm:px-6">
+  <header class="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-surface px-4 sm:px-6">
     <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-card text-text-secondary hover:bg-text-secondary/10 md:hidden" aria-label="Open menu" @click="emit('toggle-sidebar')">
       <Menu class="h-5 w-5" aria-hidden="true" />
     </button>

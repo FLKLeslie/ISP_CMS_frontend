@@ -1,24 +1,52 @@
 import type { User } from './auth'
 
+export type PlanType = 'GENERAL' | 'SPECIFIC'
+// Lightweight shape of a customer eligible for a SPECIFIC plan - just
+// enough for the admin plan-details panel, not the full Customer object.
+export interface EligibleCustomer { id: string; name: string; email: string }
 export interface Plan {
   id: string; name: string; description: string; duration_days: number
-  price: string; is_active: boolean; created_at: string; updated_at: string
+  price: string; is_active: boolean; plan_type: PlanType
+  // Only meaningful when plan_type is SPECIFIC - who the plan is limited
+  // to. Read as full nested objects; write with eligible_customer_ids
+  // (see PlanWritePayload) which takes a plain list of customer IDs.
+  eligible_customers: EligibleCustomer[]
+  is_deleted: boolean; deleted_at: string | null
+  created_at: string; updated_at: string
 }
 
 export type CustomerStatus = 'ACTIVE' | 'SUSPENDED'
 export interface Customer {
   id: string; user: User; address: string; city: string; country: string
-  registration_date: string; status: CustomerStatus; created_at: string; updated_at: string
+  // Router IP is separate from any Device's own ip_address - it's the
+  // customer-site router, known independently of whether a device has
+  // been registered yet.
+  router_ip: string | null
+  registration_date: string; status: CustomerStatus
+  is_deleted: boolean; deleted_at: string | null
+  created_at: string; updated_at: string
 }
 
 export type SubscriptionStatus = 'ACTIVE' | 'EXPIRED' | 'CANCELLED'
 export interface Subscription {
   id: string; customer: Customer; plan: Plan; start_date: string; end_date: string
+  // Precise end-of-day moment for end_date, in ISO 8601 - use this (not
+  // end_date) for a live days/hours/minutes countdown.
+  expires_at: string
   amount_paid: string; status: SubscriptionStatus; remaining_days: number
-  is_active: boolean; created_at: string; updated_at: string
+  is_active: boolean
+  // Set only when an administrator granted this subscription directly
+  // (e.g. a cash payment taken in person) rather than it arising from a
+  // normal customer purchase - see POST /api/subscriptions/grant/.
+  granted_by: string | null; granted_by_name: string | null
+  created_at: string; updated_at: string
 }
 
-export type PaymentMethod = 'CASH' | 'MTN_MOMO' | 'ORANGE_MONEY' | 'BANK'
+// Only three methods exist: CASH (used for both a walk-in cash payment
+// and an administrator granting a plan directly - the two are the same
+// thing from an accounting perspective, so they're not tracked
+// separately) plus the two mobile-money gateways. No bank transfer.
+export type PaymentMethod = 'CASH' | 'MTN_MOMO' | 'ORANGE_MONEY'
 export type PaymentStatus = 'COMPLETED' | 'PENDING' | 'FAILED' | 'CANCELLED'
 export interface Payment {
   id: string; subscription: Subscription; customer: Customer; amount: string

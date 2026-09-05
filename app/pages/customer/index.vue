@@ -3,7 +3,6 @@ import { Bell, CreditCard, Wifi } from 'lucide-vue-next'
 definePageMeta({ layout: 'customer' })
 const { fetchCustomerDashboard } = useDashboardApi()
 const { data, pending, error, refresh } = await useAsyncData('customer-dashboard', () => fetchCustomerDashboard())
-function handleRenew() { navigateTo('/customer/subscription') }
 </script>
 <template>
   <div class="space-y-6">
@@ -11,11 +10,23 @@ function handleRenew() { navigateTo('/customer/subscription') }
     <LoadingState v-if="pending" :rows="4" />
     <ErrorState v-else-if="error" @retry="refresh()" />
     <template v-else-if="data">
-      <SubscriptionCard :plan-name="data.active_plan?.name ?? null" :remaining-days="data.remaining_days" :expiry-date="data.expiry_date" @renew="handleRenew" />
+      <div v-if="data.account_status === 'SUSPENDED'" class="rounded-card border border-error/40 bg-error/5 p-3 text-sm text-error">
+        Your account is suspended. Please contact an administrator to restore access.
+      </div>
+      <!-- Dashboard is a read-only summary - renewing/duplicating a plan
+           happens on the Subscription page, not here. -->
+      <SubscriptionCard
+        :plan-name="data.is_blocked ? data.blocked_plan_name : (data.active_plan?.name ?? null)"
+        :remaining-days="data.remaining_days"
+        :expiry-date="data.expiry_date"
+        :expires-at="data.expires_at"
+        :blocked="data.is_blocked"
+        :show-action="false"
+      />
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div class="flex items-center gap-3 rounded-card border border-border bg-surface p-4">
-          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-success/10 text-success"><Wifi class="h-5 w-5" aria-hidden="true" /></div>
-          <div><p class="text-xs text-text-secondary">Service Status</p><p class="text-sm font-semibold text-text-primary">{{ data.active_plan ? 'Online' : 'No Active Service' }}</p></div>
+          <div class="flex h-10 w-10 items-center justify-center rounded-full" :class="data.is_blocked ? 'bg-error/10 text-error' : 'bg-success/10 text-success'"><Wifi class="h-5 w-5" aria-hidden="true" /></div>
+          <div><p class="text-xs text-text-secondary">Service Status</p><p class="text-sm font-semibold text-text-primary">{{ data.is_blocked ? 'Blocked' : data.active_plan ? 'Online' : 'No Active Service' }}</p></div>
         </div>
         <NuxtLink to="/customer/subscription" class="flex items-center gap-3 rounded-card border border-border bg-surface p-4 transition-colors hover:border-secondary/40">
           <div class="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 text-accent"><CreditCard class="h-5 w-5" aria-hidden="true" /></div>

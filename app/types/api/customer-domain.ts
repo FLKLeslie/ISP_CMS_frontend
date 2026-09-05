@@ -1,8 +1,13 @@
 import type { Payment, Plan } from './subscriptions'
 
-export type NotificationType = 'SUBSCRIPTION' | 'PAYMENT' | 'ANNOUNCEMENT' | 'GENERAL'
+export type NotificationType = 'SUBSCRIPTION' | 'PAYMENT' | 'ANNOUNCEMENT' | 'SUGGESTION' | 'CUSTOMER' | 'GENERAL'
 export interface AppNotification {
-  id: string; customer: string; customer_name: string; title: string; message: string
+  id: string
+  // null for an admin-broadcast entry (is_admin_broadcast=true) - e.g.
+  // "new customer added", "new suggestion submitted" - which has no
+  // single owning customer.
+  customer: string | null; customer_name: string | null; is_admin_broadcast: boolean
+  title: string; message: string
   type: NotificationType; is_read: boolean; created_at: string; updated_at: string
 }
 
@@ -22,5 +27,13 @@ export interface Announcement {
 
 export interface CustomerDashboard {
   active_plan: Plan | null; remaining_days: number; expiry_date: string | null
+  // Precise end-of-day moment for expiry_date, in ISO 8601 - use this
+  // (not expiry_date) for a live days/hours/minutes countdown.
+  expires_at: string | null
+  account_status: 'ACTIVE' | 'SUSPENDED'
+  // True when there's no active subscription because an administrator
+  // blocked the most recent one (see dashboard.views.CustomerDashboardView) -
+  // distinct from simply never having subscribed.
+  is_blocked: boolean; blocked_plan_name: string | null
   recent_payments: Payment[]; unread_notifications: number; latest_announcements: Announcement[]
 }

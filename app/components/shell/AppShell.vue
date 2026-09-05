@@ -9,7 +9,7 @@ const sidebarOpen = ref(false)
     <Sidebar :items="props.navItems" :brand-label="props.brandLabel" :open="sidebarOpen" @close="sidebarOpen = false" />
     <div class="flex min-w-0 flex-1 flex-col">
       <Topbar :user-name="props.userName" :unread-notifications="props.unreadNotifications" :notifications-to="props.notificationsTo" @toggle-sidebar="sidebarOpen = !sidebarOpen" @logout="emit('logout')" />
-      <main class="flex-1 px-4 py-6 sm:px-6 lg:px-8"><slot /></main>
+      <main class="flex-1 px-4 py-5 sm:px-6 lg:px-8 2xl:px-10"><slot /></main>
     </div>
   </div>
 </template>

@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { Router } from 'lucide-vue-next'
+import type { UnregisteredDeviceSighting } from '~/types/api/devices'
 
 definePageMeta({ layout: 'admin' })
 
 const { listSightings, registerSighting, discardSighting } = useUnregisteredDevicesApi()
-const { listCustomers } = useCustomersApi()
+const { listCustomers, createCustomer } = useCustomersApi()
 const { listAccessPointsWithLocation } = useAccessPointsApi()
 
 // --- List / filter state ---------------------------------------------------
@@ -73,17 +74,41 @@ const selectedAccessPointId = ref('')
 const deviceName = ref('')
 const notes = ref('')
 
-function openRegisterForm(id: string) {
+function openRegisterForm(sighting: UnregisteredDeviceSighting) {
+  const id = sighting.id
   openId.value = openId.value === id ? null : id
   registerError.value = ''
-  deviceName.value = ''
+  // Pre-fill from the auto-detected name (see devices.node_client.
+  // fetch_device_name on the backend) if Node was able to look one up
+  // when this sighting was first seen - still fully editable, just saves
+  // typing when it's right.
+  deviceName.value = sighting.detected_name || ''
   notes.value = ''
   selectedCustomerId.value = ''
   selectedAccessPointId.value = ''
   customerSearch.value = ''
+  showNewCustomerForm.value = false
+  Object.assign(newCustomerForm, { first_name: '', last_name: '', email: '', password: '', phone_number: '' })
+  newCustomerError.value = ''
 }
 
-async function handleRegister(id: string) {
+// --- Create a customer inline, for a device sighting from someone not
+// yet in the system - skips navigating away from the review queue. -----
+const showNewCustomerForm = ref(false)
+const newCustomerForm = reactive({ first_name: '', last_name: '', email: '', password: '', phone_number: '' })
+const creatingCustomer = ref(false); const newCustomerError = ref('')
+async function handleCreateCustomer() {
+  newCustomerError.value = ''; creatingCustomer.value = true
+  try {
+    const customer = await createCustomer({ ...newCustomerForm })
+    selectedCustomerId.value = customer.id
+    customerSearch.value = `${customer.user.first_name} ${customer.user.last_name}`
+    showNewCustomerForm.value = false
+  } catch (err) { newCustomerError.value = apiErrorMessage(err, "Couldn't create this customer. Check the fields and try again.") }
+  finally { creatingCustomer.value = false }
+}
+
+async function handleRegister(id: string, confirmReplace = false) {
   registerError.value = ''
   if (!selectedCustomerId.value || !deviceName.value.trim()) {
     registerError.value = 'Pick a customer and give the device a name first.'
@@ -91,20 +116,62 @@ async function handleRegister(id: string) {
   }
   registering.value = true
   try {
-    await registerSighting(id, {
-      customer: selectedCustomerId.value,
-      device_name: deviceName.value,
-      access_point: selectedAccessPointId.value || null,
-      notes: notes.value,
-    })
+    await registerSighting(
+      id,
+      {
+        customer: selectedCustomerId.value,
+        device_name: deviceName.value,
+        access_point: selectedAccessPointId.value || null,
+        notes: notes.value,
+      },
+      confirmReplace,
+    )
     openId.value = null
+    replaceConflict.value = null
     await refresh()
-  } catch {
-    registerError.value = "Couldn't register this device. Check the fields and try again."
+  } catch (err: any) {
+    if (err?.data?.errors?.conflict || err?.data?.conflict) {
+      // A Device already exists for this MAC - show the admin exactly
+      // what registering now would overwrite, and let them decide rather
+      // than silently adopting or refusing outright.
+      replaceConflict.value = { sightingId: id, ...(err.data.errors?.conflict ?? err.data.conflict) }
+    } else {
+      registerError.value = apiErrorMessage(err, "Couldn't register this device. Check the fields and try again.")
+    }
   } finally {
     registering.value = false
   }
 }
+
+// --- MAC-address conflict confirmation -----------------------------------
+// Populated when the backend refuses a register attempt because a Device
+// already exists for this sighting's MAC (see useUnregisteredDevicesApi.
+// registerSighting's docstring). Registering again with confirmReplace:
+// true will overwrite that existing device's name/customer/access point/
+// notes with whatever's currently in the form.
+const replaceConflict = ref<{
+  sightingId: string
+  existing_device_id: string
+  existing_device_name: string
+  existing_customer_name: string | null
+  existing_is_deleted: boolean
+} | null>(null)
+
+function handleConfirmReplace() {
+  if (!replaceConflict.value) return
+  handleRegister(replaceConflict.value.sightingId, true)
+}
+const replaceConflictDescription = computed(() => {
+  const conflict = replaceConflict.value
+  if (!conflict) return ''
+  const owner = conflict.existing_customer_name
+    ? `, linked to ${conflict.existing_customer_name}`
+    : ', not linked to any customer'
+  const deletedNote = conflict.existing_is_deleted ? ' This device was previously deactivated.' : ''
+  const name = conflict.existing_device_name || 'Unnamed device'
+  return `A device already exists with this MAC address: "${name}"${owner}.${deletedNote} `
+    + "Registering now will overwrite its name, customer, access point, and notes with what you entered here. This can't be undone."
+})
 
 const discarding = ref<string | null>(null)
 async function handleDiscard(id: string) {
@@ -168,6 +235,7 @@ async function handleDiscard(id: string) {
           <div class="flex flex-wrap items-start justify-between gap-2">
             <div>
               <p class="font-mono text-sm font-semibold text-text-primary">{{ s.mac_address }}</p>
+              <p v-if="s.detected_name" class="mt-0.5 text-sm text-secondary">Detected as "{{ s.detected_name }}"</p>
               <p class="text-xs text-text-secondary">
                 First seen {{ formatDateTime(s.first_seen) }} · Last seen {{ formatRelativeTime(s.last_seen) }}
                 · {{ s.sighting_count }} {{ s.sighting_count === 1 ? 'ping' : 'pings' }}
@@ -189,7 +257,7 @@ async function handleDiscard(id: string) {
             <button
               type="button"
               class="text-sm font-medium text-accent hover:underline"
-              @click="openRegisterForm(s.id)"
+              @click="openRegisterForm(s)"
             >
               {{ openId === s.id ? 'Cancel' : 'Register to a customer' }}
             </button>
@@ -205,7 +273,21 @@ async function handleDiscard(id: string) {
 
           <div v-if="openId === s.id" class="mt-4 space-y-3 border-t border-border pt-4">
             <div>
-              <label class="mb-1 block text-sm font-medium text-text-primary">Customer</label>
+              <div class="mb-1 flex items-center justify-between">
+                <label class="block text-sm font-medium text-text-primary">Customer</label>
+                <button type="button" class="text-xs font-medium text-secondary hover:underline" @click="showNewCustomerForm = !showNewCustomerForm">
+                  {{ showNewCustomerForm ? 'Cancel' : "Customer not in the system? Create one" }}
+                </button>
+              </div>
+              <form v-if="showNewCustomerForm" class="mb-3 grid grid-cols-1 gap-2 rounded-card border border-border bg-background/40 p-3 sm:grid-cols-2" @submit.prevent="handleCreateCustomer">
+                <input v-model="newCustomerForm.first_name" placeholder="First name" required class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
+                <input v-model="newCustomerForm.last_name" placeholder="Last name" required class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
+                <input v-model="newCustomerForm.email" type="email" placeholder="Email" required class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
+                <input v-model="newCustomerForm.password" placeholder="Temporary password" required class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
+                <input v-model="newCustomerForm.phone_number" placeholder="Phone (optional)" class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent sm:col-span-2">
+                <p v-if="newCustomerError" role="alert" class="text-xs text-error sm:col-span-2">{{ newCustomerError }}</p>
+                <button type="submit" :disabled="creatingCustomer" class="btn-primary sm:col-span-2">{{ creatingCustomer ? 'Creating…' : 'Create and select customer' }}</button>
+              </form>
               <SearchInput v-model="customerSearch" placeholder="Search by name or email…" />
               <div v-if="customerOptions.length" class="mt-2 max-h-40 overflow-y-auto rounded-card border border-border">
                 <button
@@ -257,7 +339,7 @@ async function handleDiscard(id: string) {
             <button
               type="button"
               :disabled="registering"
-              class="rounded-card bg-secondary px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+              class="btn-primary"
               @click="handleRegister(s.id)"
             >
               {{ registering ? 'Registering…' : 'Register Device' }}
@@ -267,5 +349,14 @@ async function handleDiscard(id: string) {
       </div>
       <Pagination :current-page="page" :total-pages="totalPages" @change="page = $event" />
     </template>
+    <ConfirmationDialog
+      :open="!!replaceConflict"
+      title="Replace the existing device?"
+      :description="replaceConflictDescription"
+      :confirm-label="registering ? 'Please wait…' : 'Replace device'"
+      danger
+      @confirm="handleConfirmReplace"
+      @cancel="replaceConflict = null"
+    />
   </div>
 </template>
