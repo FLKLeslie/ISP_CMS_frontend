@@ -3,13 +3,13 @@ import { Bell, CreditCard, Home, Map, Megaphone, MessageSquare, RadioTower, Rout
 import type { NavItem } from '~/types/nav'
 
 const { fetchAdminDashboard } = useDashboardApi()
+const { listRouters } = useMikroTikApi()
 
-// Fetched once per layout mount, purely to drive the "Unregistered
-// Devices" sidebar badge below — the admin dashboard page itself does its
-// own separate fetch for its full stats, this is intentionally minimal
-// and doesn't block rendering the shell (errors here just leave the badge
-// at 0, they never block navigation).
+// Fetched once per layout mount, purely to drive sidebar badges below —
+// each destination page does its own separate full fetch; errors here
+// just leave a badge at 0, they never block navigation.
 const pendingUnregisteredDevices = ref(0)
+const pendingMikroTikRouters = ref(0)
 onMounted(async () => {
   try {
     const dashboard = await fetchAdminDashboard()
@@ -18,6 +18,12 @@ onMounted(async () => {
     // Sidebar badge just stays at 0 — not worth surfacing an error for a
     // secondary indicator when the main page content will show its own
     // error state if the API is genuinely down.
+  }
+  try {
+    const pendingRouters = await listRouters({ status: 'PENDING', page_size: 1 })
+    pendingMikroTikRouters.value = pendingRouters.count
+  } catch {
+    // Same rationale as above.
   }
 })
 
@@ -38,6 +44,12 @@ const navItems = computed<NavItem[]>(() => [
   },
   { label: 'Device Map', to: '/admin/devices/map', icon: Map },
   { label: 'Access Points', to: '/admin/access-points', icon: RadioTower },
+  {
+    label: 'MikroTik Routers',
+    to: '/admin/microtik',
+    icon: Router,
+    badge: pendingMikroTikRouters.value,
+  },
   { label: 'Suggestions', to: '/admin/suggestions', icon: MessageSquare },
   { label: 'Announcements', to: '/admin/announcements', icon: Megaphone },
   { label: 'Notifications', to: '/admin/notifications', icon: Bell },
