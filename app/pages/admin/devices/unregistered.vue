@@ -4,7 +4,7 @@ import type { UnregisteredDeviceSighting } from '~/types/api/devices'
 
 definePageMeta({ layout: 'admin' })
 
-const { listSightings, registerSighting, discardSighting } = useUnregisteredDevicesApi()
+const { listSightings, registerSighting, registerSightingAsAccessPoint, discardSighting } = useUnregisteredDevicesApi()
 const { listCustomers, createCustomer } = useCustomersApi()
 const { listAccessPointsWithLocation } = useAccessPointsApi()
 
@@ -73,6 +73,58 @@ const selectedAccessPointId = ref('')
 
 const deviceName = ref('')
 const notes = ref('')
+const registerMode = ref<'station' | 'access-point'>('station')
+const apSite = ref('')
+
+function roleLabel(role: string) {
+  if (role === 'access-point') return 'Access Point'
+  if (role === 'station') return 'Station'
+  return 'Unknown role'
+}
+
+// Registering an access-point creates infrastructure, not a customer
+// device - so it needs a name and optional site, never a customer.
+async function handleRegisterAccessPoint(id: string, confirmReplace = false) {
+  registerError.value = ''
+  if (!deviceName.value.trim()) {
+    registerError.value = 'Give this access point a name first.'
+    return
+  }
+  registering.value = true
+  try {
+    await registerSightingAsAccessPoint(
+      id, { name: deviceName.value, site: apSite.value }, confirmReplace,
+    )
+    openId.value = null
+    apReplaceConflict.value = null
+    await refresh()
+  } catch (err: any) {
+    const conflict = err?.data?.errors?.conflict || err?.data?.conflict
+    if (conflict) {
+      apReplaceConflict.value = { sightingId: id, ...conflict }
+    } else {
+      registerError.value = apiErrorMessage(err, "Couldn't register this access point. Please try again.")
+    }
+  } finally {
+    registering.value = false
+  }
+}
+
+const apReplaceConflict = ref<{
+  sightingId: string
+  existing_access_point_id: string
+  existing_access_point_name: string
+} | null>(null)
+const apReplaceConflictDescription = computed(() => {
+  const conflict = apReplaceConflict.value
+  if (!conflict) return ''
+  return `An access point already exists with this MAC address: "${conflict.existing_access_point_name}". `
+    + "Registering now will overwrite its details with what you entered here. This can't be undone."
+})
+function handleConfirmApReplace() {
+  if (!apReplaceConflict.value) return
+  handleRegisterAccessPoint(apReplaceConflict.value.sightingId, true)
+}
 
 function openRegisterForm(sighting: UnregisteredDeviceSighting) {
   const id = sighting.id
@@ -83,6 +135,11 @@ function openRegisterForm(sighting: UnregisteredDeviceSighting) {
   // when this sighting was first seen - still fully editable, just saves
   // typing when it's right.
   deviceName.value = sighting.detected_name || ''
+  // Default the form to whatever the device reported itself as - an
+  // access-point becomes infrastructure, a station becomes a customer's
+  // device. The admin can still override this either way.
+  registerMode.value = sighting.detected_role === 'access-point' ? 'access-point' : 'station'
+  apSite.value = ''
   notes.value = ''
   selectedCustomerId.value = ''
   selectedAccessPointId.value = ''
@@ -235,7 +292,12 @@ async function handleDiscard(id: string) {
           <div class="flex flex-wrap items-start justify-between gap-2">
             <div>
               <p class="font-mono text-sm font-semibold text-text-primary">{{ s.mac_address }}</p>
-              <p v-if="s.detected_name" class="mt-0.5 text-sm text-secondary">Detected as "{{ s.detected_name }}"</p>
+              <p v-if="s.detected_name" class="mt-0.5 text-sm text-secondary">
+                Detected as "{{ s.detected_name }}"<span v-if="s.detected_model"> · {{ s.detected_model }}</span>
+              </p>
+              <p v-if="s.detected_role" class="mt-0.5">
+                <StatusBadge :label="roleLabel(s.detected_role)" :tone="s.detected_role === 'access-point' ? 'info' : 'neutral'" />
+              </p>
               <p class="text-xs text-text-secondary">
                 First seen {{ formatDateTime(s.first_seen) }} · Last seen {{ formatRelativeTime(s.last_seen) }}
                 · {{ s.sighting_count }} {{ s.sighting_count === 1 ? 'ping' : 'pings' }}
@@ -272,6 +334,42 @@ async function handleDiscard(id: string) {
           </div>
 
           <div v-if="openId === s.id" class="mt-4 space-y-3 border-t border-border pt-4">
+            <!-- What kind of record this becomes. Pre-set from the device's
+                 own reported role, but the admin has the final say. -->
+            <div>
+              <label class="mb-1 block text-sm font-medium text-text-primary">Register as</label>
+              <div class="inline-flex rounded-card border border-border bg-background p-0.5">
+                <button
+                  v-for="m in [{ key: 'station', label: 'Customer device' }, { key: 'access-point', label: 'Access point' }]"
+                  :key="m.key" type="button"
+                  class="rounded-[0.4rem] px-3 py-1.5 text-sm font-medium transition-colors"
+                  :class="registerMode === m.key ? 'bg-primary text-white' : 'text-text-secondary hover:text-text-primary'"
+                  @click="registerMode = m.key as any"
+                >{{ m.label }}</button>
+              </div>
+              <p v-if="s.detected_role === 'access-point' && registerMode === 'station'" class="mt-1 text-xs text-warning">
+                This device reports itself as an access point — registering it to a customer is unusual.
+              </p>
+            </div>
+
+            <!-- Access point form -->
+            <template v-if="registerMode === 'access-point'">
+              <div>
+                <label class="mb-1 block text-sm font-medium text-text-primary">Access point name</label>
+                <input v-model="deviceName" placeholder="e.g. Rooftop AP" class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
+              </div>
+              <div>
+                <label class="mb-1 block text-sm font-medium text-text-primary">Site (optional)</label>
+                <input v-model="apSite" placeholder="Where it's installed" class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
+              </div>
+              <p v-if="registerError" role="alert" class="text-sm text-error">{{ registerError }}</p>
+              <button type="button" :disabled="registering" class="btn-primary" @click="handleRegisterAccessPoint(s.id)">
+                {{ registering ? 'Registering…' : 'Register Access Point' }}
+              </button>
+            </template>
+
+            <!-- Customer device form -->
+            <template v-else>
             <div>
               <div class="mb-1 flex items-center justify-between">
                 <label class="block text-sm font-medium text-text-primary">Customer</label>
@@ -344,11 +442,21 @@ async function handleDiscard(id: string) {
             >
               {{ registering ? 'Registering…' : 'Register Device' }}
             </button>
+            </template>
           </div>
         </div>
       </div>
       <Pagination :current-page="page" :total-pages="totalPages" @change="page = $event" />
     </template>
+    <ConfirmationDialog
+      :open="!!apReplaceConflict"
+      title="Replace the existing access point?"
+      :description="apReplaceConflictDescription"
+      :confirm-label="registering ? 'Please wait…' : 'Replace access point'"
+      danger
+      @confirm="handleConfirmApReplace"
+      @cancel="apReplaceConflict = null"
+    />
     <ConfirmationDialog
       :open="!!replaceConflict"
       title="Replace the existing device?"

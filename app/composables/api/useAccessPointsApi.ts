@@ -4,7 +4,7 @@
 // least read. Only call this composable from pages under /admin/; a
 // customer session will get a 403 on every method here, including list.
 import type { Paginated } from '~/types/api/common'
-import type { AccessPoint, AccessPointWritePayload } from '~/types/api/devices'
+import type { AccessPoint, AccessPointWritePayload, DeviceListItem } from '~/types/api/devices'
 
 export function useAccessPointsApi() {
   // GET /api/access-points/ — filterable by status, site (icontains),
@@ -38,7 +38,29 @@ export function useAccessPointsApi() {
     })
   }
 
+  // Which customer Devices sit behind this AP. Manual for now — an
+  // administrator attaches/detaches them; a future mechanism may derive
+  // this automatically, at which point these become a manual override.
+  function listAccessPointDevices(id: string) {
+    return apiFetch<DeviceListItem[]>(`/api/access-points/${id}/devices/`)
+  }
+
+  function attachDeviceToAccessPoint(id: string, deviceId: string) {
+    return apiFetch<DeviceListItem>(`/api/access-points/${id}/attach-device/`, {
+      method: 'POST', body: { device: deviceId },
+    })
+  }
+
+  function detachDeviceFromAccessPoint(id: string, deviceId: string) {
+    return apiFetch<DeviceListItem>(`/api/access-points/${id}/detach-device/`, {
+      method: 'POST', body: { device: deviceId },
+    })
+  }
+
   return {
+    listAccessPointDevices,
+    attachDeviceToAccessPoint,
+    detachDeviceFromAccessPoint,
     listAccessPoints,
     getAccessPoint,
     createAccessPoint,

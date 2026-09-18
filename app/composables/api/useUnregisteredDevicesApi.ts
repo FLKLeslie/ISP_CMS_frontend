@@ -2,7 +2,7 @@
 // UnregisteredDeviceSightingViewSet). Administrator-only, same as
 // useAccessPointsApi — a customer session gets a 403 on every method here.
 import type { Paginated } from '~/types/api/common'
-import type { DeviceDetail, UnregisteredDeviceSighting } from '~/types/api/devices'
+import type { AccessPoint, DeviceDetail, UnregisteredDeviceSighting } from '~/types/api/devices'
 
 // The 409 the backend returns when a Device already exists for this
 // sighting's MAC address (see devices.views.UnregisteredDeviceSightingViewSet.
@@ -51,6 +51,22 @@ export function useUnregisteredDevicesApi() {
     })
   }
 
+  // POST /api/unregistered-devices/{id}/register-access-point/ — the
+  // access-point counterpart to registerSighting. A sighting whose
+  // wireless role is "access-point" is institution infrastructure, so it
+  // becomes an AccessPoint record rather than a customer Device. Same
+  // MAC-conflict/confirm_replace behaviour as registerSighting above.
+  function registerSightingAsAccessPoint(
+    id: string,
+    payload: { name?: string; site?: string },
+    confirmReplace = false,
+  ) {
+    return apiFetch<AccessPoint>(`/api/unregistered-devices/${id}/register-access-point/`, {
+      method: 'POST',
+      body: { ...payload, confirm_replace: confirmReplace },
+    })
+  }
+
   // POST /api/unregistered-devices/{id}/discard/ — dismisses the sighting
   // with no Device created. Background heartbeats from this MAC keep
   // updating last_seen/sighting_count quietly, but the admin won't be
@@ -61,5 +77,5 @@ export function useUnregisteredDevicesApi() {
     })
   }
 
-  return { listSightings, registerSighting, discardSighting }
+  return { listSightings, registerSighting, registerSightingAsAccessPoint, discardSighting }
 }

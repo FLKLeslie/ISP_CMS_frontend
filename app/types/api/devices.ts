@@ -23,6 +23,8 @@ export type CommandStatus = 'PENDING' | 'SENT' | 'COMPLETED' | 'FAILED' | 'CANCE
 // ---------------------------------------------------------------------------
 export interface AccessPoint {
   id: string
+  // How many customer Devices are currently linked to this AP.
+  device_count?: number
   name: string
   model: string
   ip_address: string | null
@@ -258,6 +260,13 @@ export interface UnregisteredDeviceSighting {
   // never guaranteed accurate and blank if the lookup failed or the
   // device didn't report a usable one.
   detected_name: string
+  detected_model: string
+  // What the device reports itself as. "station" -> register it to a
+  // customer as a normal Device. "access-point" -> it's institution
+  // infrastructure, register it as an AccessPoint instead. Empty string
+  // means the device didn't report enough to classify, so the admin
+  // chooses. It's a suggestion, never a restriction.
+  detected_role: '' | 'station' | 'access-point'
   status: SightingStatus
   resolved_device: string | null
   resolved_device_name: string | null

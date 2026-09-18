@@ -33,10 +33,38 @@ export function useMikroTikApi() {
     return apiFetch<MikroTikRouter>(`/api/microtik/routers/${id}/reject/`, { method: 'POST' })
   }
 
-  // GET /api/microtik/leases/ — filterable by router/mac_address;
-  // searchable by mac_address/hostname/ip_address.
+  // GET /api/microtik/leases/ — the client routers each MikroTik can
+  // see. Filterable by router/mac_address/customer/access_state, plus
+  // allocated=true|false for the "not yet matched to a customer" review
+  // queue. Searchable by mac_address/hostname/ip_address.
   function listLeases(params: Record<string, string | number> = {}) {
     return apiFetch<Paginated<MikroTikLease>>('/api/microtik/leases/', { params })
+  }
+
+  // Assigns an unallocated client router to a customer. This also
+  // backfills the customer's router MAC/IP/hostname, so every future
+  // report for this router matches them automatically.
+  function allocateLease(id: string, customerId: string) {
+    return apiFetch<MikroTikLease>(`/api/microtik/leases/${id}/allocate/`, {
+      method: 'POST', body: { customer: customerId },
+    })
+  }
+
+  // Block/reconnect ONE specific client router, routed automatically to
+  // whichever MikroTik it sits behind. Returns the updated lease plus the
+  // command audit record — note the command's "SENT" status only means
+  // the request was queued for the router's next check-in, never that the
+  // router confirmed applying it.
+  function blockLease(id: string) {
+    return apiFetch<{ lease: MikroTikLease; command: MikroTikCommand }>(
+      `/api/microtik/leases/${id}/block/`, { method: 'POST' },
+    )
+  }
+
+  function reconnectLease(id: string) {
+    return apiFetch<{ lease: MikroTikLease; command: MikroTikCommand }>(
+      `/api/microtik/leases/${id}/reconnect/`, { method: 'POST' },
+    )
   }
 
   // GET /api/microtik/commands/ — filterable by status/command_type/router/customer.
@@ -51,6 +79,9 @@ export function useMikroTikApi() {
     approveRouter,
     rejectRouter,
     listLeases,
+    allocateLease,
+    blockLease,
+    reconnectLease,
     listCommands,
   }
 }

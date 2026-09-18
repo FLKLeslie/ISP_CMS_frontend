@@ -6,10 +6,45 @@ const { fetchCustomer, setCustomerStatus, updateCustomer, blockInternet } = useC
 const { listSubscriptions } = useSubscriptionsApi()
 const { listPayments } = usePaymentsApi()
 const { listSuggestions } = useSuggestionsApi()
+const { listLeases, blockLease, reconnectLease } = useMikroTikApi()
 const { data: customer, pending, error, refresh } = await useAsyncData(`customer-${id}`, () => fetchCustomer(id))
 const { data: subs, refresh: refreshSubs } = await useAsyncData(`customer-${id}-subs`, () => listSubscriptions({ customer: id }))
 const { data: payments } = await useAsyncData(`customer-${id}-payments`, () => listPayments({ customer: id }))
 const { data: suggestions } = await useAsyncData(`customer-${id}-suggestions`, () => listSuggestions({ customer: id }))
+// This customer's client routers as reported by whichever MikroTik each
+// one sits behind — the block/reconnect controls below act on these
+// directly, routing each command to the correct MikroTik automatically.
+const { data: leasesData, refresh: refreshLeases } = await useAsyncData(
+  `customer-${id}-leases`, () => listLeases({ customer: id }),
+)
+const leases = computed(() => leasesData.value?.results ?? [])
+const accessStateTone = (state: string) =>
+  state === 'ALLOWED' ? 'success' : state === 'BLOCKED' ? 'error' : 'neutral'
+const accessStateLabel = (state: string) =>
+  state === 'ALLOWED' ? 'Allowed' : state === 'BLOCKED' ? 'Blocked' : 'Not set'
+
+const confirmLeaseAction = ref<{ leaseId: string; mac: string; type: 'block' | 'reconnect' } | null>(null)
+const actingLeaseId = ref<string | null>(null)
+const leaseError = ref('')
+async function handleConfirmLeaseAction() {
+  if (!confirmLeaseAction.value) return
+  const { leaseId, type } = confirmLeaseAction.value
+  actingLeaseId.value = leaseId
+  leaseError.value = ''
+  try {
+    const result = type === 'block' ? await blockLease(leaseId) : await reconnectLease(leaseId)
+    await refreshLeases()
+    if (result.command.status === 'FAILED') {
+      leaseError.value = result.command.error_message
+        || `The ${type} request couldn't be delivered to the MikroTik.`
+    }
+  } catch (err) {
+    leaseError.value = apiErrorMessage(err, `Couldn't ${type} this router. Please try again.`)
+  } finally {
+    actingLeaseId.value = null
+    confirmLeaseAction.value = null
+  }
+}
 
 const subscriptionStatusLabel: Record<string, string> = { ACTIVE: 'Active', EXPIRED: 'Expired', CANCELLED: 'Blocked' }
 const hasActiveSubscription = computed(() => subs.value?.results.some((s) => s.status === 'ACTIVE') ?? false)
@@ -40,7 +75,7 @@ async function handleBlockInternet() {
 const editing = ref(false)
 const form = reactive({
   first_name: '', last_name: '', email: '', phone_number: '',
-  address: '', city: '', country: '', router_ip: '',
+  address: '', city: '', country: '', router_ip: '', router_mac_address: '', router_hostname: '',
 })
 const saving = ref(false)
 function startEdit() {
@@ -53,6 +88,8 @@ function startEdit() {
   form.city = customer.value.city
   form.country = customer.value.country
   form.router_ip = customer.value.router_ip ?? ''
+  form.router_mac_address = customer.value.router_mac_address
+  form.router_hostname = customer.value.router_hostname
   editing.value = true
 }
 async function handleSave() {
@@ -78,7 +115,11 @@ async function handleSave() {
           <h1 class="text-xl font-semibold text-text-primary">{{ customer.user.first_name }} {{ customer.user.last_name }}</h1>
           <p class="text-sm text-text-secondary">{{ customer.user.email }} · {{ customer.user.phone_number || 'No phone on file' }}</p>
           <p class="mt-1 text-sm text-text-secondary">{{ [customer.address, customer.city, customer.country].filter(Boolean).join(', ') || 'No address on file' }}</p>
-          <p class="mt-1 text-sm text-text-secondary">Router IP: {{ customer.router_ip || 'Not set' }}</p>
+          <p class="mt-1 text-sm text-text-secondary">
+            Router: <span class="font-mono text-xs">{{ customer.router_mac_address || 'MAC not set' }}</span>
+            · {{ customer.router_ip || 'no IP' }}
+            · {{ customer.router_hostname || 'no hostname' }}
+          </p>
         </div>
         <div class="flex flex-col items-end gap-2">
           <StatusBadge :label="customer.status === 'ACTIVE' ? 'Active' : 'Suspended'" :tone="customer.status === 'ACTIVE' ? 'success' : 'error'" />
@@ -100,6 +141,8 @@ async function handleSave() {
         <input v-model="form.city" placeholder="City" class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
         <input v-model="form.country" placeholder="Country" class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
         <input v-model="form.router_ip" placeholder="Router IP (optional)" class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
+        <input v-model="form.router_mac_address" placeholder="Router MAC address (links them to MikroTik reports)" class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
+        <input v-model="form.router_hostname" placeholder="Router hostname (optional)" class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
         <div class="flex gap-2 sm:col-span-2">
           <button type="submit" :disabled="saving" class="btn-primary">{{ saving ? 'Saving…' : 'Save changes' }}</button>
           <button type="button" class="btn-secondary" @click="editing = false">Cancel</button>
@@ -107,6 +150,37 @@ async function handleSave() {
       </form>
 
       <p v-if="blockError" role="alert" class="rounded-card border border-error/30 bg-error/5 px-4 py-3 text-sm text-error">{{ blockError }}</p>
+
+      <div class="rounded-card border border-border bg-surface p-5">
+        <h2 class="mb-3 text-sm font-semibold text-text-primary">Internet Connection</h2>
+        <p v-if="leaseError" role="alert" class="mb-3 rounded-card border border-error/30 bg-error/5 px-3 py-2 text-sm text-error">{{ leaseError }}</p>
+        <EmptyState
+          v-if="!leases.length" title="No router reported yet"
+          description="No MikroTik has reported a router matching this customer's MAC address, so their connection can't be controlled from here yet."
+        />
+        <DataTable
+          v-else
+          :columns="[
+            { key: 'mac', label: 'Router MAC' },
+            { key: 'router', label: 'Behind MikroTik' },
+            { key: 'access', label: 'Access' },
+            { key: 'actions', label: '' },
+          ]"
+          :rows="leases" row-key="id"
+        >
+          <template #cell-mac="{ row }"><span class="font-mono text-xs">{{ row.mac_address }}</span></template>
+          <template #cell-router="{ row }">{{ row.router_identity || row.router_signature }}</template>
+          <template #cell-access="{ row }">
+            <StatusBadge :label="accessStateLabel(row.access_state)" :tone="accessStateTone(row.access_state)" />
+          </template>
+          <template #cell-actions="{ row }">
+            <div class="flex justify-end gap-2">
+              <button v-if="row.access_state !== 'BLOCKED'" type="button" :disabled="actingLeaseId === row.id" class="text-xs font-medium text-error hover:underline" @click.stop="confirmLeaseAction = { leaseId: row.id, mac: row.mac_address, type: 'block' }">Block</button>
+              <button v-if="row.access_state !== 'ALLOWED'" type="button" :disabled="actingLeaseId === row.id" class="text-xs font-medium text-success hover:underline" @click.stop="confirmLeaseAction = { leaseId: row.id, mac: row.mac_address, type: 'reconnect' }">Reconnect</button>
+            </div>
+          </template>
+        </DataTable>
+      </div>
 
       <div class="rounded-card border border-border bg-surface p-5">
         <h2 class="mb-3 text-sm font-semibold text-text-primary">Subscriptions</h2>
@@ -139,6 +213,15 @@ async function handleSave() {
       </div>
     </template>
     <ConfirmationDialog :open="confirmOpen" :title="customer?.status === 'ACTIVE' ? 'Suspend this account?' : 'Reactivate this account?'" description="A suspended customer can still log in, but can't make any changes until reactivated." :confirm-label="toggling ? 'Please wait…' : 'Confirm'" danger @confirm="handleToggleStatus" @cancel="confirmOpen = false" />
+    <ConfirmationDialog
+      :open="!!confirmLeaseAction"
+      :title="confirmLeaseAction?.type === 'block' ? 'Block this router\'s internet?' : 'Restore this router\'s internet?'"
+      :description="`A ${confirmLeaseAction?.type} command is sent to the MikroTik this router sits behind. The MikroTik can't confirm it applied the change — check MikroTik Management → Command History for the outcome.`"
+      :confirm-label="actingLeaseId ? 'Please wait…' : 'Confirm'"
+      :danger="confirmLeaseAction?.type === 'block'"
+      @confirm="handleConfirmLeaseAction"
+      @cancel="confirmLeaseAction = null"
+    />
     <ConfirmationDialog :open="confirmBlockOpen" title="Block this customer's internet access?" description="Their active subscription will be marked as blocked and they'll be alerted to contact you. A block command is sent to their MikroTik router if one is on file, but there's no way to confirm the router actually applied it — check MikroTik Routers → Commands to see the outcome. This can't be undone from here." :confirm-label="blocking ? 'Please wait…' : 'Block internet access'" danger @confirm="handleBlockInternet" @cancel="confirmBlockOpen = false" />
   </div>
 </template>

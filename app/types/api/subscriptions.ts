@@ -21,7 +21,13 @@ export interface Customer {
   // Router IP is separate from any Device's own ip_address - it's the
   // customer-site router, known independently of whether a device has
   // been registered yet.
+  // The customer's own router (what a MikroTik sees connected to it) —
+  // NOT their PowerBeam radio. router_mac_address is the key that matches
+  // this customer to reported MikroTik leases; blank means no MikroTik
+  // report can be attributed to them automatically yet.
+  router_mac_address: string
   router_ip: string | null
+  router_hostname: string
   registration_date: string; status: CustomerStatus
   is_deleted: boolean; deleted_at: string | null
   created_at: string; updated_at: string

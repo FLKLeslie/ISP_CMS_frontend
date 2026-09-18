@@ -11,7 +11,7 @@ export interface CustomerCreatePayload {
 // admin-only - the backend rejects them from a non-admin with a 400 (see
 // customers.serializers.CustomerSerializer.update on the backend).
 export interface CustomerUpdatePayload extends Partial<
-  Pick<Customer, 'address' | 'city' | 'country' | 'router_ip' | 'status'>
+  Pick<Customer, 'address' | 'city' | 'country' | 'router_ip' | 'router_mac_address' | 'router_hostname' | 'status'>
 > {
   first_name?: string; last_name?: string; email?: string; phone_number?: string
 }
