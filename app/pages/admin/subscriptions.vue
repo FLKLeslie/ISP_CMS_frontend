@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Plan } from '~/types/api/subscriptions'
+import { SUBSCRIPTION_STATUS_LABEL, type Plan, type SubscriptionStatus } from '~/types/api/subscriptions'
 definePageMeta({ layout: 'admin' })
 const { listPlans, createPlan } = usePlansApi()
 const { listSubscriptions, grantSubscription } = useSubscriptionsApi()
@@ -110,7 +110,7 @@ async function handleGrant() {
     </div>
     <div v-if="tab === 'subscriptions'" class="space-y-4">
       <select v-model="statusFilter" class="rounded-card border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
-        <option value="">All statuses</option><option value="ACTIVE">Active</option><option value="EXPIRED">Expired</option><option value="CANCELLED">Cancelled</option>
+        <option value="">All statuses</option><option value="ACTIVE">Active</option><option value="EXPIRED">Expired</option><option value="CANCELLED">Blocked</option>
       </select>
       <LoadingState v-if="subsPending" :rows="6" />
       <ErrorState v-else-if="subsError" @retry="refreshSubs()" />
@@ -121,7 +121,7 @@ async function handleGrant() {
           <template #cell-plan="{ row }">{{ row.plan.name }}</template>
           <template #cell-end_date="{ row }">{{ formatDate(row.end_date) }}</template>
           <template #cell-remaining="{ row }">{{ formatRemainingDays(row.remaining_days) }}</template>
-          <template #cell-status="{ row }"><StatusBadge :label="row.status" :tone="row.status === 'ACTIVE' ? 'success' : row.status === 'EXPIRED' ? 'neutral' : 'error'" /></template>
+          <template #cell-status="{ row }"><StatusBadge :label="SUBSCRIPTION_STATUS_LABEL[row.status as SubscriptionStatus] ?? row.status" :tone="row.status === 'ACTIVE' ? 'success' : row.status === 'EXPIRED' ? 'neutral' : 'error'" /></template>
           <template #cell-source="{ row }">{{ row.granted_by_name ? `Granted by ${row.granted_by_name}` : 'Customer purchase' }}</template>
         </DataTable>
         <Pagination :current-page="page" :total-pages="totalPages" @change="page = $event" />

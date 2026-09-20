@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { MikroTikLease } from '~/types/api/microtik'
+import { SUBSCRIPTION_STATUS_LABEL, type Subscription } from '~/types/api/subscriptions'
 
 definePageMeta({ layout: 'admin' })
 const route = useRoute()
@@ -10,7 +11,7 @@ const { listPayments } = usePaymentsApi()
 const { listSuggestions } = useSuggestionsApi()
 const { listLeases } = useMikroTikApi()
 const { data: customer, pending, error, refresh } = await useAsyncData(`customer-${id}`, () => fetchCustomer(id))
-const { data: subs, refresh: refreshSubs } = await useAsyncData(`customer-${id}-subs`, () => listSubscriptions({ customer: id }))
+const { data: subs, refresh: refreshSubs } = await useAsyncData(`customer-${id}-subs`, () => listSubscriptions({ customer: id, page_size: 100 }))
 const { data: payments } = await useAsyncData(`customer-${id}-payments`, () => listPayments({ customer: id }))
 const { data: suggestions } = await useAsyncData(`customer-${id}-suggestions`, () => listSuggestions({ customer: id }))
 // This customer's devices as reported by whichever MikroTik each one sits
@@ -33,8 +34,40 @@ onMounted(() => {
 })
 onBeforeUnmount(() => clearInterval(leasePoller))
 
-const subscriptionStatusLabel: Record<string, string> = { ACTIVE: 'Active', EXPIRED: 'Expired', CANCELLED: 'Blocked' }
-const hasActiveSubscription = computed(() => subs.value?.results.some((s) => s.status === 'ACTIVE') ?? false)
+// --- Subscriptions ---------------------------------------------------------------
+// The API reports each subscription's status as it really is today, so a plan
+// past its end date reads Expired without waiting for the nightly job.
+//
+// "Current" is the one an administrator cares about right now: the active one
+// (the earliest-starting, if several are chained back to back), otherwise the
+// most recent blocked one — so a blocked customer's plan stays front and
+// centre with its Resume action rather than sinking into the history.
+// Everything else is history.
+const allSubs = computed<Subscription[]>(() => subs.value?.results ?? [])
+const currentSub = computed<Subscription | null>(() => {
+  const active = allSubs.value
+    .filter((s) => s.status === 'ACTIVE')
+    .sort((a, b) => a.start_date.localeCompare(b.start_date))
+  if (active.length) return active[0] ?? null
+  return allSubs.value.find((s) => s.status === 'CANCELLED') ?? null // the API lists newest first
+})
+const historySubs = computed(() => allSubs.value.filter((s) => s.id !== currentSub.value?.id))
+const hasActiveSubscription = computed(() => allSubs.value.some((s) => s.status === 'ACTIVE'))
+const statusTone = (status: string) => status === 'ACTIVE' ? 'success' : status === 'CANCELLED' ? 'error' : 'neutral'
+const statusLabel = (status: string) => SUBSCRIPTION_STATUS_LABEL[status as keyof typeof SUBSCRIPTION_STATUS_LABEL] ?? status
+const daysLabel = (n: number) => `${n} ${n === 1 ? 'day' : 'days'}`
+
+// Resume a blocked subscription (allow as it is, or add the blocked time).
+const resumingSub = ref<Subscription | null>(null)
+const subNotice = ref('')
+async function handleResumed(updated: Subscription) {
+  // The server refuses to reconnect a plan whose end date has already passed
+  // and marks it Expired instead - say so rather than implying it worked.
+  subNotice.value = updated.status === 'ACTIVE'
+    ? 'Subscription resumed and the customer is being reconnected. Their device shows Pending until the MikroTik confirms it.'
+    : 'This plan had already ended while it was blocked, so it is now Expired and the customer was not reconnected. Grant a new plan to bring them back.'
+  await Promise.all([refreshSubs(), refreshLeases()])
+}
 
 // Suspend/reactivate the account (Customer.status). A suspended customer
 // can still log in and look around, but every write action is blocked
@@ -53,7 +86,7 @@ async function handleToggleStatus() {
 // first, per the requirement that this never happens accidentally.
 const confirmBlockOpen = ref(false); const blocking = ref(false); const blockError = ref('')
 async function handleBlockInternet() {
-  blocking.value = true; blockError.value = ''
+  blocking.value = true; blockError.value = ''; subNotice.value = ''
   try { customer.value = await blockInternet(id); await Promise.all([refreshSubs(), refreshLeases()]) }
   catch { blockError.value = "Couldn't block internet access - please try again." }
   finally { blocking.value = false; confirmBlockOpen.value = false }
@@ -114,7 +147,6 @@ async function handleSave() {
             {{ customer.status === 'ACTIVE' ? 'Suspend account' : 'Reactivate account' }}
           </button>
           <button type="button" class="btn-secondary" @click="startEdit">Edit details</button>
-          <button v-if="hasActiveSubscription" type="button" class="btn-danger" @click="confirmBlockOpen = true">Block internet access</button>
         </div>
       </div>
 
@@ -160,14 +192,91 @@ async function handleSave() {
         />
       </div>
 
+      <!-- Current subscription: the active one, or the blocked one awaiting a decision -->
       <div class="rounded-card border border-border bg-surface p-5">
-        <h2 class="mb-3 text-sm font-semibold text-text-primary">Subscriptions</h2>
-        <EmptyState v-if="!subs?.results.length" title="No subscriptions" />
-        <DataTable v-else :columns="[{key:'plan',label:'Plan'},{key:'end_date',label:'Expires'},{key:'status',label:'Status'}]" :rows="subs.results" row-key="id">
-          <template #cell-plan="{ row }">{{ row.plan.name }}</template>
-          <template #cell-end_date="{ row }">{{ formatDate(row.end_date) }}</template>
-          <template #cell-status="{ row }"><StatusBadge :label="subscriptionStatusLabel[row.status] ?? row.status" :tone="row.status === 'ACTIVE' ? 'success' : row.status === 'CANCELLED' ? 'error' : 'neutral'" /></template>
-        </DataTable>
+        <h2 class="mb-3 text-sm font-semibold text-text-primary">Current subscription</h2>
+        <p v-if="subNotice" role="status" class="mb-3 rounded-card border border-success/30 bg-success/5 px-3 py-2 text-sm text-text-primary">{{ subNotice }}</p>
+
+        <template v-if="currentSub">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-lg font-semibold text-text-primary">{{ currentSub.plan.name }}</p>
+              <p class="text-sm text-text-secondary">{{ formatCurrency(currentSub.amount_paid) }} · {{ currentSub.plan.duration_days }}-day plan</p>
+            </div>
+            <StatusBadge :label="statusLabel(currentSub.status)" :tone="statusTone(currentSub.status)" />
+          </div>
+
+          <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm sm:grid-cols-3">
+            <div>
+              <dt class="text-xs text-text-secondary">Started</dt>
+              <dd class="text-text-primary">{{ formatDate(currentSub.start_date) }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs text-text-secondary">{{ currentSub.status === 'ACTIVE' ? 'Expires' : 'Would end' }}</dt>
+              <dd class="text-text-primary">{{ formatDate(currentSub.end_date) }}</dd>
+            </div>
+            <div class="col-span-2 sm:col-span-1">
+              <dt class="text-xs text-text-secondary">{{ currentSub.status === 'ACTIVE' ? 'Time left' : 'Blocked for' }}</dt>
+              <dd class="text-text-primary">
+                {{ currentSub.status === 'ACTIVE' ? formatRemainingDays(currentSub.remaining_days) : daysLabel(currentSub.blocked_days) }}
+              </dd>
+            </div>
+          </dl>
+
+          <!-- Active: the way to cut them off -->
+          <div v-if="currentSub.status === 'ACTIVE'" class="mt-4 border-t border-border pt-4">
+            <button type="button" class="btn-danger" @click="confirmBlockOpen = true">Block internet access</button>
+          </div>
+
+          <!-- Blocked: the decision -->
+          <div v-else class="mt-4 rounded-card border border-error/30 bg-error/5 p-3">
+            <p class="text-sm text-text-primary">
+              Their internet is blocked. When you reopen it you can allow the plan as it is, or add the
+              {{ daysLabel(currentSub.blocked_days) }} it has been blocked so they don't lose the time.
+            </p>
+            <button type="button" class="btn-primary mt-3" @click="resumingSub = currentSub">Resume subscription…</button>
+          </div>
+        </template>
+
+        <div v-else>
+          <p class="text-sm text-text-primary">No active subscription.</p>
+          <p v-if="historySubs.length" class="mt-1 text-sm text-text-secondary">
+            Their most recent plan, {{ historySubs[0]?.plan.name }}, {{ historySubs[0]?.status === 'EXPIRED' ? 'ended on' : 'was last' }}
+            {{ formatDate(historySubs[0]?.end_date) }}.
+          </p>
+          <p v-else class="mt-1 text-sm text-text-secondary">This customer hasn't had a subscription yet.</p>
+        </div>
+      </div>
+
+      <!-- History: every other subscription, newest first -->
+      <div class="rounded-card border border-border bg-surface p-5">
+        <h2 class="mb-3 text-sm font-semibold text-text-primary">
+          Subscription history<span v-if="historySubs.length" class="ml-1.5 font-normal text-text-secondary">({{ historySubs.length }})</span>
+        </h2>
+        <EmptyState v-if="!historySubs.length" title="No earlier subscriptions" />
+        <template v-else>
+          <div class="hidden sm:block">
+            <DataTable
+              :columns="[{key:'plan',label:'Plan'},{key:'period',label:'Period'},{key:'amount',label:'Amount'},{key:'status',label:'Status'}]"
+              :rows="historySubs" row-key="id"
+            >
+              <template #cell-plan="{ row }">{{ row.plan.name }}</template>
+              <template #cell-period="{ row }">{{ formatDate(row.start_date) }} – {{ formatDate(row.end_date) }}</template>
+              <template #cell-amount="{ row }">{{ formatCurrency(row.amount_paid) }}</template>
+              <template #cell-status="{ row }"><StatusBadge :label="statusLabel(row.status)" :tone="statusTone(row.status)" /></template>
+            </DataTable>
+          </div>
+          <ul class="space-y-2 sm:hidden">
+            <li v-for="sub in historySubs" :key="sub.id" class="rounded-card border border-border p-3">
+              <div class="flex items-start justify-between gap-3">
+                <p class="text-sm font-medium text-text-primary">{{ sub.plan.name }}</p>
+                <StatusBadge :label="statusLabel(sub.status)" :tone="statusTone(sub.status)" class="shrink-0" />
+              </div>
+              <p class="mt-1 text-xs text-text-secondary">{{ formatDate(sub.start_date) }} – {{ formatDate(sub.end_date) }}</p>
+              <p class="text-xs text-text-secondary">{{ formatCurrency(sub.amount_paid) }}</p>
+            </li>
+          </ul>
+        </template>
       </div>
       <div class="rounded-card border border-border bg-surface p-5">
         <h2 class="mb-3 text-sm font-semibold text-text-primary">Payments</h2>
@@ -200,7 +309,8 @@ async function handleSave() {
       @confirm="controls.confirm()"
       @cancel="controls.cancel()"
     />
+    <SubscriptionResumeModal :subscription="resumingSub" @close="resumingSub = null" @resumed="handleResumed" />
     <LeaseAllocationModal :lease="reallocatingLease" @close="reallocatingLease = null" @updated="refreshLeases()" />
-    <ConfirmationDialog :open="confirmBlockOpen" title="Block this customer's internet access?" description="Their active subscription will be marked as blocked and they'll be alerted to contact you. A block command is also sent to their MikroTik device if one is allocated; it shows as Pending until the MikroTik confirms it (see MikroTik Management → Command history). This can't be undone from here." :confirm-label="blocking ? 'Please wait…' : 'Block internet access'" danger @confirm="handleBlockInternet" @cancel="confirmBlockOpen = false" />
+    <ConfirmationDialog :open="confirmBlockOpen" title="Block this customer's internet access?" description="Their active subscription will be marked as blocked and they'll be alerted to contact you. A block command is also sent to their MikroTik device if one is allocated; it shows as Pending until the MikroTik confirms it. You can resume it later, allowing it as it is or adding the blocked time." :confirm-label="blocking ? 'Please wait…' : 'Block internet access'" danger @confirm="handleBlockInternet" @cancel="confirmBlockOpen = false" />
   </div>
 </template>

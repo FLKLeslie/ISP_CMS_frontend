@@ -33,7 +33,15 @@ export interface Customer {
   created_at: string; updated_at: string
 }
 
+// The status as it really is today — the API derives ACTIVE/EXPIRED from the
+// end date, so a plan past its end date reads EXPIRED even if the nightly job
+// hasn't flipped the stored value yet. 'CANCELLED' is stored for what is
+// shown everywhere as "Blocked" (an administrator cut the customer's
+// internet); unlike the others it can be resumed.
 export type SubscriptionStatus = 'ACTIVE' | 'EXPIRED' | 'CANCELLED'
+export const SUBSCRIPTION_STATUS_LABEL: Record<SubscriptionStatus, string> = {
+  ACTIVE: 'Active', EXPIRED: 'Expired', CANCELLED: 'Blocked',
+}
 export interface Subscription {
   id: string; customer: Customer; plan: Plan; start_date: string; end_date: string
   // Precise end-of-day moment for end_date, in ISO 8601 - use this (not
@@ -41,6 +49,9 @@ export interface Subscription {
   expires_at: string
   amount_paid: string; status: SubscriptionStatus; remaining_days: number
   is_active: boolean
+  // Set only while blocked (status 'CANCELLED'): when it was blocked, and the
+  // whole days since — exactly what "add the blocked time" gives back on resume.
+  blocked_at: string | null; blocked_days: number
   // Set only when an administrator granted this subscription directly
   // (e.g. a cash payment taken in person) rather than it arising from a
   // normal customer purchase - see POST /api/subscriptions/grant/.

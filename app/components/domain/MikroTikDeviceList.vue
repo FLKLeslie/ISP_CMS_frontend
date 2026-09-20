@@ -19,6 +19,7 @@ const emit = defineEmits<{
   connect: [lease: MikroTikLease]
   allocate: [lease: MikroTikLease]
   reallocate: [lease: MikroTikLease]
+  forget: [lease: MikroTikLease]
 }>()
 
 const columns = (showCustomer: boolean) => [
@@ -64,6 +65,7 @@ const columns = (showCustomer: boolean) => [
             :lease="row" :busy="actingId === row.id"
             @allocate="emit('allocate', row as MikroTikLease)" @reallocate="emit('reallocate', row as MikroTikLease)"
             @block="emit('block', row as MikroTikLease)" @connect="emit('connect', row as MikroTikLease)"
+            @forget="emit('forget', row as MikroTikLease)"
           />
         </template>
       </DataTable>
@@ -112,6 +114,7 @@ const columns = (showCustomer: boolean) => [
             :lease="lease" :busy="actingId === lease.id"
             @allocate="emit('allocate', lease)" @reallocate="emit('reallocate', lease)"
             @block="emit('block', lease)" @connect="emit('connect', lease)"
+            @forget="emit('forget', lease)"
           />
         </div>
       </li>

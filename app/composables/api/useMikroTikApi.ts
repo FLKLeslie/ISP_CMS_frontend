@@ -72,6 +72,14 @@ export function useMikroTikApi() {
     return apiFetch<MikroTikLease>(`/api/microtik/leases/${id}/unallocate/`, { method: 'POST' })
   }
 
+  // Removes an UNALLOCATED, OFFLINE device from the list (400 otherwise; 409 if
+  // a command for it is still awaiting the router). Only Django's record goes:
+  // a device still on the MikroTik's allowed list keeps its access, and one
+  // that connects again reappears as unallocated.
+  function forgetLease(id: string) {
+    return apiFetch<void>(`/api/microtik/leases/${id}/forget/`, { method: 'POST' })
+  }
+
   // Block/reconnect ONE specific device, routed automatically to whichever
   // MikroTik it sits behind. Returns the updated lease (now PENDING) plus
   // the command audit record. The lease only settles to BLOCKED/ALLOWED
@@ -94,6 +102,18 @@ export function useMikroTikApi() {
     return apiFetch<Paginated<MikroTikCommand>>('/api/microtik/commands/', { params })
   }
 
+  // DELETE /api/microtik/commands/{id}/ — remove one history entry. 409 if a
+  // device is still waiting on that command.
+  function deleteCommand(id: string) {
+    return apiFetch<void>(`/api/microtik/commands/${id}/`, { method: 'DELETE' })
+  }
+
+  // POST /api/microtik/commands/clear/ — wipe the history, except commands a
+  // device is still waiting on. Returns how many were deleted and kept.
+  function clearCommands() {
+    return apiFetch<{ deleted: number; kept: number }>('/api/microtik/commands/clear/', { method: 'POST' })
+  }
+
   return {
     listRouters,
     getRouter,
@@ -105,8 +125,11 @@ export function useMikroTikApi() {
     listAllocatableCustomers,
     allocateLease,
     unallocateLease,
+    forgetLease,
     blockLease,
     reconnectLease,
     listCommands,
+    deleteCommand,
+    clearCommands,
   }
 }

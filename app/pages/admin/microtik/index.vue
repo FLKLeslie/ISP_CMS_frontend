@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Router, Wifi, WifiOff, UserX } from 'lucide-vue-next'
-import type { MikroTikLease, MikroTikRouter } from '~/types/api/microtik'
+import { Router, Trash2, Wifi, WifiOff, UserX } from 'lucide-vue-next'
+import type { MikroTikCommand, MikroTikLease, MikroTikRouter } from '~/types/api/microtik'
 
 definePageMeta({ layout: 'admin' })
 
@@ -8,6 +8,7 @@ const route = useRoute()
 const {
   listRouters, listLeases, getLeaseSummary, listCommands,
   approveRouter, rejectRouter, linkRouterToAccessPoint,
+  forgetLease, deleteCommand, clearCommands,
 } = useMikroTikApi()
 const { listAccessPointsWithLocation } = useAccessPointsApi()
 
@@ -145,6 +146,64 @@ const commandStatusTone = (status: string) =>
 const commandStatusLabel = (status: string) =>
   status === 'CONFIRMED' ? 'Confirmed' : status === 'SENT' ? 'Waiting for router' : status === 'FAILED' ? 'Failed' : 'Pending'
 
+// --- Forget an unallocated, offline device ---------------------------------------
+const forgettingLease = ref<MikroTikLease | null>(null)
+const forgetting = ref(false)
+const notice = ref('')
+async function handleForget() {
+  if (!forgettingLease.value) return
+  forgetting.value = true
+  actionError.value = ''
+  notice.value = ''
+  try {
+    await forgetLease(forgettingLease.value.id)
+    notice.value = 'Device forgotten.'
+  } catch (err) {
+    actionError.value = apiErrorMessage(err, "Couldn't forget this device. Please try again.")
+  } finally {
+    forgetting.value = false
+    forgettingLease.value = null
+    await refreshAll()
+  }
+}
+
+// --- Command history: delete one / clear all ---------------------------------------
+const deletingCommand = ref<MikroTikCommand | null>(null)
+const confirmClear = ref(false)
+const historyBusy = ref(false)
+async function handleDeleteCommand() {
+  if (!deletingCommand.value) return
+  historyBusy.value = true
+  actionError.value = ''
+  notice.value = ''
+  try {
+    await deleteCommand(deletingCommand.value.id)
+  } catch (err) {
+    actionError.value = apiErrorMessage(err, "Couldn't delete this entry. Please try again.")
+  } finally {
+    historyBusy.value = false
+    deletingCommand.value = null
+    await refreshCommands()
+  }
+}
+async function handleClearHistory() {
+  historyBusy.value = true
+  actionError.value = ''
+  notice.value = ''
+  try {
+    const result = await clearCommands()
+    notice.value = result.kept
+      ? `Cleared ${result.deleted} ${result.deleted === 1 ? 'entry' : 'entries'}. ${result.kept} still ${result.kept === 1 ? 'waits' : 'wait'} for a MikroTik to confirm and ${result.kept === 1 ? 'was' : 'were'} kept.`
+      : `Cleared ${result.deleted} ${result.deleted === 1 ? 'entry' : 'entries'}.`
+  } catch (err) {
+    actionError.value = apiErrorMessage(err, "Couldn't clear the history. Please try again.")
+  } finally {
+    historyBusy.value = false
+    confirmClear.value = false
+    await refreshCommands()
+  }
+}
+
 // --- Refresh ----------------------------------------------------------------------
 async function refreshAll() {
   await Promise.all([
@@ -205,6 +264,7 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
     <p v-if="actionError" role="alert" class="rounded-card border border-error/30 bg-error/5 px-4 py-3 text-sm text-error">{{ actionError }}</p>
     <p v-if="controls.error.value" role="alert" class="rounded-card border border-error/30 bg-error/5 px-4 py-3 text-sm text-error">{{ controls.error.value }}</p>
     <p v-if="controls.notice.value" role="status" class="rounded-card border border-success/30 bg-success/5 px-4 py-3 text-sm text-success">{{ controls.notice.value }}</p>
+    <p v-if="notice" role="status" class="rounded-card border border-success/30 bg-success/5 px-4 py-3 text-sm text-success">{{ notice }}</p>
 
     <!-- MikroTiks -->
     <div v-if="tab === 'routers'" class="space-y-5">
@@ -308,6 +368,7 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
           :leases="leases" :acting-id="controls.actingId.value"
           @block="controls.ask($event, 'block')" @connect="controls.ask($event, 'reconnect')"
           @allocate="allocatingLease = $event" @reallocate="allocatingLease = $event"
+          @forget="forgettingLease = $event"
         />
         <Pagination :current-page="page" :total-pages="leasesData?.total_pages ?? 1" @change="page = $event" />
       </template>
@@ -315,6 +376,9 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
 
     <!-- Command history -->
     <div v-else class="space-y-4">
+      <div class="flex justify-end">
+        <button type="button" class="btn-danger" :disabled="historyBusy || !commands.length" @click="confirmClear = true">Clear history</button>
+      </div>
       <p class="rounded-card border border-dashed border-border bg-surface p-3 text-sm text-text-secondary">
         <span class="font-semibold text-text-primary">Waiting for router</span> means the command was queued for the
         MikroTik's next check-in. It becomes <span class="font-semibold text-success">Confirmed</span> when a later report
@@ -334,6 +398,7 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
               { key: 'router', label: 'Via MikroTik' },
               { key: 'status', label: 'Status' },
               { key: 'created_at', label: 'When' },
+              { key: 'actions', label: '' },
             ]"
             :rows="commands" row-key="id"
           >
@@ -346,6 +411,13 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
               <p v-if="row.error_message" class="mt-1 max-w-xs whitespace-normal text-xs text-error">{{ row.error_message }}</p>
             </template>
             <template #cell-created_at="{ row }">{{ formatRelativeTime(row.created_at) }}</template>
+            <template #cell-actions="{ row }">
+              <button
+                type="button" :disabled="historyBusy" :aria-label="`Delete this ${row.command_type} entry`"
+                class="rounded-card p-1.5 text-text-secondary transition-colors hover:bg-error/10 hover:text-error disabled:opacity-50"
+                @click.stop="deletingCommand = row as MikroTikCommand"
+              ><Trash2 class="h-4 w-4" aria-hidden="true" /></button>
+            </template>
           </DataTable>
         </div>
         <ul class="space-y-3 md:hidden">
@@ -358,12 +430,46 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
               <StatusBadge :label="commandStatusLabel(c.status)" :tone="commandStatusTone(c.status)" class="shrink-0" />
             </div>
             <p v-if="c.error_message" class="mt-2 text-xs text-error">{{ c.error_message }}</p>
-            <p class="mt-2 text-xs text-text-secondary">{{ formatRelativeTime(c.created_at) }}</p>
+            <div class="mt-2 flex items-center justify-between gap-3">
+              <p class="text-xs text-text-secondary">{{ formatRelativeTime(c.created_at) }}</p>
+              <button
+                type="button" :disabled="historyBusy"
+                class="inline-flex items-center gap-1 rounded-card border border-error/40 px-2.5 py-1 text-xs font-medium text-error transition-colors hover:bg-error/10 disabled:opacity-50"
+                @click="deletingCommand = c"
+              ><Trash2 class="h-3.5 w-3.5" aria-hidden="true" />Delete</button>
+            </div>
           </li>
         </ul>
       </div>
     </div>
 
+    <ConfirmationDialog
+      :open="!!forgettingLease"
+      title="Forget this device?"
+      :description="`${forgettingLease?.hostname || forgettingLease?.mac_address || 'This device'} will be removed from this list. It only removes the record: if the device is still on the MikroTik's allowed list it keeps its internet access, and if it connects again it reappears here as unallocated. Block it first if you don't want it online.`"
+      :confirm-label="forgetting ? 'Please wait…' : 'Forget device'"
+      danger
+      @confirm="handleForget"
+      @cancel="forgettingLease = null"
+    />
+    <ConfirmationDialog
+      :open="!!deletingCommand"
+      title="Delete this history entry?"
+      description="This removes the entry from the command history. It doesn't undo the block or connect itself."
+      :confirm-label="historyBusy ? 'Please wait…' : 'Delete'"
+      danger
+      @confirm="handleDeleteCommand"
+      @cancel="deletingCommand = null"
+    />
+    <ConfirmationDialog
+      :open="confirmClear"
+      title="Clear the whole command history?"
+      description="Every entry will be removed. Commands a device is still waiting on are kept until the MikroTik confirms them. This doesn't undo any block or connect."
+      :confirm-label="historyBusy ? 'Please wait…' : 'Clear history'"
+      danger
+      @confirm="handleClearHistory"
+      @cancel="confirmClear = false"
+    />
     <LeaseAllocationModal :lease="allocatingLease" @close="allocatingLease = null" @updated="refreshAll()" />
 
     <ConfirmationDialog

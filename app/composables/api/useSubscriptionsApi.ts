@@ -57,14 +57,23 @@ export function useSubscriptionsApi() {
   function grantSubscription(payload: { customer: string; plan: string; amount?: string; start_date?: string }) {
     return apiFetch<Subscription>('/api/subscriptions/grant/', { method: 'POST', body: payload })
   }
-  // POST /api/subscriptions/{id}/deactivate/ (Administrator only) - cancels
-  // the subscription and alerts the customer their internet was
-  // disconnected. Frontend should confirm with the admin before calling
-  // this. Actually cutting the connection physically is a backend TODO
-  // (see devices.services.request_physical_disconnect) - this only
-  // updates records and sends the alert today.
+  // POST /api/subscriptions/{id}/deactivate/ (Administrator only) - BLOCKS
+  // the subscription (status shows as Blocked), alerts the customer, and cuts
+  // their device off via the MikroTik. Only an active subscription can be
+  // blocked (400 otherwise). Reversible with resumeSubscription. Frontend
+  // should confirm with the admin before calling this.
   function deactivateSubscription(id: string) {
     return apiFetch<Subscription>(`/api/subscriptions/${id}/deactivate/`, { method: 'POST' })
   }
-  return { listSubscriptions, createSubscription, purchasePlan, grantSubscription, deactivateSubscription }
+  // POST /api/subscriptions/{id}/resume/ (Administrator only) - reopens a
+  // blocked subscription and reconnects the customer. addBlockedTime true
+  // adds the days it spent blocked to the end date; false allows it as it is.
+  // If the plan's end date has already passed the result comes back EXPIRED
+  // and nothing is reconnected - check the returned status.
+  function resumeSubscription(id: string, addBlockedTime: boolean) {
+    return apiFetch<Subscription>(`/api/subscriptions/${id}/resume/`, {
+      method: 'POST', body: { add_blocked_time: addBlockedTime },
+    })
+  }
+  return { listSubscriptions, createSubscription, purchasePlan, grantSubscription, deactivateSubscription, resumeSubscription }
 }
