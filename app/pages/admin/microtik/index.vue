@@ -1,55 +1,53 @@
 <script setup lang="ts">
-import { Router } from 'lucide-vue-next'
+import { Router, Wifi, WifiOff, UserX } from 'lucide-vue-next'
 import type { MikroTikLease, MikroTikRouter } from '~/types/api/microtik'
 
 definePageMeta({ layout: 'admin' })
 
+const route = useRoute()
 const {
-  listRouters, listLeases, listCommands,
+  listRouters, listLeases, getLeaseSummary, listCommands,
   approveRouter, rejectRouter, linkRouterToAccessPoint,
-  allocateLease, blockLease, reconnectLease,
 } = useMikroTikApi()
 const { listAccessPointsWithLocation } = useAccessPointsApi()
-const { listCustomers } = useCustomersApi()
 
-const tab = ref<'routers' | 'unallocated' | 'commands'>('routers')
+// --- Tabs -----------------------------------------------------------------
+// MikroTiks    the routers themselves (approve / reject / link to an AP)
+// Online       devices a MikroTik currently sees
+// Offline      devices a MikroTik has seen before but doesn't right now —
+//              they stay on record and keep their customer
+// Needs allocation  devices not matched to any customer (online or not)
+// Commands     audit trail of every block / connect
+type Tab = 'routers' | 'online' | 'offline' | 'unallocated' | 'commands'
+const TAB_KEYS: Tab[] = ['routers', 'online', 'offline', 'unallocated', 'commands']
+const tab = ref<Tab>(TAB_KEYS.includes(route.query.tab as Tab) ? (route.query.tab as Tab) : 'routers')
+const isDeviceTab = computed(() => tab.value === 'online' || tab.value === 'offline' || tab.value === 'unallocated')
 
-// --- Routers + their connected client routers -----------------------------
+// --- Counts for the tab badges --------------------------------------------
+const { data: summary, refresh: refreshSummary } = await useAsyncData('admin-microtik-summary', () => getLeaseSummary())
+
+const tabs = computed(() => [
+  { key: 'routers' as Tab, label: 'MikroTiks', count: undefined as number | undefined },
+  { key: 'online' as Tab, label: 'Online', count: summary.value?.online },
+  { key: 'offline' as Tab, label: 'Offline', count: summary.value?.offline },
+  { key: 'unallocated' as Tab, label: 'Needs allocation', count: summary.value?.unallocated },
+  { key: 'commands' as Tab, label: 'Command history', count: undefined as number | undefined },
+])
+
+// --- MikroTiks --------------------------------------------------------------
 const { data: routersData, pending: routersPending, error: routersError, refresh: refreshRouters } = await useAsyncData(
   'admin-microtik-routers', () => listRouters({ page_size: 50 }),
 )
 const routers = computed(() => routersData.value?.results ?? [])
-
-// All leases in one fetch, then grouped by router client-side - far fewer
-// round trips than one request per router, and the volume here (client
-// routers behind an institution's MikroTiks) is small enough that paging
-// per-router would be more machinery than it's worth.
-const { data: leasesData, pending: leasesPending, refresh: refreshLeases } = await useAsyncData(
-  'admin-microtik-leases', () => listLeases({ page_size: 200, ordering: '-last_seen' }),
-)
-const allLeases = computed(() => leasesData.value?.results ?? [])
-const leasesByRouter = computed(() => {
-  const grouped: Record<string, MikroTikLease[]> = {}
-  for (const lease of allLeases.value) {
-    ;(grouped[lease.router] ??= []).push(lease)
-  }
-  return grouped
-})
-const unallocatedLeases = computed(() => allLeases.value.filter((l) => !l.is_allocated))
 
 const { data: accessPointsData } = await useAsyncData('admin-microtik-aps', () => listAccessPointsWithLocation())
 const accessPointOptions = computed(() => accessPointsData.value?.results ?? [])
 
 const routerStatusTone = (status: string) =>
   status === 'APPROVED' ? 'success' : status === 'REJECTED' ? 'error' : 'warning'
-const accessStateTone = (state: string) =>
-  state === 'ALLOWED' ? 'success' : state === 'BLOCKED' ? 'error' : 'neutral'
-const accessStateLabel = (state: string) =>
-  state === 'ALLOWED' ? 'Allowed' : state === 'BLOCKED' ? 'Blocked' : 'Not set'
 
 const actionError = ref('')
 
-// --- Approve / reject a MikroTik ------------------------------------------
 const confirmRouterAction = ref<{ router: MikroTikRouter; type: 'approve' | 'reject' } | null>(null)
 const actingRouterId = ref<string | null>(null)
 async function handleConfirmRouterAction() {
@@ -81,112 +79,157 @@ async function handleLinkAccessPoint(router: MikroTikRouter, accessPointId: stri
   }
 }
 
-// --- Block / reconnect one client router ----------------------------------
-const confirmLeaseAction = ref<{ lease: MikroTikLease; type: 'block' | 'reconnect' } | null>(null)
-const actingLeaseId = ref<string | null>(null)
-function replaceLease(updated: MikroTikLease) {
-  const index = leasesData.value?.results.findIndex((l) => l.id === updated.id) ?? -1
-  if (index !== -1 && leasesData.value) leasesData.value.results[index] = updated
-}
-async function handleConfirmLeaseAction() {
-  if (!confirmLeaseAction.value) return
-  const { lease, type } = confirmLeaseAction.value
-  actingLeaseId.value = lease.id
-  actionError.value = ''
-  try {
-    const result = type === 'block' ? await blockLease(lease.id) : await reconnectLease(lease.id)
-    replaceLease(result.lease)
-    if (result.command.status === 'FAILED') {
-      actionError.value = result.command.error_message
-        || `The ${type} request couldn't be delivered to the MikroTik. Check the Commands tab.`
-    }
-  } catch (err) {
-    actionError.value = apiErrorMessage(err, `Couldn't ${type} this router. Please try again.`)
-  } finally {
-    actingLeaseId.value = null
-    confirmLeaseAction.value = null
-  }
-}
+// --- Devices (server-side filtered, searched and paged) ---------------------
+const page = ref(1)
+const searchInput = ref('')
+const search = ref('')
+const routerFilter = ref('')
+const accessFilter = ref('')
 
-// --- Allocate an unmatched client router to a customer --------------------
-const allocatingLease = ref<MikroTikLease | null>(null)
-const customerSearch = ref('')
-const allocating = ref(false)
-const { data: customerResults } = await useAsyncData(
-  'admin-microtik-customer-search',
-  () => customerSearch.value.length >= 2 ? listCustomers({ search: customerSearch.value, page_size: 10 }) : Promise.resolve(null),
-  { watch: [customerSearch] },
+// Debounced so typing doesn't fire a request per keystroke.
+let searchTimer: ReturnType<typeof setTimeout> | undefined
+watch(searchInput, (value) => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => { search.value = value.trim() }, 300)
+})
+
+const leaseParams = computed(() => {
+  const params: Record<string, string | number | boolean> = { page: page.value, page_size: 20 }
+  if (tab.value === 'online') params.online = true
+  if (tab.value === 'offline') params.online = false
+  if (tab.value === 'unallocated') params.allocated = false
+  if (search.value) params.search = search.value
+  if (routerFilter.value) params.router = routerFilter.value
+  if (accessFilter.value) params.access_state = accessFilter.value
+  return params
+})
+
+const { data: leasesData, pending: leasesPending, error: leasesError, refresh: refreshLeases } = await useAsyncData(
+  'admin-microtik-leases',
+  () => (isDeviceTab.value ? listLeases(leaseParams.value) : Promise.resolve(null)),
+  { watch: [leaseParams, isDeviceTab] },
 )
-const customerOptions = computed(() => customerResults.value?.results ?? [])
-async function handleAllocate(customerId: string) {
-  if (!allocatingLease.value) return
-  allocating.value = true
-  actionError.value = ''
-  try {
-    const updated = await allocateLease(allocatingLease.value.id, customerId)
-    replaceLease(updated)
-    allocatingLease.value = null
-    customerSearch.value = ''
-  } catch (err) {
-    actionError.value = apiErrorMessage(err, "Couldn't allocate this router. Please try again.")
-  } finally {
-    allocating.value = false
-  }
+const leases = computed(() => leasesData.value?.results ?? [])
+
+// Back to page 1 whenever the question being asked changes.
+watch([tab, search, routerFilter, accessFilter], () => { page.value = 1 })
+
+function openDevices(router: MikroTikRouter, target: 'online' | 'offline' | 'unallocated') {
+  routerFilter.value = router.id
+  accessFilter.value = ''
+  searchInput.value = ''
+  search.value = ''
+  tab.value = target
 }
 
-// --- Command history ------------------------------------------------------
+const emptyCopy = computed(() => {
+  if (search.value || routerFilter.value || accessFilter.value) {
+    return { title: 'No devices match', description: 'Try clearing the search or filters.' }
+  }
+  if (tab.value === 'online') return { title: 'No devices online', description: 'Devices appear here while a MikroTik can see them.' }
+  if (tab.value === 'offline') return { title: 'No offline devices', description: 'A device that a MikroTik has seen before but can no longer see appears here.' }
+  return { title: 'Everything is allocated', description: 'Every device a MikroTik has reported is matched to a customer.' }
+})
+
+// --- Block / connect + allocation -------------------------------------------
+const controls = useLeaseControls(() => refreshAll())
+const allocatingLease = ref<MikroTikLease | null>(null)
+
+// --- Command history ----------------------------------------------------------
 const { data: commandsData, pending: commandsPending, error: commandsError, refresh: refreshCommands } = await useAsyncData(
   'admin-microtik-commands', () => listCommands({ page_size: 50 }),
 )
 const commands = computed(() => commandsData.value?.results ?? [])
 const commandStatusTone = (status: string) =>
-  status === 'SENT' ? 'success' : status === 'FAILED' ? 'error' : 'neutral'
+  status === 'CONFIRMED' ? 'success' : status === 'FAILED' ? 'error' : status === 'SENT' ? 'info' : 'neutral'
+const commandStatusLabel = (status: string) =>
+  status === 'CONFIRMED' ? 'Confirmed' : status === 'SENT' ? 'Waiting for router' : status === 'FAILED' ? 'Failed' : 'Pending'
+
+// --- Refresh ----------------------------------------------------------------------
+async function refreshAll() {
+  await Promise.all([
+    refreshSummary(),
+    refreshRouters(),
+    isDeviceTab.value ? refreshLeases() : Promise.resolve(),
+    tab.value === 'commands' ? refreshCommands() : Promise.resolve(),
+  ])
+}
+
+// A block/connect settles when the MikroTik's next report arrives (roughly
+// every 20s), so poll quietly to let Pending turn into Blocked/Allowed
+// without anyone pressing Refresh. Skipped while the tab is hidden.
+let poller: ReturnType<typeof setInterval> | undefined
+onMounted(() => {
+  poller = setInterval(() => { if (!document.hidden) refreshAll() }, 10_000)
+})
+onBeforeUnmount(() => {
+  clearInterval(poller)
+  clearTimeout(searchTimer)
+})
+
+const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-accent'
 </script>
+
 <template>
   <div class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <h1 class="text-2xl font-semibold text-text-primary">MikroTik Management</h1>
-      <button type="button" class="btn-secondary" @click="refreshRouters(); refreshLeases()">Refresh</button>
+      <button type="button" class="btn-secondary" @click="refreshAll()">Refresh</button>
     </div>
 
-    <div class="inline-flex rounded-card border border-border bg-surface p-0.5" role="tablist">
-      <button
-        v-for="t in [
-          { key: 'routers', label: 'MikroTiks & Devices' },
-          { key: 'unallocated', label: `Needs Allocation${unallocatedLeases.length ? ` (${unallocatedLeases.length})` : ''}` },
-          { key: 'commands', label: 'Command History' },
-        ]"
-        :key="t.key" type="button"
-        class="rounded-[0.4rem] px-4 py-1.5 text-sm font-medium transition-colors"
-        :class="tab === t.key ? 'bg-primary text-white' : 'text-text-secondary hover:text-text-primary'"
-        @click="tab = t.key as any"
-      >{{ t.label }}</button>
+    <!-- Tabs (scroll sideways on narrow screens rather than wrapping) -->
+    <div class="overflow-x-auto">
+      <div class="inline-flex min-w-max rounded-card border border-border bg-surface p-0.5" role="tablist">
+        <button
+          v-for="t in tabs" :key="t.key" type="button" role="tab" :aria-selected="tab === t.key"
+          class="flex items-center gap-1.5 whitespace-nowrap rounded-[0.4rem] px-3 py-1.5 text-sm font-medium transition-colors sm:px-4"
+          :class="tab === t.key ? 'bg-primary text-white' : 'text-text-secondary hover:text-text-primary'"
+          @click="tab = t.key"
+        >
+          {{ t.label }}
+          <span
+            v-if="t.count !== undefined"
+            class="rounded-full px-1.5 py-0.5 text-xs leading-none"
+            :class="tab === t.key
+              ? 'bg-white/20 text-white'
+              : t.key === 'unallocated' && t.count > 0 ? 'bg-warning/10 text-warning' : 'bg-text-secondary/10 text-text-secondary'"
+          >{{ t.count }}</span>
+        </button>
+      </div>
     </div>
+
+    <p v-if="summary && summary.pending > 0" class="text-sm text-text-secondary">
+      {{ summary.pending }} {{ summary.pending === 1 ? 'device is' : 'devices are' }} waiting for a MikroTik to confirm a block or connect.
+    </p>
 
     <p v-if="actionError" role="alert" class="rounded-card border border-error/30 bg-error/5 px-4 py-3 text-sm text-error">{{ actionError }}</p>
+    <p v-if="controls.error.value" role="alert" class="rounded-card border border-error/30 bg-error/5 px-4 py-3 text-sm text-error">{{ controls.error.value }}</p>
+    <p v-if="controls.notice.value" role="status" class="rounded-card border border-success/30 bg-success/5 px-4 py-3 text-sm text-success">{{ controls.notice.value }}</p>
 
-    <!-- MikroTiks, each with the client routers connected to it -->
+    <!-- MikroTiks -->
     <div v-if="tab === 'routers'" class="space-y-5">
-      <LoadingState v-if="routersPending || leasesPending" :rows="5" />
+      <LoadingState v-if="routersPending && !routersData" :rows="4" />
       <ErrorState v-else-if="routersError" @retry="refreshRouters()" />
       <EmptyState
         v-else-if="!routers.length" :icon="Router" title="No MikroTiks yet"
         description="A MikroTik appears here automatically the first time it checks in with the device-communication service."
       />
       <div v-else v-for="r in routers" :key="r.id" class="rounded-card border border-border bg-surface">
-        <!-- MikroTik header -->
         <div class="border-b border-border p-4">
-          <div class="flex flex-wrap items-start justify-between gap-3">
-            <div>
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div class="min-w-0">
               <p class="font-medium text-text-primary">{{ r.identity || 'Unnamed MikroTik' }}</p>
-              <p class="font-mono text-xs text-text-secondary">{{ r.signature }}</p>
+              <p class="break-all font-mono text-xs text-text-secondary">{{ r.signature }}</p>
               <p class="mt-1 text-xs text-text-secondary">
                 {{ r.model || 'Unknown model' }}{{ r.firmware ? ` · v${r.firmware}` : '' }} ·
                 Last seen {{ r.last_seen_at ? formatRelativeTime(r.last_seen_at) : 'never' }}
               </p>
             </div>
-            <div class="flex flex-col items-end gap-2">
-              <StatusBadge :label="r.status" :tone="routerStatusTone(r.status)" />
+            <div class="flex flex-col gap-2 sm:items-end">
+              <div class="flex flex-wrap items-center gap-2">
+                <StatusBadge v-if="r.status === 'APPROVED' && !r.is_reporting" label="Not reporting" tone="warning" />
+                <StatusBadge :label="r.status" :tone="routerStatusTone(r.status)" />
+              </div>
               <div v-if="r.status === 'PENDING'" class="flex gap-2">
                 <button type="button" :disabled="actingRouterId === r.id" class="btn-primary" @click="confirmRouterAction = { router: r, type: 'approve' }">Approve</button>
                 <button type="button" :disabled="actingRouterId === r.id" class="btn-danger" @click="confirmRouterAction = { router: r, type: 'reject' }">Reject</button>
@@ -198,8 +241,7 @@ const commandStatusTone = (status: string) =>
           <div class="mt-3 max-w-xs">
             <label class="mb-1 block text-xs font-medium text-text-secondary">Linked access point</label>
             <select
-              :value="r.access_point ?? ''" :disabled="linkingRouterId === r.id"
-              class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
+              :value="r.access_point ?? ''" :disabled="linkingRouterId === r.id" class="w-full" :class="selectClass"
               @change="handleLinkAccessPoint(r, ($event.target as HTMLSelectElement).value)"
             >
               <option value="">Not linked</option>
@@ -208,135 +250,121 @@ const commandStatusTone = (status: string) =>
           </div>
         </div>
 
-        <!-- Client routers connected to THIS MikroTik -->
         <div class="p-4">
-          <h3 class="mb-2 text-sm font-semibold text-text-primary">
-            Connected client routers
-            <span class="font-normal text-text-secondary">({{ (leasesByRouter[r.id] ?? []).length }})</span>
-          </h3>
-          <EmptyState v-if="!(leasesByRouter[r.id] ?? []).length" title="Nothing reported yet" description="Client routers appear here once this MikroTik starts reporting them." />
-          <DataTable
-            v-else
-            :columns="[
-              { key: 'mac', label: 'MAC Address' },
-              { key: 'ip', label: 'IP' },
-              { key: 'hostname', label: 'Hostname' },
-              { key: 'customer', label: 'Customer' },
-              { key: 'access', label: 'Access' },
-              { key: 'actions', label: '' },
-            ]"
-            :rows="leasesByRouter[r.id] ?? []" row-key="id"
-          >
-            <template #cell-mac="{ row }"><span class="font-mono text-xs">{{ row.mac_address }}</span></template>
-            <template #cell-ip="{ row }">{{ row.ip_address || '—' }}</template>
-            <template #cell-hostname="{ row }">{{ row.hostname || '—' }}</template>
-            <template #cell-customer="{ row }">
-              <NuxtLink v-if="row.customer" :to="`/admin/customers/${row.customer}`" class="hover:underline">{{ row.customer_name }}</NuxtLink>
-              <span v-else class="text-warning">Not allocated</span>
-            </template>
-            <template #cell-access="{ row }">
-              <StatusBadge :label="accessStateLabel(row.access_state)" :tone="accessStateTone(row.access_state)" />
-            </template>
-            <template #cell-actions="{ row }">
-              <div class="flex justify-end gap-2">
-                <button v-if="!row.is_allocated" type="button" class="text-xs font-medium text-secondary hover:underline" @click.stop="allocatingLease = row; customerSearch = ''">Allocate</button>
-                <button v-if="row.access_state !== 'BLOCKED'" type="button" :disabled="actingLeaseId === row.id" class="text-xs font-medium text-error hover:underline" @click.stop="confirmLeaseAction = { lease: row, type: 'block' }">Block</button>
-                <button v-if="row.access_state !== 'ALLOWED'" type="button" :disabled="actingLeaseId === row.id" class="text-xs font-medium text-success hover:underline" @click.stop="confirmLeaseAction = { lease: row, type: 'reconnect' }">Reconnect</button>
-              </div>
-            </template>
-          </DataTable>
+          <p v-if="r.status === 'APPROVED' && !r.is_reporting" class="mb-3 rounded-card border border-warning/40 bg-warning/5 px-3 py-2 text-sm text-text-primary">
+            This MikroTik hasn't checked in recently, so its devices can't be confirmed as online and block or connect
+            requests won't take effect until it reports again.
+          </p>
+          <div class="grid grid-cols-3 gap-2 sm:gap-3">
+            <button type="button" class="rounded-card border border-border p-3 text-left transition-colors hover:border-accent/50 hover:bg-text-secondary/5" @click="openDevices(r, 'online')">
+              <span class="flex items-center gap-1.5 text-xs text-text-secondary"><Wifi class="h-3.5 w-3.5 text-success" aria-hidden="true" />Online</span>
+              <span class="mt-0.5 block text-xl font-semibold text-text-primary">{{ r.online_lease_count }}</span>
+            </button>
+            <button type="button" class="rounded-card border border-border p-3 text-left transition-colors hover:border-accent/50 hover:bg-text-secondary/5" @click="openDevices(r, 'offline')">
+              <span class="flex items-center gap-1.5 text-xs text-text-secondary"><WifiOff class="h-3.5 w-3.5" aria-hidden="true" />Offline</span>
+              <span class="mt-0.5 block text-xl font-semibold text-text-primary">{{ r.offline_lease_count }}</span>
+            </button>
+            <button type="button" class="rounded-card border border-border p-3 text-left transition-colors hover:border-accent/50 hover:bg-text-secondary/5" @click="openDevices(r, 'unallocated')">
+              <span class="flex items-center gap-1.5 text-xs text-text-secondary"><UserX class="h-3.5 w-3.5 text-warning" aria-hidden="true" />Unallocated</span>
+              <span class="mt-0.5 block text-xl font-semibold" :class="r.unallocated_lease_count > 0 ? 'text-warning' : 'text-text-primary'">{{ r.unallocated_lease_count }}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Client routers not yet matched to a customer -->
-    <div v-else-if="tab === 'unallocated'" class="space-y-4">
+    <!-- Devices: online / offline / needs allocation -->
+    <div v-else-if="isDeviceTab" class="space-y-4">
       <p class="text-sm text-text-secondary">
-        Client routers a MikroTik can see but that aren't matched to any customer yet. Allocating one records its
-        MAC address against that customer, so every future report matches them automatically.
-      </p>
-      <LoadingState v-if="leasesPending" :rows="4" />
-      <EmptyState v-else-if="!unallocatedLeases.length" title="Everything is allocated" description="Every client router currently reported is matched to a customer." />
-      <DataTable
-        v-else
-        :columns="[
-          { key: 'mac', label: 'MAC Address' },
-          { key: 'ip', label: 'IP' },
-          { key: 'hostname', label: 'Hostname' },
-          { key: 'router', label: 'Behind MikroTik' },
-          { key: 'last_seen', label: 'Last Seen' },
-          { key: 'actions', label: '' },
-        ]"
-        :rows="unallocatedLeases" row-key="id"
-      >
-        <template #cell-mac="{ row }"><span class="font-mono text-xs">{{ row.mac_address }}</span></template>
-        <template #cell-ip="{ row }">{{ row.ip_address || '—' }}</template>
-        <template #cell-hostname="{ row }">{{ row.hostname || '—' }}</template>
-        <template #cell-router="{ row }">{{ row.router_identity || row.router_signature }}</template>
-        <template #cell-last_seen="{ row }">{{ formatRelativeTime(row.last_seen) }}</template>
-        <template #cell-actions="{ row }">
-          <button type="button" class="text-xs font-medium text-secondary hover:underline" @click.stop="allocatingLease = row; customerSearch = ''">Allocate to customer</button>
+        <template v-if="tab === 'online'">Devices a MikroTik can see right now.</template>
+        <template v-else-if="tab === 'offline'">
+          Devices a MikroTik has seen before but can't see right now. They stay on record with their customer, so you can
+          still block or connect them — the change applies as soon as they return.
         </template>
-      </DataTable>
+        <template v-else>
+          Devices not matched to any customer yet, online or not. Allocate each one to the customer it belongs to.
+        </template>
+      </p>
+
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <SearchInput v-model="searchInput" placeholder="Search by MAC, IP, hostname or customer…" class="sm:max-w-sm sm:flex-1" />
+        <select v-if="routers.length > 1" v-model="routerFilter" :class="selectClass" aria-label="Filter by MikroTik">
+          <option value="">All MikroTiks</option>
+          <option v-for="r in routers" :key="r.id" :value="r.id">{{ r.identity || r.signature }}</option>
+        </select>
+        <select v-model="accessFilter" :class="selectClass" aria-label="Filter by access">
+          <option value="">Any access</option>
+          <option value="ALLOWED">Allowed</option>
+          <option value="BLOCKED">Blocked</option>
+          <option value="PENDING">Pending</option>
+        </select>
+      </div>
+
+      <LoadingState v-if="leasesPending && !leasesData" :rows="5" />
+      <ErrorState v-else-if="leasesError" @retry="refreshLeases()" />
+      <EmptyState v-else-if="!leases.length" :icon="Router" :title="emptyCopy.title" :description="emptyCopy.description" />
+      <template v-else>
+        <MikroTikDeviceList
+          :leases="leases" :acting-id="controls.actingId.value"
+          @block="controls.ask($event, 'block')" @connect="controls.ask($event, 'reconnect')"
+          @allocate="allocatingLease = $event" @reallocate="allocatingLease = $event"
+        />
+        <Pagination :current-page="page" :total-pages="leasesData?.total_pages ?? 1" @change="page = $event" />
+      </template>
     </div>
 
     <!-- Command history -->
     <div v-else class="space-y-4">
-      <p class="rounded-card border border-dashed border-warning/50 bg-warning/5 p-3 text-sm text-text-primary">
-        <span class="font-semibold text-warning">"Sent" isn't the same as "confirmed".</span>
-        A MikroTik has no way to report back that it actually applied a command — "Sent" only means the
-        device-communication service accepted it for delivery on that MikroTik's next check-in.
+      <p class="rounded-card border border-dashed border-border bg-surface p-3 text-sm text-text-secondary">
+        <span class="font-semibold text-text-primary">Waiting for router</span> means the command was queued for the
+        MikroTik's next check-in. It becomes <span class="font-semibold text-success">Confirmed</span> when a later report
+        shows the change took effect, or <span class="font-semibold text-error">Failed</span> if it couldn't be delivered or
+        the MikroTik never applied it in time.
       </p>
-      <LoadingState v-if="commandsPending" :rows="5" />
+      <LoadingState v-if="commandsPending && !commandsData" :rows="5" />
       <ErrorState v-else-if="commandsError" @retry="refreshCommands()" />
       <EmptyState v-else-if="!commands.length" title="No commands sent yet" />
-      <DataTable
-        v-else
-        :columns="[
-          { key: 'mac', label: 'MAC Address' },
-          { key: 'command_type', label: 'Command' },
-          { key: 'customer', label: 'Customer' },
-          { key: 'router', label: 'Via MikroTik' },
-          { key: 'status', label: 'Status' },
-          { key: 'created_at', label: 'When' },
-        ]"
-        :rows="commands" row-key="id"
-      >
-        <template #cell-mac="{ row }"><span class="font-mono text-xs">{{ row.mac_address }}</span></template>
-        <template #cell-command_type="{ row }">{{ row.command_type === 'block' ? 'Block' : 'Reconnect' }}</template>
-        <template #cell-customer="{ row }">{{ row.customer_name || '—' }}</template>
-        <template #cell-router="{ row }"><span class="font-mono text-xs">{{ row.router_signature }}</span></template>
-        <template #cell-status="{ row }"><StatusBadge :label="row.status" :tone="commandStatusTone(row.status)" /></template>
-        <template #cell-created_at="{ row }">{{ formatRelativeTime(row.created_at) }}</template>
-      </DataTable>
-    </div>
-
-    <!-- Allocation picker -->
-    <div v-if="allocatingLease" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" @mousedown.self="allocatingLease = null">
-      <div class="w-full max-w-md rounded-card border border-border bg-surface p-5 shadow-xl" role="dialog" aria-modal="true">
-        <h2 class="text-base font-semibold text-text-primary">Allocate this router</h2>
-        <p class="mt-1 font-mono text-xs text-text-secondary">{{ allocatingLease.mac_address }}</p>
-        <p class="mt-2 text-sm text-text-secondary">
-          The customer's router details will be updated to match, so future reports for this router are
-          recognised automatically.
-        </p>
-        <div class="mt-4">
-          <SearchInput v-model="customerSearch" placeholder="Search customers by name or email…" />
-          <div v-if="customerOptions.length" class="mt-2 max-h-56 overflow-y-auto rounded-card border border-border">
-            <button
-              v-for="c in customerOptions" :key="c.id" type="button" :disabled="allocating"
-              class="block w-full px-3 py-2 text-left text-sm text-text-primary transition-colors hover:bg-text-secondary/10 disabled:opacity-50"
-              @click="handleAllocate(c.id)"
-            >
-              {{ c.user.first_name }} {{ c.user.last_name }} · {{ c.user.email }}
-            </button>
-          </div>
+      <div v-else>
+        <div class="hidden md:block">
+          <DataTable
+            :columns="[
+              { key: 'mac', label: 'MAC Address' },
+              { key: 'command_type', label: 'Command' },
+              { key: 'customer', label: 'Customer' },
+              { key: 'router', label: 'Via MikroTik' },
+              { key: 'status', label: 'Status' },
+              { key: 'created_at', label: 'When' },
+            ]"
+            :rows="commands" row-key="id"
+          >
+            <template #cell-mac="{ row }"><span class="font-mono text-xs">{{ row.mac_address }}</span></template>
+            <template #cell-command_type="{ row }">{{ row.command_type === 'block' ? 'Block' : 'Connect' }}</template>
+            <template #cell-customer="{ row }">{{ row.customer_name || '—' }}</template>
+            <template #cell-router="{ row }"><span class="font-mono text-xs">{{ row.router_signature }}</span></template>
+            <template #cell-status="{ row }">
+              <StatusBadge :label="commandStatusLabel(row.status)" :tone="commandStatusTone(row.status)" />
+              <p v-if="row.error_message" class="mt-1 max-w-xs whitespace-normal text-xs text-error">{{ row.error_message }}</p>
+            </template>
+            <template #cell-created_at="{ row }">{{ formatRelativeTime(row.created_at) }}</template>
+          </DataTable>
         </div>
-        <div class="mt-4 flex justify-end">
-          <button type="button" class="btn-secondary" @click="allocatingLease = null">Cancel</button>
-        </div>
+        <ul class="space-y-3 md:hidden">
+          <li v-for="c in commands" :key="c.id" class="rounded-card border border-border bg-surface p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-text-primary">{{ c.command_type === 'block' ? 'Block' : 'Connect' }} · {{ c.customer_name || 'No customer' }}</p>
+                <p class="break-all font-mono text-xs text-text-secondary">{{ c.mac_address }}</p>
+              </div>
+              <StatusBadge :label="commandStatusLabel(c.status)" :tone="commandStatusTone(c.status)" class="shrink-0" />
+            </div>
+            <p v-if="c.error_message" class="mt-2 text-xs text-error">{{ c.error_message }}</p>
+            <p class="mt-2 text-xs text-text-secondary">{{ formatRelativeTime(c.created_at) }}</p>
+          </li>
+        </ul>
       </div>
     </div>
+
+    <LeaseAllocationModal :lease="allocatingLease" @close="allocatingLease = null" @updated="refreshAll()" />
 
     <ConfirmationDialog
       :open="!!confirmRouterAction"
@@ -350,15 +378,13 @@ const commandStatusTone = (status: string) =>
       @cancel="confirmRouterAction = null"
     />
     <ConfirmationDialog
-      :open="!!confirmLeaseAction"
-      :title="confirmLeaseAction?.type === 'block' ? 'Block this router\'s internet?' : 'Restore this router\'s internet?'"
-      :description="confirmLeaseAction?.type === 'block'
-        ? 'A block command is sent to the MikroTik this router sits behind. The MikroTik can\'t confirm it applied the change — check Command History for the outcome.'
-        : 'A reconnect command is sent to the MikroTik this router sits behind. The MikroTik can\'t confirm it applied the change — check Command History for the outcome.'"
-      :confirm-label="actingLeaseId ? 'Please wait…' : 'Confirm'"
-      :danger="confirmLeaseAction?.type === 'block'"
-      @confirm="handleConfirmLeaseAction"
-      @cancel="confirmLeaseAction = null"
+      :open="controls.dialog.value.open"
+      :title="controls.dialog.value.title"
+      :description="controls.dialog.value.description"
+      :confirm-label="controls.dialog.value.confirmLabel"
+      :danger="controls.dialog.value.danger"
+      @confirm="controls.confirm()"
+      @cancel="controls.cancel()"
     />
   </div>
 </template>

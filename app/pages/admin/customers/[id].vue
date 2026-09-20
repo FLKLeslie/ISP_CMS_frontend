@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { MikroTikLease } from '~/types/api/microtik'
+
 definePageMeta({ layout: 'admin' })
 const route = useRoute()
 const id = route.params.id as string
@@ -6,45 +8,30 @@ const { fetchCustomer, setCustomerStatus, updateCustomer, blockInternet } = useC
 const { listSubscriptions } = useSubscriptionsApi()
 const { listPayments } = usePaymentsApi()
 const { listSuggestions } = useSuggestionsApi()
-const { listLeases, blockLease, reconnectLease } = useMikroTikApi()
+const { listLeases } = useMikroTikApi()
 const { data: customer, pending, error, refresh } = await useAsyncData(`customer-${id}`, () => fetchCustomer(id))
 const { data: subs, refresh: refreshSubs } = await useAsyncData(`customer-${id}-subs`, () => listSubscriptions({ customer: id }))
 const { data: payments } = await useAsyncData(`customer-${id}-payments`, () => listPayments({ customer: id }))
 const { data: suggestions } = await useAsyncData(`customer-${id}-suggestions`, () => listSuggestions({ customer: id }))
-// This customer's client routers as reported by whichever MikroTik each
-// one sits behind — the block/reconnect controls below act on these
-// directly, routing each command to the correct MikroTik automatically.
+// This customer's devices as reported by whichever MikroTik each one sits
+// behind. Block / Connect / Reallocate here go through the same shared
+// controls as the MikroTik page, so both behave identically: a request
+// leaves the device Pending until the MikroTik's next report confirms it.
 const { data: leasesData, refresh: refreshLeases } = await useAsyncData(
   `customer-${id}-leases`, () => listLeases({ customer: id }),
 )
 const leases = computed(() => leasesData.value?.results ?? [])
-const accessStateTone = (state: string) =>
-  state === 'ALLOWED' ? 'success' : state === 'BLOCKED' ? 'error' : 'neutral'
-const accessStateLabel = (state: string) =>
-  state === 'ALLOWED' ? 'Allowed' : state === 'BLOCKED' ? 'Blocked' : 'Not set'
+const controls = useLeaseControls(() => refreshLeases())
+const reallocatingLease = ref<MikroTikLease | null>(null)
 
-const confirmLeaseAction = ref<{ leaseId: string; mac: string; type: 'block' | 'reconnect' } | null>(null)
-const actingLeaseId = ref<string | null>(null)
-const leaseError = ref('')
-async function handleConfirmLeaseAction() {
-  if (!confirmLeaseAction.value) return
-  const { leaseId, type } = confirmLeaseAction.value
-  actingLeaseId.value = leaseId
-  leaseError.value = ''
-  try {
-    const result = type === 'block' ? await blockLease(leaseId) : await reconnectLease(leaseId)
-    await refreshLeases()
-    if (result.command.status === 'FAILED') {
-      leaseError.value = result.command.error_message
-        || `The ${type} request couldn't be delivered to the MikroTik.`
-    }
-  } catch (err) {
-    leaseError.value = apiErrorMessage(err, `Couldn't ${type} this router. Please try again.`)
-  } finally {
-    actingLeaseId.value = null
-    confirmLeaseAction.value = null
-  }
-}
+// Let Pending settle on its own once the MikroTik reports back.
+let leasePoller: ReturnType<typeof setInterval> | undefined
+onMounted(() => {
+  leasePoller = setInterval(() => {
+    if (!document.hidden && leases.value.some((l) => l.access_state === 'PENDING')) refreshLeases()
+  }, 10_000)
+})
+onBeforeUnmount(() => clearInterval(leasePoller))
 
 const subscriptionStatusLabel: Record<string, string> = { ACTIVE: 'Active', EXPIRED: 'Expired', CANCELLED: 'Blocked' }
 const hasActiveSubscription = computed(() => subs.value?.results.some((s) => s.status === 'ACTIVE') ?? false)
@@ -67,7 +54,7 @@ async function handleToggleStatus() {
 const confirmBlockOpen = ref(false); const blocking = ref(false); const blockError = ref('')
 async function handleBlockInternet() {
   blocking.value = true; blockError.value = ''
-  try { customer.value = await blockInternet(id); await refreshSubs() }
+  try { customer.value = await blockInternet(id); await Promise.all([refreshSubs(), refreshLeases()]) }
   catch { blockError.value = "Couldn't block internet access - please try again." }
   finally { blocking.value = false; confirmBlockOpen.value = false }
 }
@@ -152,34 +139,25 @@ async function handleSave() {
       <p v-if="blockError" role="alert" class="rounded-card border border-error/30 bg-error/5 px-4 py-3 text-sm text-error">{{ blockError }}</p>
 
       <div class="rounded-card border border-border bg-surface p-5">
-        <h2 class="mb-3 text-sm font-semibold text-text-primary">Internet Connection</h2>
-        <p v-if="leaseError" role="alert" class="mb-3 rounded-card border border-error/30 bg-error/5 px-3 py-2 text-sm text-error">{{ leaseError }}</p>
+        <h2 class="mb-1 text-sm font-semibold text-text-primary">Internet Connection</h2>
+        <p class="mb-3 text-xs text-text-secondary">
+          Block or connect this customer's device directly. A change shows as Pending until the MikroTik confirms it.
+        </p>
+        <p v-if="controls.error.value" role="alert" class="mb-3 rounded-card border border-error/30 bg-error/5 px-3 py-2 text-sm text-error">{{ controls.error.value }}</p>
+        <p v-if="controls.notice.value" role="status" class="mb-3 rounded-card border border-success/30 bg-success/5 px-3 py-2 text-sm text-success">{{ controls.notice.value }}</p>
         <EmptyState
-          v-if="!leases.length" title="No router reported yet"
-          description="No MikroTik has reported a router matching this customer's MAC address, so their connection can't be controlled from here yet."
-        />
-        <DataTable
-          v-else
-          :columns="[
-            { key: 'mac', label: 'Router MAC' },
-            { key: 'router', label: 'Behind MikroTik' },
-            { key: 'access', label: 'Access' },
-            { key: 'actions', label: '' },
-          ]"
-          :rows="leases" row-key="id"
+          v-if="!leases.length" title="No device allocated"
+          description="No MikroTik device is allocated to this customer yet, so their connection can't be controlled from here. Allocate one from MikroTik Management → Needs allocation."
         >
-          <template #cell-mac="{ row }"><span class="font-mono text-xs">{{ row.mac_address }}</span></template>
-          <template #cell-router="{ row }">{{ row.router_identity || row.router_signature }}</template>
-          <template #cell-access="{ row }">
-            <StatusBadge :label="accessStateLabel(row.access_state)" :tone="accessStateTone(row.access_state)" />
+          <template #action>
+            <NuxtLink to="/admin/microtik?tab=unallocated" class="btn-secondary inline-block">Go to Needs allocation</NuxtLink>
           </template>
-          <template #cell-actions="{ row }">
-            <div class="flex justify-end gap-2">
-              <button v-if="row.access_state !== 'BLOCKED'" type="button" :disabled="actingLeaseId === row.id" class="text-xs font-medium text-error hover:underline" @click.stop="confirmLeaseAction = { leaseId: row.id, mac: row.mac_address, type: 'block' }">Block</button>
-              <button v-if="row.access_state !== 'ALLOWED'" type="button" :disabled="actingLeaseId === row.id" class="text-xs font-medium text-success hover:underline" @click.stop="confirmLeaseAction = { leaseId: row.id, mac: row.mac_address, type: 'reconnect' }">Reconnect</button>
-            </div>
-          </template>
-        </DataTable>
+        </EmptyState>
+        <MikroTikDeviceList
+          v-else :leases="leases" :show-customer="false" cards-only :acting-id="controls.actingId.value"
+          @block="controls.ask($event, 'block')" @connect="controls.ask($event, 'reconnect')"
+          @allocate="reallocatingLease = $event" @reallocate="reallocatingLease = $event"
+        />
       </div>
 
       <div class="rounded-card border border-border bg-surface p-5">
@@ -214,14 +192,15 @@ async function handleSave() {
     </template>
     <ConfirmationDialog :open="confirmOpen" :title="customer?.status === 'ACTIVE' ? 'Suspend this account?' : 'Reactivate this account?'" description="A suspended customer can still log in, but can't make any changes until reactivated." :confirm-label="toggling ? 'Please wait…' : 'Confirm'" danger @confirm="handleToggleStatus" @cancel="confirmOpen = false" />
     <ConfirmationDialog
-      :open="!!confirmLeaseAction"
-      :title="confirmLeaseAction?.type === 'block' ? 'Block this router\'s internet?' : 'Restore this router\'s internet?'"
-      :description="`A ${confirmLeaseAction?.type} command is sent to the MikroTik this router sits behind. The MikroTik can't confirm it applied the change — check MikroTik Management → Command History for the outcome.`"
-      :confirm-label="actingLeaseId ? 'Please wait…' : 'Confirm'"
-      :danger="confirmLeaseAction?.type === 'block'"
-      @confirm="handleConfirmLeaseAction"
-      @cancel="confirmLeaseAction = null"
+      :open="controls.dialog.value.open"
+      :title="controls.dialog.value.title"
+      :description="controls.dialog.value.description"
+      :confirm-label="controls.dialog.value.confirmLabel"
+      :danger="controls.dialog.value.danger"
+      @confirm="controls.confirm()"
+      @cancel="controls.cancel()"
     />
-    <ConfirmationDialog :open="confirmBlockOpen" title="Block this customer's internet access?" description="Their active subscription will be marked as blocked and they'll be alerted to contact you. A block command is sent to their MikroTik router if one is on file, but there's no way to confirm the router actually applied it — check MikroTik Routers → Commands to see the outcome. This can't be undone from here." :confirm-label="blocking ? 'Please wait…' : 'Block internet access'" danger @confirm="handleBlockInternet" @cancel="confirmBlockOpen = false" />
+    <LeaseAllocationModal :lease="reallocatingLease" @close="reallocatingLease = null" @updated="refreshLeases()" />
+    <ConfirmationDialog :open="confirmBlockOpen" title="Block this customer's internet access?" description="Their active subscription will be marked as blocked and they'll be alerted to contact you. A block command is also sent to their MikroTik device if one is allocated; it shows as Pending until the MikroTik confirms it (see MikroTik Management → Command history). This can't be undone from here." :confirm-label="blocking ? 'Please wait…' : 'Block internet access'" danger @confirm="handleBlockInternet" @cancel="confirmBlockOpen = false" />
   </div>
 </template>
