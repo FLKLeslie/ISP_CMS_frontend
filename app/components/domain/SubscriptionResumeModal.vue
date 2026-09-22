@@ -27,18 +27,14 @@ watch(() => props.subscription?.id, () => {
   error.value = ''
 }, { immediate: true })
 
-const blockedDays = computed(() => props.subscription?.blocked_days ?? 0)
-const newEndDate = computed(() => {
+// Exact blocked time, to the minute - "add the blocked time" gives back exactly
+// this, which matters when a plan lasts hours or minutes rather than days.
+const blockedSeconds = computed(() => props.subscription?.blocked_seconds ?? 0)
+const blockedLabel = computed(() => formatDuration(blockedSeconds.value, 3))
+const newEnd = computed(() => {
   if (!props.subscription) return ''
-  const end = new Date(`${props.subscription.end_date}T00:00:00`)
-  end.setDate(end.getDate() + blockedDays.value)
-  // Local parts, NOT toISOString(): that converts to UTC, which shifts local
-  // midnight back a day in any timezone ahead of UTC.
-  const month = String(end.getMonth() + 1).padStart(2, '0')
-  const day = String(end.getDate()).padStart(2, '0')
-  return `${end.getFullYear()}-${month}-${day}`
+  return new Date(new Date(props.subscription.ends_at).getTime() + blockedSeconds.value * 1000).toISOString()
 })
-const daysLabel = (n: number) => `${n} ${n === 1 ? 'day' : 'days'}`
 
 async function submit() {
   if (!props.subscription) return
@@ -78,7 +74,7 @@ const optionBase = 'flex w-full items-start gap-3 rounded-card border p-3 text-l
         <h2 id="resume-title" class="text-base font-semibold text-text-primary">Resume this subscription</h2>
         <p class="mt-1 text-sm text-text-secondary">
           {{ subscription.plan.name }} · blocked for
-          <span class="font-medium text-text-primary">{{ daysLabel(blockedDays) }}</span>.
+          <span class="font-medium text-text-primary">{{ blockedLabel }}</span>.
           Their internet is reconnected either way — choose what happens to their time.
         </p>
       </div>
@@ -95,7 +91,7 @@ const optionBase = 'flex w-full items-start gap-3 rounded-card border p-3 text-l
           <span>
             <span class="block text-sm font-medium text-text-primary">Allow it as it is</span>
             <span class="block text-xs text-text-secondary">
-              The plan still ends on {{ formatDate(subscription.end_date) }}. The blocked days aren't given back.
+              The plan still ends at {{ formatDateTime(subscription.ends_at) }}. The time it was blocked isn't given back.
             </span>
           </span>
         </button>
@@ -111,10 +107,10 @@ const optionBase = 'flex w-full items-start gap-3 rounded-card border p-3 text-l
           <span>
             <span class="block text-sm font-medium text-text-primary">Add the blocked time</span>
             <span class="block text-xs text-text-secondary">
-              <template v-if="blockedDays > 0">
-                Adds {{ daysLabel(blockedDays) }}, so the plan now ends on {{ formatDate(newEndDate) }} instead of {{ formatDate(subscription.end_date) }}.
+              <template v-if="blockedSeconds > 0">
+                Adds {{ blockedLabel }}, so the plan now ends at {{ formatDateTime(newEnd) }} instead of {{ formatDateTime(subscription.ends_at) }}.
               </template>
-              <template v-else>Blocked for less than a day, so there's nothing to add — same as allowing it as it is.</template>
+              <template v-else>Blocked for less than a minute, so there's nothing to add — same as allowing it as it is.</template>
             </span>
           </span>
         </button>

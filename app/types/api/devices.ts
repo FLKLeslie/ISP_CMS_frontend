@@ -267,6 +267,10 @@ export interface UnregisteredDeviceSighting {
   // means the device didn't report enough to classify, so the admin
   // chooses. It's a suggestion, never a restriction.
   detected_role: '' | 'station' | 'access-point'
+  // When we last asked the device who it is. A blank role/name with a recent
+  // value here means "asked, couldn't tell" (uncertain) - as opposed to never
+  // having been asked.
+  detection_checked_at: string | null
   status: SightingStatus
   resolved_device: string | null
   resolved_device_name: string | null

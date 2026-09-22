@@ -93,6 +93,9 @@ export interface MikroTikCommand {
   id: string
   router: string
   router_signature: string
+  // The MikroTik's name - what an administrator recognises (the signature is
+  // a 32-character secret). Blank if the router never reported one.
+  router_identity: string
   mac_address: string
   command_type: MikroTikCommandType
   // SENT      Node accepted queuing it for the router's next poll — NOT yet

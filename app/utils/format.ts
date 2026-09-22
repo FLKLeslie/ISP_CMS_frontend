@@ -29,3 +29,25 @@ export function formatRelativeTime(value: string): string {
   }
   return formatDate(value)
 }
+
+// A length of time as people say it: "45 minutes", "2 hours 10 minutes",
+// "3 days". Shows at most `maxParts` of the largest non-zero units. Mirrors the
+// backend's common/durations.py so a label reads the same wherever it comes from.
+export function formatDuration(seconds: number, maxParts = 2, roundUp = false): string {
+  let total = Math.max(Math.floor(seconds), 0)
+  if (roundUp) total = Math.ceil(total / 60) * 60
+  if (total < 60) return 'less than a minute'
+  const days = Math.floor(total / 86400)
+  const hours = Math.floor((total % 86400) / 3600)
+  const minutes = Math.floor((total % 3600) / 60)
+  const unit = (n: number, name: string) => `${n} ${name}${n === 1 ? '' : 's'}`
+  return [days && unit(days, 'day'), hours && unit(hours, 'hour'), minutes && unit(minutes, 'minute')]
+    .filter(Boolean).slice(0, maxParts).join(' ')
+}
+
+// Time left on a plan, from the exact seconds remaining (NOT whole days - a plan
+// measured in hours or minutes has 0 days left the whole time it is running).
+export function formatRemainingSeconds(seconds: number): string {
+  if (seconds <= 0) return 'Expired'
+  return `${formatDuration(seconds, 2, true)} left`
+}

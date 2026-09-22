@@ -1,0 +1,373 @@
+ISP MANAGEMENT SYSTEM - PROJECT HANDOVER
+Last updated: 2026-09-21
+=================================================================
+
+PURPOSE OF THIS FILE
+---------------------------------------------------------------
+This is a snapshot of what has been built, how it fits together, and what
+is still missing or fragile - written so that if this project changes
+hands, whoever picks it up can get oriented without re-reading every file.
+
+Whoever keeps working on this project should keep this file up to date.
+When you finish a piece of work, add a line under "RECENT CHANGES" and
+adjust "KNOWN ISSUES / NOT YET DONE" if you closed something on that list.
+This file is not generated automatically - it only stays true if people
+edit it.
+
+
+1. WHAT THE SYSTEM DOES
+---------------------------------------------------------------
+An ISP management system for a small/medium wireless internet provider.
+Admins manage customers, plans and billing; customers buy internet
+access; the system controls, through the ISP's own hardware, whether a
+customer's router actually has internet access - automatically when they
+pay, and automatically when their time runs out.
+
+Three moving parts, three separate codebases:
+
+  1. FRONTEND (this project)  - Nuxt 4, what admins and customers see.
+  2. BACKEND                  - Django, the business logic and database.
+  3. DEVICE-COMMS SERVICE     - Node.js, talks to the physical hardware
+                                 (PowerBeam radios and MikroTik routers).
+                                 Built and owned by a different developer;
+                                 the frontend never talks to it directly.
+
+     Frontend  <--HTTP/JSON-->  Backend (Django)  <--HTTP+WebSocket-->  Node service  <---->  Hardware
+
+
+2. THE THREE CODEBASES
+---------------------------------------------------------------
+
+2.1 Frontend (this repository)
+  Framework   : Nuxt 4 (Vue 3), client-rendered only (ssr: false)
+  Styling     : Tailwind, design tokens in app/assets/css/tokens.css
+                so the whole app shares one palette/spacing scale
+  Charts      : ApexCharts (vue3-apexcharts)
+  Maps        : Leaflet (device map)
+  State       : Pinia (auth store persists tokens to localStorage)
+  Auth        : JWT access + refresh; app/composables/useApiFetch.ts
+                wraps $fetch with automatic 401 -> refresh -> retry
+  Structure   : app/pages       one file per route (Nuxt file-based routing)
+                app/layouts     admin.vue and customer.vue, both built on
+                                components/shell/AppShell.vue
+                app/components  domain/ (business widgets), shell/ (nav),
+                                charts/, data/ (table, pagination, search),
+                                feedback/ (empty/loading/error states)
+                app/composables/api/   one file per backend app
+                                        (useCustomersApi, useDevicesApi,
+                                        useMikroTikApi, useRevenueApi, etc)
+                app/types/api/  TypeScript shapes matching the Django
+                                serializers, one file per backend app
+  Run it      : npm install && npm run dev  (expects the backend's URL in
+                the runtime config / .env - check nuxt.config.ts)
+
+2.2 Backend (separate repository - not in this folder)
+  Framework   : Django 5 + Django REST Framework, JWT via SimpleJWT
+  Database    : PostgreSQL (DATABASE_URL, or the POSTGRES_* variables)
+  Docs        : drf-spectacular auto-generated API docs at /api/docs/
+  Apps (each is a top-level Django app with its own models/views/tests):
+    accounts       - custom User model (ADMIN / CUSTOMER roles), login,
+                     JWT refresh, change password
+    customers      - Customer profile, linked to a User
+    plans          - subscription plans (name, price, duration)
+    subscriptions  - a customer's purchased/granted plan, its exact
+                     start/end time, blocking and resuming
+    payments       - payment records, and the revenue analytics endpoints
+    devices        - PowerBeam radios: registered customer Devices and
+                     institutional AccessPoints, heartbeats, metrics,
+                     commands, and the "unregistered device" review queue
+    microtik       - MikroTik routers, the client devices they report,
+                     block/connect commands, and reconciling what actually
+                     happened
+    notifications  - in-app notifications for admins and customers
+    announcements  - admin broadcasts to all customers
+    dashboard      - the two summary endpoints (admin dashboard, customer
+                     dashboard)
+    common         - shared base models (UUID pk, soft delete, audit log),
+                     the internal-service authentication used by Node,
+                     pagination, and common/maintenance.py (see section 5)
+
+  Two kinds of API, both under /api/:
+    /api/<app>/...           normal endpoints, JWT-authenticated, used by
+                              this frontend (admin or customer, enforced
+                              per-endpoint by DRF permission classes)
+    /api/internal/<app>/...  used ONLY by the Node device-comms service,
+                              authenticated by a single shared bearer
+                              token (INTERNAL_SERVICE_TOKEN), never by a
+                              logged-in user's JWT
+
+  Run it      : a normal Django project - venv, pip install -r
+                requirements.txt, migrate, runserver. See its own README
+                for exact steps and required environment variables.
+
+2.3 Device-comms service (separate repository, different developer)
+  Framework   : Node.js, single process (no framework - raw http + ws)
+  Talks to    : PowerBeam radios over an encrypted WebSocket connection
+                they open outbound to this service; MikroTik routers over
+                plain HTTP polling (the router asks "what should I do?"
+                every ~20 seconds and reports what it currently sees).
+  Talks to    : Django's /api/internal/... endpoints, using
+                INTERNAL_SERVICE_TOKEN
+  We (the frontend/backend side) do not maintain this codebase. If
+  something about how a PowerBeam or MikroTik is addressed, or the exact
+  wire format Node expects, needs to change, that is a conversation with
+  whoever owns that service - not something to patch around silently in
+  Django.
+
+
+3. HOW THE CORE BUSINESS FLOW WORKS
+---------------------------------------------------------------
+This is the part most worth understanding end-to-end, because it spans
+all three codebases.
+
+3.1 Devices and access points
+  - A PowerBeam radio can be configured as an Access Point (institution
+    infrastructure - mounted on a tower, serves many customers) or a
+    Station (one customer's receiver dish).
+  - When a PowerBeam that Django doesn't recognise sends a heartbeat, it
+    is recorded as an UnregisteredDeviceSighting. Django asks Node to
+    classify it (access-point vs station) and to read its configured
+    name; this can fail or be inconclusive ("uncertain"), and is retried
+    automatically, throttled, until an admin resolves it.
+  - An admin reviews these under Devices > Unregistered and either
+    registers it as an AccessPoint, registers it as a customer's Device
+    (a "station"), or discards the sighting.
+
+3.2 MikroTik routers and client leases
+  - A customer's Device (the receiver PowerBeam) sits behind a MikroTik
+    router, which is what actually grants or denies that specific
+    customer's internet access (by MAC address whitelist).
+  - A MikroTik that Django has never seen registers as PENDING; an admin
+    must approve it once. Once approved, it is trusted automatically on
+    every future reconnect (e.g. after the Node service restarts) with no
+    further admin action - see microtik/services.py
+    verify_or_register_router. Revoking an approved router (MikroTik
+    Management > MikroTiks > Revoke) takes effect immediately and stays
+    revoked even if it reconnects.
+  - Every ~20 seconds each MikroTik reports which client MACs it
+    currently sees connected, and which MACs are on its "allowed" list.
+    Django uses this to keep a MikroTikLease record for every device the
+    router has ever seen - online or not, allocated to a customer or not.
+    A device that stops being seen is marked offline but is NEVER
+    deleted, so it isn't lost.
+  - A lease with no matching customer is "unallocated" and appears under
+    MikroTik Management > Needs allocation for an admin to assign.
+  - Blocking/connecting a device is NOT instant. Django asks Node to
+    queue the command; the router only picks it up on its next poll. The
+    lease shows as PENDING until a later router report confirms the
+    change actually took effect (or the command times out and is marked
+    Failed). This is unavoidable given how the router protocol works -
+    do not "optimistically" mark something Blocked/Allowed before it is
+    confirmed.
+
+3.3 Plans, subscriptions and automatic access control
+  - A Plan has a price and a length. Length is stored in MINUTES, so a
+    plan can last 30 minutes, 2 hours, or 30 days - the admin UI takes a
+    number and a unit (Minutes/Hours/Days).
+  - A customer can only buy a plan, or be granted one by an admin, if a
+    MikroTik device has already been allocated to them. Without a
+    router there is nothing to connect them through.
+  - The moment a plan becomes active (customer purchase, admin grant, or
+    a renewal payment), the customer's router is sent a "reconnect"
+    command automatically.
+  - Subscriptions track an exact starts_at / ends_at timestamp, not just
+    a date - this is what makes short plans meaningful. A background
+    sweep (common/maintenance.py, piggy-backed on the constant stream of
+    heartbeats/router-reports Node sends - no external cron needed) runs
+    roughly every 15 seconds and disconnects any customer whose plan has
+    passed its exact end time, sends them a notification, and reminds
+    customers whose plan is about to expire (the reminder timing scales
+    with the plan's length).
+  - This whole automatic-connect/automatic-disconnect behaviour is gated
+    by one Django setting, MIKROTIK_AUTO_ENFORCEMENT (default True). If
+    set to False it becomes an emergency kill switch: subscriptions and
+    payments still record normally, but nothing automatically touches a
+    router. Manual block/connect by an admin always works regardless of
+    this setting.
+  - Every automatic action, and every failure (a command that couldn't
+    be sent, or that a router never confirmed), generates a notification
+    - to the admins for anything system-triggered, to the customer for
+    anything that concerns their own service.
+
+3.4 Revenue
+  - "Revenue" is defined as the sum of COMPLETED payments, by the date
+    the payment was recorded. This is computed live from the Payment
+    table (payments/revenue.py), not cached anywhere, so it can never
+    drift out of sync with the underlying records.
+  - The admin Revenue page (Nav: Revenue) is deliberately minimal: the
+    admin picks a period, a measure (revenue / number of payments /
+    average payment), an optional split (by plan or by payment method),
+    an optional comparison period, and a chart type. The page shows only
+    what was picked - no fixed dashboard of numbers.
+
+
+4. WHAT EACH ADMIN NAV ITEM IS, IN ONE LINE
+---------------------------------------------------------------
+(See USER_MANUAL.txt for the full walkthrough; this is just a map from
+nav label to the page file, for a developer.)
+
+  Dashboard          pages/admin/index.vue           - top-line counts
+  Customers          pages/admin/customers/           - list + detail
+  Subscriptions       pages/admin/subscriptions.vue    - list, grant, plans
+  Payments           pages/admin/payments.vue         - record a payment
+  Revenue            pages/admin/revenue.vue          - analysis, see 3.4
+  Devices            pages/admin/devices/             - list, detail,
+                                                          configure, history,
+                                                          map, unregistered
+  Access Points      pages/admin/access-points/        - AP inventory
+  MikroTik           pages/admin/microtik/index.vue    - routers, devices,
+                                                          allocation, block/
+                                                          connect, command
+                                                          history
+  Suggestions        pages/admin/suggestions.vue       - customer feedback
+  Announcements      pages/admin/announcements.vue     - broadcast messages
+  Notifications      pages/admin/notifications.vue     - the admin's own
+                                                          notification feed
+
+Customer nav (pages/customer/...):
+  Dashboard, Subscription (buy/renew/history), Suggestions, Notifications,
+  Account (profile + change password).
+
+
+5. THINGS THAT ARE EASY TO GET WRONG (READ BEFORE CHANGING)
+---------------------------------------------------------------
+- A MikroTik lease's access_state (Allowed/Blocked/Pending/Unknown) is
+  DERIVED from the router's own report, never set directly by Django
+  except to PENDING when a command is queued. Don't add code that sets
+  it to Allowed/Blocked directly - that would lie about hardware state
+  Django hasn't actually confirmed.
+- "Online" for a Device, AccessPoint or MikroTikRouter always means "the
+  status says so AND the last report was recent enough" - never trust
+  the stored status field alone, it is only ever updated when a report
+  arrives, so a device that went silent would otherwise look online
+  forever. Look for the *_offline_threshold settings and the
+  is_actually_online()-style helpers already in each model.
+- Subscription status (Active/Expired) is derived live from ends_at, not
+  from the stored `status` field alone - the stored field only gets
+  flipped to EXPIRED when the maintenance sweep runs. Any new code that
+  reads a subscription's status should go through the model's
+  effective_status property / the queryset's .active()/.expired()
+  helpers, not compare `status == 'ACTIVE'` directly.
+- The internal (/api/internal/...) endpoints are for the Node service
+  only. They use a completely different auth mechanism from the rest of
+  the API (a shared bearer token, not a user's JWT). Never point the
+  frontend at them.
+- common/maintenance.py's sweep is what makes automatic disconnect work
+  without a scheduler - it rides along on whatever heartbeat/report
+  request happens to arrive next, throttled by MAINTENANCE_INTERVAL_SECONDS.
+  There is also a `python manage.py expire_subscriptions` management
+  command that does the same work, kept as a backup for real schedulers
+  (e.g. Heroku Scheduler) - both are safe to run at the same time.
+
+
+6. ENVIRONMENT VARIABLES (NAMES ONLY - GET ACTUAL VALUES SEPARATELY)
+---------------------------------------------------------------
+None of the values below are stored in this file or anywhere in the
+repository - get them from whoever manages deployment (Heroku config
+vars / your own .env), never commit them.
+
+Backend (Django):
+  DATABASE_URL or POSTGRES_*           database connection
+  DJANGO_SECRET_KEY                    Django's own secret key
+  DJANGO_DEBUG                         True/False
+  DJANGO_ALLOWED_HOSTS                 comma-separated hostnames
+  INTERNAL_SERVICE_TOKEN               shared secret the Node service
+                                        uses on every /api/internal/... call
+  MIKROTIK_OFFLINE_THRESHOLD_SECONDS   default 90
+  MIKROTIK_COMMAND_CONFIRM_TIMEOUT_SECONDS  default 120
+  MIKROTIK_AUTO_ENFORCEMENT            True/False, default True - the kill
+                                        switch described in 3.3
+  MAINTENANCE_INTERVAL_SECONDS         default 15 - see section 5
+  DEVICE_OFFLINE_THRESHOLD_SECONDS     used for Devices/AccessPoints too
+  (check backend/isms_backend/settings.py for the full, current list -
+  this is not guaranteed exhaustive)
+
+Frontend (Nuxt):
+  check nuxt.config.ts / .env.example in the frontend root for the
+  backend API base URL and any other runtime config keys
+
+Node device-comms service:
+  DJANGO_BASE_URL, INTERNAL_SERVICE_TOKEN (must match the backend's),
+  STATIC_AES_KEY_HEX / STATIC_AES_KEY_PADDING_HEX (PowerBeam encryption)
+  - check that project's own config for the current full list
+
+
+7. TESTING
+---------------------------------------------------------------
+Backend: `python manage.py test` runs the full Django test suite
+  (one tests.py per app). There are also a few plain-Python test files
+  with no Django/database dependency, useful for quickly checking pure
+  logic in isolation:
+    python -m unittest microtik.test_parsing     (MikroTik report parsing
+                                                    and block/connect
+                                                    reconciliation logic)
+    python -m unittest payments.test_periods      (date-range/bucketing
+                                                    math behind Revenue)
+    python -m unittest common.test_durations      (minutes/hours/days
+                                                    formatting and reminder
+                                                    timing math)
+
+Frontend: no automated test suite exists yet. Testing is manual -
+  exercise the page in a browser against a running backend.
+
+
+8. RECENT CHANGES (most recent first - keep this updated)
+---------------------------------------------------------------
+- 2026-09-21  Plans can last minutes or hours, not just whole days;
+              subscriptions track exact start/end timestamps; the
+              automatic disconnect sweep now runs every ~15s so a short
+              plan is cut off close to its real expiry. Revenue page
+              simplified to show only what the admin selects.
+- 2026-09-19  MikroTik: known/approved routers reconnect automatically
+              with no admin action; revoke actually takes effect
+              immediately. PowerBeam sighting detection (AP vs station)
+              is retried instead of staying "uncertain" forever, and can
+              be re-run by an admin. Admin dashboard tiles changed to
+              Revenue (This Year), Devices online/total, Online APs,
+              Online MikroTik routers. New Revenue analysis page.
+              Automatic connect-on-activate / disconnect-on-expiry wired
+              up, gated by MIKROTIK_AUTO_ENFORCEMENT, with admin and
+              customer notifications for successes and failures. A
+              customer can only buy/be granted a plan once a router is
+              allocated to them.
+- 2026-09-18  MikroTik device management overhauled: online/offline/
+              pending/unallocated states, allocate/reallocate/unallocate,
+              block/connect with pending confirmation, command history
+              with delete/clear. Fixed a bug where the router's report
+              payload was being parsed incorrectly (signature field was
+              swallowing the allowed_macs field), causing every report
+              to be rejected. Subscription status (Active/Expired/
+              Blocked) made to update automatically instead of only on a
+              (previously unscheduled) nightly job; blocking a
+              subscription made reversible (Resume, with the option to
+              add back the blocked time).
+- (earlier)   Initial Django backend and Nuxt frontend built out:
+              accounts/auth, customers, plans, subscriptions, payments,
+              devices (registration, heartbeats, metrics, commands),
+              microtik (routers, leases, commands), notifications,
+              announcements, suggestions, dashboards.
+
+
+9. KNOWN ISSUES / NOT YET DONE
+---------------------------------------------------------------
+- No real payment gateway integration. Every payment (customer purchase
+  or admin-recorded) is written straight to the database as COMPLETED;
+  there is no actual charge against MTN MoMo / Orange Money / a bank
+  API anywhere. Online customer purchase currently returns a clear
+  "payments unavailable" error until a gateway is wired in
+  (payments/services.py - is_gateway_configured / PaymentGatewayNotConfigured).
+  Admin-recorded payments and grants work today because they don't go
+  through a gateway.
+- NOTE: the banner on the admin Payments page ("Coming soon - not yet
+  wired in") still lists "automatically reconnecting a customer once a
+  payment is confirmed" as not implemented. That is now out of date -
+  automatic reconnect-on-payment was implemented and is described in
+  section 3.3. Only the payment-gateway line in that banner is still
+  accurate. This banner text needs updating in
+  frontend/app/pages/admin/payments.vue.
+- No self-service password reset ("forgot password") flow exists yet -
+  only change-password while already logged in. Customer accounts are
+  created by an admin, not self-registered.
+- No automated frontend test suite.
+- If you find something else that's missing or broken, add it here
+  rather than only mentioning it in chat/Slack, so it doesn't get lost.

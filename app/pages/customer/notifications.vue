@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { Bell, CreditCard, Megaphone, MessageSquare, Wifi } from 'lucide-vue-next'
+import { Bell, CreditCard, Megaphone, MessageSquare, Router, Wifi } from 'lucide-vue-next'
 definePageMeta({ layout: 'customer' })
 const { listNotifications, markRead } = useNotificationsApi()
 const { data, pending, error, refresh } = await useAsyncData('customer-notifications', () => listNotifications({ ordering: '-created_at', page_size: 50 }))
 const notifications = computed(() => data.value?.results ?? [])
-const typeIcon: Record<string, typeof Bell> = { SUBSCRIPTION: Wifi, PAYMENT: CreditCard, ANNOUNCEMENT: Megaphone, SUGGESTION: MessageSquare, GENERAL: Bell }
+const typeIcon: Record<string, typeof Bell> = { SUBSCRIPTION: Wifi, PAYMENT: CreditCard, ANNOUNCEMENT: Megaphone, SUGGESTION: MessageSquare, NETWORK: Router, GENERAL: Bell }
 async function handleMarkRead(id: string) {
   const target = notifications.value.find((n) => n.id === id)
   if (target) target.is_read = true

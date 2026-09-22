@@ -2,10 +2,16 @@
 definePageMeta({ layout: 'customer' })
 const { listSubscriptions, purchasePlan } = useSubscriptionsApi()
 const { listPlans } = usePlansApi()
+const { fetchCustomerDashboard } = useDashboardApi()
 const activeTab = ref<'current' | 'plans' | 'history'>('current')
 const tabs: { key: typeof activeTab.value; label: string }[] = [{ key: 'current', label: 'Current' }, { key: 'plans', label: 'Plans' }, { key: 'history', label: 'History' }]
 const { data: subscriptionsData, pending: subscriptionsPending, error: subscriptionsError, refresh: refreshSubscriptions } = await useAsyncData('customer-subscriptions', () => listSubscriptions({ ordering: '-created_at' }))
 const { data: plansData, pending: plansPending, error: plansError, refresh: refreshPlans } = await useAsyncData('customer-plans', () => listPlans())
+// Whether an administrator has linked a router to this account. Without one the
+// customer can't buy a plan (there'd be nothing to connect), so say so up front
+// rather than letting them try and fail. The server enforces it too.
+const { data: dashboardData } = await useAsyncData('customer-subscription-dashboard', () => fetchCustomerDashboard())
+const routerAllocated = computed(() => dashboardData.value?.router_allocated ?? true) // don't flash a warning before it has loaded
 const subscriptions = computed(() => subscriptionsData.value?.results ?? [])
 const currentSubscription = computed(() => subscriptions.value.find((s) => s.is_active) ?? null)
 // No active subscription, but the most recent one was blocked (CANCELLED)
@@ -17,6 +23,7 @@ const plans = computed(() => plansData.value?.results.filter((p) => p.is_active)
 const purchaseError = ref(''); const purchasing = ref<string | null>(null)
 const paymentMethod = ref<'MTN_MOMO' | 'ORANGE_MONEY'>('MTN_MOMO')
 async function handleSelectPlan(planId: string) {
+  if (!routerAllocated.value) return
   purchaseError.value = ''; purchasing.value = planId
   try { await purchasePlan(planId, paymentMethod.value); await refreshSubscriptions(); activeTab.value = 'current' }
   catch (err: any) { purchaseError.value = err?.data?.detail || "Couldn't complete this purchase. Please try again." }
@@ -26,6 +33,13 @@ async function handleSelectPlan(planId: string) {
 <template>
   <div class="space-y-6">
     <h1 class="text-2xl font-semibold text-text-primary">Subscription</h1>
+    <div v-if="!routerAllocated" role="alert" class="rounded-card border border-warning/40 bg-warning/5 px-4 py-3">
+      <p class="text-sm font-medium text-text-primary">Your router isn't linked to your account yet</p>
+      <p class="mt-0.5 text-sm text-text-secondary">
+        You can't purchase a plan until an administrator links your router to your account. Please contact them
+        to have it set up — you'll get a notification here as soon as it's done.
+      </p>
+    </div>
     <div class="inline-flex rounded-card border border-border bg-surface p-0.5" role="tablist">
       <button v-for="tab in tabs" :key="tab.key" type="button" role="tab" :aria-selected="activeTab === tab.key"
         class="rounded-[0.4rem] px-4 py-1.5 text-sm font-medium transition-colors"
@@ -39,12 +53,12 @@ async function handleSelectPlan(planId: string) {
       <SubscriptionCard
         v-else
         :plan-name="isBlocked ? mostRecentSubscription?.plan.name ?? null : (currentSubscription?.plan.name ?? null)"
-        :remaining-days="currentSubscription?.remaining_days ?? 0"
-        :expiry-date="currentSubscription?.end_date ?? null"
-        :expires-at="currentSubscription?.expires_at ?? null"
-        :duration-days="currentSubscription?.plan.duration_days"
+        :remaining-seconds="currentSubscription?.remaining_seconds ?? 0"
+        :expires-at="currentSubscription?.ends_at ?? null"
+        :duration-minutes="currentSubscription?.plan.duration_minutes"
         :blocked="isBlocked"
-        @renew="activeTab = 'plans'"
+        @renew="routerAllocated ? (activeTab = 'plans') : undefined"
+        @expired="refreshSubscriptions()"
       />
     </div>
     <div v-else-if="activeTab === 'plans'" class="space-y-4">
@@ -59,7 +73,7 @@ async function handleSelectPlan(planId: string) {
       <LoadingState v-if="plansPending" :rows="3" />
       <ErrorState v-else-if="plansError" @retry="refreshPlans()" />
       <EmptyState v-else-if="!plans.length" title="No plans available right now" />
-      <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" :class="routerAllocated ? '' : 'pointer-events-none select-none opacity-50'" :aria-disabled="!routerAllocated">
         <PlanCard v-for="plan in plans" :key="plan.id" :plan="plan" :current="currentSubscription?.plan.id === plan.id" @select="handleSelectPlan(plan.id)" />
       </div>
     </div>
@@ -75,8 +89,8 @@ async function handleSelectPlan(planId: string) {
           <tbody>
             <tr v-for="sub in subscriptions" :key="sub.id" class="border-b border-border last:border-0">
               <td class="px-4 py-3 text-text-primary">{{ sub.plan.name }}</td>
-              <td class="px-4 py-3 text-text-secondary">{{ formatDate(sub.start_date) }}</td>
-              <td class="px-4 py-3 text-text-secondary">{{ formatDate(sub.end_date) }}</td>
+              <td class="px-4 py-3 text-text-secondary">{{ formatDateTime(sub.starts_at) }}</td>
+              <td class="px-4 py-3 text-text-secondary">{{ formatDateTime(sub.ends_at) }}</td>
               <td class="px-4 py-3 text-text-secondary">{{ formatCurrency(sub.amount_paid) }}</td>
               <td class="px-4 py-3"><StatusBadge :label="sub.status === 'CANCELLED' ? 'Blocked' : sub.status" :tone="sub.status === 'ACTIVE' ? 'success' : sub.status === 'EXPIRED' ? 'neutral' : 'error'" /></td>
             </tr>

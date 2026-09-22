@@ -68,6 +68,30 @@ async function handleConfirmRouterAction() {
   }
 }
 
+// The wording depends on what is being done to what: approving a new router,
+// rejecting one still awaiting approval, or REVOKING one that is already live
+// (which has real consequences, so it says what they are).
+const routerDialogTitle = computed(() => {
+  const { type, router } = confirmRouterAction.value ?? {}
+  if (type === 'approve') return router?.status === 'REJECTED' ? 'Approve this MikroTik again?' : 'Approve this MikroTik?'
+  return router?.status === 'APPROVED' ? 'Revoke this MikroTik?' : 'Reject this MikroTik?'
+})
+const routerDialogDescription = computed(() => {
+  const { type, router } = confirmRouterAction.value ?? {}
+  if (type === 'approve') {
+    return 'It will be accepted as one of your MikroTiks, and it will be trusted again automatically whenever it reconnects.'
+  }
+  if (router?.status === 'APPROVED') {
+    return 'Its reports will be refused and it won\'t be sent any block or connect commands, its devices will show as offline, and anything still waiting on it will fail. It stays revoked even if it reconnects, until you approve it again. Customers behind it keep whatever access it last applied.'
+  }
+  return 'It will be refused until you approve it. Reconnecting won\'t change that.'
+})
+const routerDialogConfirm = computed(() => {
+  const { type, router } = confirmRouterAction.value ?? {}
+  if (type === 'approve') return 'Approve'
+  return router?.status === 'APPROVED' ? 'Revoke' : 'Reject'
+})
+
 const linkingRouterId = ref<string | null>(null)
 async function handleLinkAccessPoint(router: MikroTikRouter, accessPointId: string) {
   linkingRouterId.value = router.id
@@ -405,7 +429,7 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
             <template #cell-mac="{ row }"><span class="font-mono text-xs">{{ row.mac_address }}</span></template>
             <template #cell-command_type="{ row }">{{ row.command_type === 'block' ? 'Block' : 'Connect' }}</template>
             <template #cell-customer="{ row }">{{ row.customer_name || '—' }}</template>
-            <template #cell-router="{ row }"><span class="font-mono text-xs">{{ row.router_signature }}</span></template>
+            <template #cell-router="{ row }">{{ row.router_identity || 'Unnamed MikroTik' }}</template>
             <template #cell-status="{ row }">
               <StatusBadge :label="commandStatusLabel(row.status)" :tone="commandStatusTone(row.status)" />
               <p v-if="row.error_message" class="mt-1 max-w-xs whitespace-normal text-xs text-error">{{ row.error_message }}</p>
@@ -426,6 +450,7 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
               <div class="min-w-0">
                 <p class="text-sm font-medium text-text-primary">{{ c.command_type === 'block' ? 'Block' : 'Connect' }} · {{ c.customer_name || 'No customer' }}</p>
                 <p class="break-all font-mono text-xs text-text-secondary">{{ c.mac_address }}</p>
+                <p class="text-xs text-text-secondary">via {{ c.router_identity || 'Unnamed MikroTik' }}</p>
               </div>
               <StatusBadge :label="commandStatusLabel(c.status)" :tone="commandStatusTone(c.status)" class="shrink-0" />
             </div>
@@ -474,11 +499,9 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
 
     <ConfirmationDialog
       :open="!!confirmRouterAction"
-      :title="confirmRouterAction?.type === 'approve' ? 'Approve this MikroTik?' : 'Reject this MikroTik?'"
-      :description="confirmRouterAction?.type === 'approve'
-        ? 'It will start being accepted as a known MikroTik, and Django will act on the client routers it reports.'
-        : 'It will stop being accepted until approved again — reports from it will be refused.'"
-      :confirm-label="actingRouterId ? 'Please wait…' : 'Confirm'"
+      :title="routerDialogTitle"
+      :description="routerDialogDescription"
+      :confirm-label="actingRouterId ? 'Please wait…' : routerDialogConfirm"
       :danger="confirmRouterAction?.type === 'reject'"
       @confirm="handleConfirmRouterAction"
       @cancel="confirmRouterAction = null"

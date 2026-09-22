@@ -9,7 +9,7 @@ const { updatePlan, deactivatePlan } = usePlansApi()
 const { listCustomers } = useCustomersApi()
 
 const form = reactive({
-  name: '', description: '', duration_days: 30, price: '', is_active: true,
+  name: '', description: '', duration_minutes: 30 * 1440, price: '', is_active: true,
   plan_type: 'GENERAL' as 'GENERAL' | 'SPECIFIC',
 })
 const eligibleIds = ref<string[]>([])
@@ -27,7 +27,7 @@ const customerOptions = computed(() => (customerResults.value?.results ?? []).fi
 
 watch(() => props.plan, (plan) => {
   if (!plan) return
-  form.name = plan.name; form.description = plan.description; form.duration_days = plan.duration_days
+  form.name = plan.name; form.description = plan.description; form.duration_minutes = plan.duration_minutes
   form.price = plan.price; form.is_active = plan.is_active; form.plan_type = plan.plan_type
   eligibleIds.value = plan.eligible_customers.map((c) => c.id)
   plan.eligible_customers.forEach((c) => { eligibleLabels[c.id] = `${c.name} · ${c.email}` })
@@ -56,7 +56,7 @@ async function handleSave() {
   saving.value = true
   try {
     const updated = await updatePlan(props.plan.id, {
-      name: form.name, description: form.description, duration_days: form.duration_days,
+      name: form.name, description: form.description, duration_minutes: form.duration_minutes,
       price: form.price, is_active: form.is_active, plan_type: form.plan_type,
       eligible_customer_ids: form.plan_type === 'SPECIFIC' ? eligibleIds.value : [],
     })
@@ -115,8 +115,8 @@ onUnmounted(() => {
               <input v-model="form.price" required type="number" step="0.01" class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none transition-colors focus:border-accent">
             </div>
             <div>
-              <label class="mb-1 block text-sm font-medium text-text-primary">Duration (days)</label>
-              <input v-model.number="form.duration_days" required type="number" min="1" class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none transition-colors focus:border-accent">
+              <label class="mb-1 block text-sm font-medium text-text-primary">Duration</label>
+              <DurationInput v-model="form.duration_minutes" />
             </div>
           </div>
           <div>

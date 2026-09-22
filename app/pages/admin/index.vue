@@ -1,9 +1,17 @@
 <script setup lang="ts">
-import { Clock, CreditCard, HelpCircle, TrendingUp, UserMinus, UserX, Users, Wifi, WifiOff } from 'lucide-vue-next'
+import { Clock, CreditCard, RadioTower, Router, TrendingUp, UserMinus, UserX, Users, Wifi } from 'lucide-vue-next'
 definePageMeta({ layout: 'admin' })
 const { fetchAdminDashboard } = useDashboardApi()
 const { data, pending, error, refresh } = await useAsyncData('admin-dashboard', () => fetchAdminDashboard())
 const subscriptionSeries = computed(() => !data.value ? [] : [data.value.active_subscriptions, data.value.expiring_soon, data.value.expired_subscriptions])
+// Colour an "online / total" tile by how healthy it is: green when everything
+// is up, amber when some are down, red when none are, neutral when there's
+// nothing of that kind yet.
+function ratioTone(online: number, total: number): 'primary' | 'success' | 'warning' | 'error' {
+  if (total === 0) return 'primary'
+  if (online === total) return 'success'
+  return online === 0 ? 'error' : 'warning'
+}
 const suggestionStatusTone: Record<string, 'success' | 'warning' | 'error' | 'neutral'> = { PENDING: 'neutral', REVIEWED: 'warning', RESPONDED: 'success', CLOSED: 'neutral' }
 </script>
 <template>
@@ -17,14 +25,14 @@ const suggestionStatusTone: Record<string, 'success' | 'warning' | 'error' | 'ne
         <StatSummaryCard label="Active Subscriptions" :value="data.active_subscriptions" :icon="Wifi" tone="success" />
         <StatSummaryCard label="Expiring Soon" :value="data.expiring_soon" :icon="Clock" tone="warning" />
         <StatSummaryCard label="Suspended Customers" :value="data.suspended_customers" :icon="UserX" tone="error" to="/admin/customers?status=SUSPENDED" />
-        <StatSummaryCard label="Total Revenue" :value="formatCurrency(data.total_revenue)" :icon="TrendingUp" tone="accent" />
-        <StatSummaryCard label="Revenue (This Month)" :value="formatCurrency(data.monthly_revenue)" :icon="CreditCard" tone="accent" />
+        <StatSummaryCard label="Revenue (This Year)" :value="formatCurrency(data.yearly_revenue)" :icon="TrendingUp" tone="accent" to="/admin/revenue" />
+        <StatSummaryCard label="Revenue (This Month)" :value="formatCurrency(data.monthly_revenue)" :icon="CreditCard" tone="accent" to="/admin/revenue" />
       </div>
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         <StatSummaryCard label="Customers Without a Plan" :value="data.customers_without_active_plan" :icon="UserMinus" tone="warning" />
-        <StatSummaryCard label="Devices Online" :value="data.devices_online" :icon="Wifi" tone="success" to="/admin/devices?online=true" />
-        <StatSummaryCard label="Devices Offline" :value="data.devices_offline" :icon="WifiOff" tone="error" to="/admin/devices?online=false" />
-        <StatSummaryCard label="Devices Never Reported" :value="data.devices_never_reported" :icon="HelpCircle" tone="primary" />
+        <StatSummaryCard label="Devices Online" :value="`${data.devices_online} / ${data.devices_total}`" :icon="Wifi" :tone="ratioTone(data.devices_online, data.devices_total)" to="/admin/devices" />
+        <StatSummaryCard label="Online APs" :value="`${data.access_points_online} / ${data.access_points_total}`" :icon="RadioTower" :tone="ratioTone(data.access_points_online, data.access_points_total)" to="/admin/access-points" />
+        <StatSummaryCard label="Online MikroTik Routers" :value="`${data.mikrotik_online} / ${data.mikrotik_total}`" :icon="Router" :tone="ratioTone(data.mikrotik_online, data.mikrotik_total)" to="/admin/microtik" />
       </div>
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div class="rounded-card border border-border bg-surface p-5">

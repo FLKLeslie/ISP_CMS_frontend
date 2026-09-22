@@ -1,6 +1,6 @@
 import type { Payment, Plan } from './subscriptions'
 
-export type NotificationType = 'SUBSCRIPTION' | 'PAYMENT' | 'ANNOUNCEMENT' | 'SUGGESTION' | 'CUSTOMER' | 'GENERAL'
+export type NotificationType = 'SUBSCRIPTION' | 'PAYMENT' | 'ANNOUNCEMENT' | 'SUGGESTION' | 'CUSTOMER' | 'NETWORK' | 'GENERAL'
 export interface AppNotification {
   id: string
   // null for an admin-broadcast entry (is_admin_broadcast=true) - e.g.
@@ -26,7 +26,10 @@ export interface Announcement {
 }
 
 export interface CustomerDashboard {
-  active_plan: Plan | null; remaining_days: number; expiry_date: string | null
+  active_plan: Plan | null; remaining_days: number
+  // Exact seconds until the plan ends, and the exact moment (ISO). Use these,
+  // not remaining_days, for anything shown - a short plan has 0 days left throughout.
+  remaining_seconds: number; expiry_date: string | null
   // Precise end-of-day moment for expiry_date, in ISO 8601 - use this
   // (not expiry_date) for a live days/hours/minutes countdown.
   expires_at: string | null
@@ -35,5 +38,8 @@ export interface CustomerDashboard {
   // blocked the most recent one (see dashboard.views.CustomerDashboardView) -
   // distinct from simply never having subscribed.
   is_blocked: boolean; blocked_plan_name: string | null
+  // False until an administrator links a router to the customer's account.
+  // Without one they can't purchase a plan or be connected.
+  router_allocated: boolean
   recent_payments: Payment[]; unread_notifications: number; latest_announcements: Announcement[]
 }

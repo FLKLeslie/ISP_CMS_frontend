@@ -1,0 +1,338 @@
+ISP MANAGEMENT SYSTEM - USER MANUAL
+Last updated: 2026-09-21
+=================================================================
+
+This guide explains how to use the system. There are two kinds of
+accounts:
+
+  ADMINISTRATOR  - runs the ISP: manages customers, plans, payments,
+                   devices and routers.
+  CUSTOMER       - a person buying internet access from the ISP.
+
+Which one you see when you log in depends on your account. If something
+on screen doesn't match this guide, the application may have changed
+since this was written - check with whoever maintains it.
+
+
+=================================================================
+PART 1: LOGGING IN
+=================================================================
+Open the site and enter your Email and Password on the Sign in page,
+then submit.
+
+There is currently no "forgot password" link. If you're an
+administrator and you've lost access, you'll need another administrator
+to change it for you, or direct database/console access. If you're a
+customer and you've lost your password, contact the ISP's administrator
+- they can set you a new one from your account page.
+
+Once logged in, an administrator lands on the admin Dashboard; a
+customer lands on their own Dashboard. You can change your own password
+at any time (Administrator: your profile menu / Customer: the Account
+page).
+
+
+=================================================================
+PART 2: FOR ADMINISTRATORS
+=================================================================
+The left-hand menu has: Dashboard, Customers, Subscriptions, Payments,
+Revenue, Devices, Access Points, MikroTik, Suggestions, Announcements,
+Notifications.
+
+-----------------------------------------------------------------
+2.1 Dashboard
+-----------------------------------------------------------------
+A quick-glance summary. The tiles show:
+  - Revenue (This Year)     - money received so far this calendar year
+  - Revenue (This Month)
+  - Devices Online          - customer devices currently online, out of
+                               the total registered
+  - Online APs              - Access Points currently online, out of
+                               the total registered
+  - Online MikroTik Routers - approved routers currently reporting in,
+                               out of the total approved
+  - Customer counts, plus a short list of anything needing attention
+    (unregistered devices, MikroTiks awaiting approval, etc. - exact
+    contents depend on what's currently pending)
+
+Tap a tile to jump to the relevant page.
+
+-----------------------------------------------------------------
+2.2 Customers
+-----------------------------------------------------------------
+List of every customer, searchable, with their status (Active /
+Suspended) and whether they currently have an active plan.
+
+Open a customer to see their detail page:
+  - Profile details (name, email, phone, address)
+  - Current subscription - their active plan if they have one, or their
+    most recent Blocked plan with a "Resume subscription" option
+  - Subscription history - every plan they've ever had
+  - Their allocated device(s), with Block / Connect / Reallocate buttons
+    right there (same effect as doing it from the MikroTik page)
+  - Payment history
+  - "Block internet access" - cuts off whichever router device is
+    allocated to them. Only appears if they have one. This doesn't
+    delete their subscription, it marks it Blocked, and can be reversed
+    with "Resume subscription".
+  - "Suspend account" / "Reactivate account" - stops them being able to
+    log in at all. This is different from blocking their internet - a
+    suspended customer can't log in; a customer with blocked internet
+    can still log in and see their account, just has no connection.
+
+IMPORTANT: a customer cannot buy or be given a plan until a MikroTik
+router device has been allocated to them (see 2.6, MikroTik >
+Needs allocation). If you try to grant a plan to someone without one,
+you'll be told so.
+
+-----------------------------------------------------------------
+2.3 Subscriptions
+-----------------------------------------------------------------
+Three tabs:
+
+  Subscriptions - every subscription in the system, filterable by
+    status (Active / Expired / Blocked). Shows exactly when each one
+    ends and how much time is left.
+
+  Plans - manage what's for sale. Create a plan with a Name, an
+    optional Description, a Price, and how long it lasts. Duration is
+    entered as a number plus a unit - Minutes, Hours or Days - so you
+    can offer a 30-minute plan, a 2-hour plan, or a 30-day plan, side by
+    side. Existing plans can be edited the same way.
+
+  Grant - give a plan to a customer directly, e.g. for a cash payment
+    taken in person. Search for the customer (only customers who
+    already have a router allocated will appear in this list), pick the
+    plan, and confirm. This has exactly the same effect as the customer
+    buying it themselves: it's recorded as a payment, and their router
+    is connected automatically.
+
+-----------------------------------------------------------------
+2.4 Payments
+-----------------------------------------------------------------
+A record of payments received, and a form to record one manually (for
+a cash payment, for example). Recording a payment against a
+subscription and marking it as renewing that subscription will extend
+the customer's plan and reconnect their router automatically.
+
+Note: there is currently no live payment gateway (MTN MoMo / Orange
+Money / card) wired in - every payment here is recorded directly by an
+administrator, or via the customer's in-app "purchase" flow once a
+gateway is configured. If a customer tries to buy a plan online before
+a gateway exists, they'll see a clear message that online payment isn't
+available yet.
+
+-----------------------------------------------------------------
+2.5 Revenue
+-----------------------------------------------------------------
+This page shows only what you choose to see - pick your options at the
+top, and the chart below updates immediately:
+
+  Period       - a quick preset (last 30 days, last 12 months, this
+                 year, last year, last 5 years) or a custom date range
+  Show         - Revenue, Number of payments, or Average payment
+  Split by     - break the chart into separate lines/bars per Plan, or
+                 per Payment method; or leave it as one overall figure
+  Compare with - overlay a second line for the previous period, or the
+                 same period last year
+  Per          - group into days, months or years
+  Chart type   - Bars, Line, Area, or Stacked bars
+
+Below the chart, "Show numbers" reveals the exact figures behind it in
+a table, and there's a CSV download if you want the raw data elsewhere.
+
+-----------------------------------------------------------------
+2.6 Devices
+-----------------------------------------------------------------
+  Devices (list)     - every registered customer device (PowerBeam
+                        receiver), searchable, with online/offline
+                        status.
+  Device detail      - live status, signal, uptime and other metrics
+                        for one device, refreshed automatically.
+  Configure          - push configuration to a device (currently
+                        limited to what the hardware layer supports -
+                        e.g. SSID, reboot scheduling).
+  History            - a chart of that device's metrics over time.
+  Map                - every device plotted on a map, if location data
+                        is available for it.
+  Unregistered       - devices that have connected to the network but
+                        aren't in the system yet. For each one, the
+                        system tries to work out whether it's an Access
+                        Point or a Station (a customer's receiver) and
+                        what it's called; if it can't tell, it says so
+                        ("Role uncertain") and you can either check
+                        again or decide yourself.
+                          - "Register AP" files it as institution
+                            infrastructure (a tower-mounted radio).
+                          - "Register to a customer" links it to a
+                            specific customer as their device.
+                        You can rename it before registering either way.
+                        "Discard" removes it from the list without
+                        registering it (it'll reappear if it connects
+                        again later).
+
+-----------------------------------------------------------------
+2.7 Access Points
+-----------------------------------------------------------------
+The list of institutional Access Points (tower/rooftop radios that
+serve multiple customers), separate from customer devices. Shows their
+online status and location.
+
+-----------------------------------------------------------------
+2.8 MikroTik
+-----------------------------------------------------------------
+This page controls which customers actually have internet access,
+through the MikroTik routers in the field.
+
+  MikroTiks tab
+    Every MikroTik router the system has ever heard from.
+      - A brand-new router (never seen before) shows as Pending -
+        Approve it once you've confirmed it's genuinely one of yours.
+      - Once approved, it will keep being trusted automatically every
+        time it reconnects (for example after a power cut) - you won't
+        be asked to approve it again.
+      - "Revoke" on an approved router immediately stops trusting it:
+        its devices show offline, any block/connect commands waiting on
+        it are marked Failed, and it will stay revoked even if it
+        reconnects, until you approve it again.
+
+  Online / Offline tabs
+    Devices (customers' routers) the MikroTik network currently sees /
+    doesn't currently see. An offline device is NOT deleted or
+    forgotten - it stays in the system with its customer attached, so
+    it picks up right where it left off when it reconnects.
+
+  Needs allocation tab
+    Devices the network can see but that aren't linked to any customer
+    yet. Use "Allocate" to search for and pick the customer this device
+    belongs to. Once allocated, that customer can be given a plan and
+    connected.
+
+  For any device, in any tab, you can:
+    - Block  / Connect  - cut off or restore its internet access.
+      This is not instant: the device will show "Pending" until the
+      router confirms the change actually took effect, which normally
+      takes a few seconds to under a minute.
+    - Reallocate - move this device to a different customer (opens the
+      same picker as Needs allocation), or Unallocate it entirely.
+    - Forget - permanently remove an unallocated, offline device from
+      the list. Only available when both those conditions are true. If
+      it reconnects later it will simply reappear as unallocated.
+
+  Command history tab
+    A log of every block/connect command ever sent, its status
+    (Waiting for router / Confirmed / Failed), and which router it went
+    through (shown by name). You can delete individual entries or clear
+    the whole history; a command still waiting on a router can't be
+    deleted until it resolves.
+
+-----------------------------------------------------------------
+2.9 Suggestions
+-----------------------------------------------------------------
+Feedback, complaints, compliments and support requests submitted by
+customers. Open one to read it and reply; your reply is visible to the
+customer who sent it.
+
+-----------------------------------------------------------------
+2.10 Announcements
+-----------------------------------------------------------------
+Write a message that gets broadcast to every customer as a
+notification - for planned maintenance, outages, new plans, etc.
+
+-----------------------------------------------------------------
+2.11 Notifications
+-----------------------------------------------------------------
+Your own feed of system alerts - filterable by type (Subscription,
+Payment, Announcement, Suggestion, Customer, Network, General). Notably:
+  - "Network" notifications cover connection events and problems: a new
+    MikroTik awaiting approval, an automatic connect/disconnect that
+    happened, or one that failed and needs manual attention.
+Pay attention to anything reporting a FAILED automatic action - it
+means a customer's connection didn't update the way the system
+intended, and needs a manual check from the MikroTik page.
+
+
+=================================================================
+PART 3: FOR CUSTOMERS
+=================================================================
+The menu has: Dashboard, Subscription, Suggestions, Notifications,
+Account.
+
+-----------------------------------------------------------------
+3.1 Dashboard
+-----------------------------------------------------------------
+Shows your current plan (if you have one), how much time is left on it
+- with a live countdown - and recent notifications. If no router has
+been linked to your account yet, you'll see a notice explaining that
+you can't get internet access or buy a plan until an administrator sets
+that up; contact them.
+
+-----------------------------------------------------------------
+3.2 Subscription
+-----------------------------------------------------------------
+  Current plan - your active plan, with a live countdown to when it
+    ends and the exact time it will switch off.
+  Buy a plan - browse available plans and purchase one. If you already
+    have plenty of time left on your current plan, buying the same plan
+    again queues it to start the moment your current one ends (so your
+    time simply adds up, with no gap and no overlap). If you're running
+    low, the button instead reads as a renewal.
+  History - every plan you've had, when it started and ended, and its
+    status (Active / Expired / Blocked).
+
+If you see "Your router isn't linked to your account yet", you cannot
+buy a plan until an administrator links one - contact them.
+
+If your account shows as Blocked, an administrator has cut off your
+internet (this is different from your plan simply expiring). Contact
+them; only an administrator can lift a block.
+
+-----------------------------------------------------------------
+3.3 Suggestions
+-----------------------------------------------------------------
+Send feedback, a complaint, a compliment, or a support request to the
+ISP. Pick a category, write a subject and message, and submit. You can
+see the status of anything you've sent, and any reply from an
+administrator.
+
+-----------------------------------------------------------------
+3.4 Notifications
+-----------------------------------------------------------------
+Everything the system or an administrator has told you, including:
+  - your internet being connected or disconnected
+  - reminders that your plan is about to expire (timed to how long your
+    plan lasts - you'll be reminded well before a multi-day plan runs
+    out, and shortly before a short plan does)
+  - your router being linked to, or unlinked from, your account
+  - announcements from the ISP
+
+-----------------------------------------------------------------
+3.5 Account
+-----------------------------------------------------------------
+Your profile details, and a form to change your password. There is no
+self-service "forgot password" - if you're locked out, contact the ISP.
+
+
+=================================================================
+PART 4: QUICK ANSWERS TO COMMON QUESTIONS
+=================================================================
+"A customer paid but isn't online yet"
+  Check MikroTik > Command history for their device. If it shows
+  "Waiting for router", give it a little time - the router hasn't
+  polled yet. If it shows "Failed", check the error message and retry
+  the connect from the customer's page or the MikroTik page. If nothing
+  shows up at all, confirm a router is actually allocated to them.
+
+"A device shows Offline but the customer says they're connected"
+  The device's router may just not have reported recently - check its
+  MikroTik router's own status (approved / reporting) first.
+
+"I approved a MikroTik but it still won't send commands"
+  Confirm its status is Approved, not Pending, and that it's shown as
+  currently reporting (not silent). A router that has gone quiet can't
+  be sent anything until it reconnects.
+
+"Can I give someone a very short plan, like 30 minutes?"
+  Yes - when creating or editing a plan, set the duration in Minutes
+  instead of Days. The system disconnects the customer at the exact
+  moment the plan ends, not just "sometime that day".

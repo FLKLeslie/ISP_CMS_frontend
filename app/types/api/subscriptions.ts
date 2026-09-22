@@ -5,7 +5,11 @@ export type PlanType = 'GENERAL' | 'SPECIFIC'
 // enough for the admin plan-details panel, not the full Customer object.
 export interface EligibleCustomer { id: string; name: string; email: string }
 export interface Plan {
-  id: string; name: string; description: string; duration_days: number
+  id: string; name: string; description: string
+  // How long the plan lasts. `duration_minutes` is the real value (a plan can
+  // last 30 minutes, 2 hours or 30 days); `duration_label` is it readable
+  // ("1 hour 30 minutes"); `duration_days` is whole days only (0 under a day).
+  duration_minutes: number; duration_label: string; duration_days: number
   price: string; is_active: boolean; plan_type: PlanType
   // Only meaningful when plan_type is SPECIFIC - who the plan is limited
   // to. Read as full nested objects; write with eligible_customer_ids
@@ -43,15 +47,24 @@ export const SUBSCRIPTION_STATUS_LABEL: Record<SubscriptionStatus, string> = {
   ACTIVE: 'Active', EXPIRED: 'Expired', CANCELLED: 'Blocked',
 }
 export interface Subscription {
-  id: string; customer: Customer; plan: Plan; start_date: string; end_date: string
-  // Precise end-of-day moment for end_date, in ISO 8601 - use this (not
-  // end_date) for a live days/hours/minutes countdown.
+  id: string; customer: Customer; plan: Plan
+  // The EXACT moments it runs from and to (ISO 8601). `ends_at` is when the
+  // customer is disconnected — not "sometime that day". Use these, not the
+  // dates, for anything time-sensitive; a plan can last just minutes.
+  starts_at: string; ends_at: string
+  // Alias of ends_at (kept because existing code reads it).
   expires_at: string
-  amount_paid: string; status: SubscriptionStatus; remaining_days: number
+  // The calendar dates of the two moments above - fine for lists and filters.
+  start_date: string; end_date: string
+  amount_paid: string; status: SubscriptionStatus
+  // Whole calendar days left (0 for a plan measured in hours/minutes) and the
+  // exact seconds left - use remaining_seconds for anything shown to a person.
+  remaining_days: number; remaining_seconds: number
   is_active: boolean
-  // Set only while blocked (status 'CANCELLED'): when it was blocked, and the
-  // whole days since — exactly what "add the blocked time" gives back on resume.
-  blocked_at: string | null; blocked_days: number
+  // Set only while blocked (status 'CANCELLED'): when it was blocked, how long
+  // ago (whole days, and exact seconds to the minute) — what "add the blocked
+  // time" gives back on resume.
+  blocked_at: string | null; blocked_days: number; blocked_seconds: number
   // Set only when an administrator granted this subscription directly
   // (e.g. a cash payment taken in person) rather than it arising from a
   // normal customer purchase - see POST /api/subscriptions/grant/.

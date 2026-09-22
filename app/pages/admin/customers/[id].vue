@@ -47,7 +47,7 @@ const allSubs = computed<Subscription[]>(() => subs.value?.results ?? [])
 const currentSub = computed<Subscription | null>(() => {
   const active = allSubs.value
     .filter((s) => s.status === 'ACTIVE')
-    .sort((a, b) => a.start_date.localeCompare(b.start_date))
+    .sort((a, b) => a.starts_at.localeCompare(b.starts_at))
   if (active.length) return active[0] ?? null
   return allSubs.value.find((s) => s.status === 'CANCELLED') ?? null // the API lists newest first
 })
@@ -55,7 +55,8 @@ const historySubs = computed(() => allSubs.value.filter((s) => s.id !== currentS
 const hasActiveSubscription = computed(() => allSubs.value.some((s) => s.status === 'ACTIVE'))
 const statusTone = (status: string) => status === 'ACTIVE' ? 'success' : status === 'CANCELLED' ? 'error' : 'neutral'
 const statusLabel = (status: string) => SUBSCRIPTION_STATUS_LABEL[status as keyof typeof SUBSCRIPTION_STATUS_LABEL] ?? status
-const daysLabel = (n: number) => `${n} ${n === 1 ? 'day' : 'days'}`
+// Exact time ("45 minutes", "2 hours 10 minutes", "5 days"), because a plan can last minutes.
+const blockedFor = (seconds: number) => formatDuration(seconds, 3)
 
 // Resume a blocked subscription (allow as it is, or add the blocked time).
 const resumingSub = ref<Subscription | null>(null)
@@ -88,7 +89,7 @@ const confirmBlockOpen = ref(false); const blocking = ref(false); const blockErr
 async function handleBlockInternet() {
   blocking.value = true; blockError.value = ''; subNotice.value = ''
   try { customer.value = await blockInternet(id); await Promise.all([refreshSubs(), refreshLeases()]) }
-  catch { blockError.value = "Couldn't block internet access - please try again." }
+  catch (err) { blockError.value = apiErrorMessage(err, "Couldn't block internet access - please try again.") }
   finally { blocking.value = false; confirmBlockOpen.value = false }
 }
 
@@ -201,7 +202,7 @@ async function handleSave() {
           <div class="flex flex-wrap items-start justify-between gap-3">
             <div class="min-w-0">
               <p class="text-lg font-semibold text-text-primary">{{ currentSub.plan.name }}</p>
-              <p class="text-sm text-text-secondary">{{ formatCurrency(currentSub.amount_paid) }} · {{ currentSub.plan.duration_days }}-day plan</p>
+              <p class="text-sm text-text-secondary">{{ formatCurrency(currentSub.amount_paid) }} · {{ currentSub.plan.duration_label }} plan</p>
             </div>
             <StatusBadge :label="statusLabel(currentSub.status)" :tone="statusTone(currentSub.status)" />
           </div>
@@ -209,30 +210,36 @@ async function handleSave() {
           <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm sm:grid-cols-3">
             <div>
               <dt class="text-xs text-text-secondary">Started</dt>
-              <dd class="text-text-primary">{{ formatDate(currentSub.start_date) }}</dd>
+              <dd class="text-text-primary">{{ formatDateTime(currentSub.starts_at) }}</dd>
             </div>
             <div>
               <dt class="text-xs text-text-secondary">{{ currentSub.status === 'ACTIVE' ? 'Expires' : 'Would end' }}</dt>
-              <dd class="text-text-primary">{{ formatDate(currentSub.end_date) }}</dd>
+              <dd class="text-text-primary">{{ formatDateTime(currentSub.ends_at) }}</dd>
             </div>
             <div class="col-span-2 sm:col-span-1">
               <dt class="text-xs text-text-secondary">{{ currentSub.status === 'ACTIVE' ? 'Time left' : 'Blocked for' }}</dt>
               <dd class="text-text-primary">
-                {{ currentSub.status === 'ACTIVE' ? formatRemainingDays(currentSub.remaining_days) : daysLabel(currentSub.blocked_days) }}
+                {{ currentSub.status === 'ACTIVE' ? formatRemainingSeconds(currentSub.remaining_seconds) : blockedFor(currentSub.blocked_seconds) }}
               </dd>
             </div>
           </dl>
 
           <!-- Active: the way to cut them off -->
           <div v-if="currentSub.status === 'ACTIVE'" class="mt-4 border-t border-border pt-4">
-            <button type="button" class="btn-danger" @click="confirmBlockOpen = true">Block internet access</button>
+            <!-- Blocking only makes sense for a customer with a router allocated: it's the
+                 router that gets cut off. Without one, say what to do instead of offering a button that can't work. -->
+            <button v-if="leases.length" type="button" class="btn-danger" @click="confirmBlockOpen = true">Block internet access</button>
+            <p v-else class="text-sm text-text-secondary">
+              No router is allocated to this customer, so there's nothing to block. Allocate one from
+              <NuxtLink to="/admin/microtik?tab=unallocated" class="font-medium text-secondary hover:underline">MikroTik Management</NuxtLink>.
+            </p>
           </div>
 
           <!-- Blocked: the decision -->
           <div v-else class="mt-4 rounded-card border border-error/30 bg-error/5 p-3">
             <p class="text-sm text-text-primary">
               Their internet is blocked. When you reopen it you can allow the plan as it is, or add the
-              {{ daysLabel(currentSub.blocked_days) }} it has been blocked so they don't lose the time.
+              {{ blockedFor(currentSub.blocked_seconds) }} it has been blocked so they don't lose the time.
             </p>
             <button type="button" class="btn-primary mt-3" @click="resumingSub = currentSub">Resume subscription…</button>
           </div>
@@ -242,7 +249,7 @@ async function handleSave() {
           <p class="text-sm text-text-primary">No active subscription.</p>
           <p v-if="historySubs.length" class="mt-1 text-sm text-text-secondary">
             Their most recent plan, {{ historySubs[0]?.plan.name }}, {{ historySubs[0]?.status === 'EXPIRED' ? 'ended on' : 'was last' }}
-            {{ formatDate(historySubs[0]?.end_date) }}.
+            {{ formatDateTime(historySubs[0]?.ends_at) }}.
           </p>
           <p v-else class="mt-1 text-sm text-text-secondary">This customer hasn't had a subscription yet.</p>
         </div>
@@ -261,7 +268,7 @@ async function handleSave() {
               :rows="historySubs" row-key="id"
             >
               <template #cell-plan="{ row }">{{ row.plan.name }}</template>
-              <template #cell-period="{ row }">{{ formatDate(row.start_date) }} – {{ formatDate(row.end_date) }}</template>
+              <template #cell-period="{ row }">{{ formatDateTime(row.starts_at) }} – {{ formatDateTime(row.ends_at) }}</template>
               <template #cell-amount="{ row }">{{ formatCurrency(row.amount_paid) }}</template>
               <template #cell-status="{ row }"><StatusBadge :label="statusLabel(row.status)" :tone="statusTone(row.status)" /></template>
             </DataTable>
@@ -272,7 +279,7 @@ async function handleSave() {
                 <p class="text-sm font-medium text-text-primary">{{ sub.plan.name }}</p>
                 <StatusBadge :label="statusLabel(sub.status)" :tone="statusTone(sub.status)" class="shrink-0" />
               </div>
-              <p class="mt-1 text-xs text-text-secondary">{{ formatDate(sub.start_date) }} – {{ formatDate(sub.end_date) }}</p>
+              <p class="mt-1 text-xs text-text-secondary">{{ formatDateTime(sub.starts_at) }} – {{ formatDateTime(sub.ends_at) }}</p>
               <p class="text-xs text-text-secondary">{{ formatCurrency(sub.amount_paid) }}</p>
             </li>
           </ul>

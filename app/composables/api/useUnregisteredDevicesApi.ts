@@ -77,5 +77,14 @@ export function useUnregisteredDevicesApi() {
     })
   }
 
-  return { listSightings, registerSighting, registerSightingAsAccessPoint, discardSighting }
+  // POST /api/unregistered-devices/{id}/redetect/ — asks the device again who
+  // it is (name, model, and whether it's an access point or a station). For a
+  // sighting whose role/name came back "uncertain". Only fills in what's still
+  // unknown. Takes a few seconds (the device is asked live); if the device
+  // can't be reached the sighting comes back unchanged.
+  function redetectSighting(id: string) {
+    return apiFetch<UnregisteredDeviceSighting>(`/api/unregistered-devices/${id}/redetect/`, { method: 'POST' })
+  }
+
+  return { listSightings, registerSighting, registerSightingAsAccessPoint, discardSighting, redetectSighting }
 }

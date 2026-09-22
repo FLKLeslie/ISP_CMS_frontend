@@ -3,15 +3,16 @@ import { Wifi } from 'lucide-vue-next'
 const props = withDefaults(
   defineProps<{
     planName: string | null
-    remainingDays: number
-    expiryDate: string | null
+    // Exact seconds until the plan ends. NOT whole days: a plan measured in
+    // hours or minutes has 0 days left the entire time it is running.
+    remainingSeconds: number
+    // The exact moment it ends (ISO). Drives the live countdown and the
+    // "Ends at" line.
     expiresAt: string | null
-    // Original plan length, used to work out how much of the bundle is
-    // left as a percentage - drives whether the action button reads
-    // "Duplicate bundle" (plenty of time left) or "Renew bundle" (running
-    // low). Omit to just show a generic action (e.g. on the dashboard,
-    // where the button is hidden anyway via showAction).
-    durationDays?: number
+    // The plan's full length in minutes, used to work out how much of it is
+    // left - drives whether the action reads "Duplicate bundle" (plenty left) or
+    // "Renew bundle" (running low), and when it counts as "Expiring soon".
+    durationMinutes?: number
     // The dashboard shows this card read-only (no action button) - the
     // subscription page is where renewing/duplicating actually happens.
     showAction?: boolean
@@ -19,23 +20,30 @@ const props = withDefaults(
   }>(),
   { showAction: true, blocked: false },
 )
-const emit = defineEmits<{ renew: [] }>()
+// `expired` fires when the countdown reaches zero, so the page can re-fetch and
+// show the real state; `renew` is the action button.
+const emit = defineEmits<{ renew: []; expired: [] }>()
+
+const DAY = 86400
+// "Expiring soon" scales with the plan: 7 days for a normal plan, but a quarter
+// of the plan for a short one (7 days is longer than a 2-hour plan itself).
+const soonSeconds = computed(() => {
+  const plan = (props.durationMinutes ?? 0) * 60
+  return plan > 0 ? Math.min(7 * DAY, plan / 4) : 7 * DAY
+})
 const status = computed<{ label: string; tone: 'success' | 'warning' | 'error' | 'neutral' }>(() => {
   if (props.blocked) return { label: 'Blocked', tone: 'error' }
   if (!props.planName) return { label: 'No Active Plan', tone: 'neutral' }
-  if (props.remainingDays <= 0) return { label: 'Expired', tone: 'error' }
-  if (props.remainingDays <= 7) return { label: 'Expiring Soon', tone: 'warning' }
+  if (props.remainingSeconds <= 0) return { label: 'Expired', tone: 'error' }
+  if (props.remainingSeconds <= soonSeconds.value) return { label: 'Expiring Soon', tone: 'warning' }
   return { label: 'Active', tone: 'success' }
 })
 // >70% of the bundle remaining -> plenty of room to stack another period
-// ("Duplicate"). <30% remaining -> running low, frame it as renewing.
-// The 30-70% middle ground defaults to "Renew" too, since that's the
-// more broadly-applicable action once a bundle is more than a third
-// spent.
+// ("Duplicate"). Otherwise frame it as renewing.
 const actionLabel = computed(() => {
   if (!props.planName) return 'Choose a Plan'
-  if (!props.durationDays) return 'Renew or duplicate plan'
-  const percentRemaining = (props.remainingDays / props.durationDays) * 100
+  if (!props.durationMinutes) return 'Renew or duplicate plan'
+  const percentRemaining = (props.remainingSeconds / (props.durationMinutes * 60)) * 100
   return percentRemaining > 70 ? 'Duplicate bundle' : 'Renew bundle'
 })
 </script>
@@ -50,13 +58,15 @@ const actionLabel = computed(() => {
     </div>
     <div class="mb-5 flex flex-wrap items-center gap-3">
       <StatusBadge :label="status.label" :tone="status.tone" />
-      <span v-if="props.planName && !props.blocked" class="text-sm text-text-secondary">{{ formatRemainingDays(props.remainingDays) }}</span>
+      <span v-if="props.planName && !props.blocked" class="text-sm text-text-secondary">{{ formatRemainingSeconds(props.remainingSeconds) }}</span>
     </div>
     <p v-if="props.blocked" class="mb-5 text-sm text-error">Your internet access has been blocked. Please contact an administrator for more information.</p>
-    <div v-else-if="props.expiresAt && props.remainingDays > 0" class="mb-5">
-      <CountdownTimer :expires-at="props.expiresAt" />
+    <div v-else-if="props.expiresAt && props.remainingSeconds > 0" class="mb-5">
+      <CountdownTimer :expires-at="props.expiresAt" @expired="emit('expired')" />
     </div>
-    <p v-if="props.expiryDate && !props.blocked" class="mb-5 text-sm text-text-secondary">Expires: <span class="font-medium text-text-primary">{{ formatDate(props.expiryDate) }}</span></p>
+    <p v-if="props.expiresAt && !props.blocked && props.remainingSeconds > 0" class="mb-5 text-sm text-text-secondary">
+      Your internet switches off at <span class="font-medium text-text-primary">{{ formatDateTime(props.expiresAt) }}</span>
+    </p>
     <button v-if="props.showAction && !props.blocked" type="button" class="btn-primary" @click="emit('renew')">
       {{ actionLabel }}
     </button>

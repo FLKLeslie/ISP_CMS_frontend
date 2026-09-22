@@ -4,7 +4,7 @@ import type { UnregisteredDeviceSighting } from '~/types/api/devices'
 
 definePageMeta({ layout: 'admin' })
 
-const { listSightings, registerSighting, registerSightingAsAccessPoint, discardSighting } = useUnregisteredDevicesApi()
+const { listSightings, registerSighting, registerSightingAsAccessPoint, discardSighting, redetectSighting } = useUnregisteredDevicesApi()
 const { listCustomers, createCustomer } = useCustomersApi()
 const { listAccessPointsWithLocation } = useAccessPointsApi()
 
@@ -35,6 +35,20 @@ function statusTone(status: string) {
   return 'neutral' // DISCARDED
 }
 
+// --- What kind of device is this? -------------------------------------------
+// The role comes from the device itself (see the backend's detect_sighting_
+// details). It can legitimately be UNKNOWN: the device may not have answered
+// yet, or reported too little to classify (e.g. advanced wireless
+// configuration). That is shown as "uncertain" rather than hidden, because it
+// changes what the administrator has to do: decide for themselves.
+type Role = 'access-point' | 'station' | 'uncertain'
+const roleOf = (s: UnregisteredDeviceSighting): Role => (s.detected_role === 'access-point' || s.detected_role === 'station' ? s.detected_role : 'uncertain')
+const roleView: Record<Role, { label: string; tone: 'info' | 'success' | 'warning' }> = {
+  'access-point': { label: 'Access Point', tone: 'info' },
+  station: { label: 'Station', tone: 'success' },
+  uncertain: { label: 'Role uncertain', tone: 'warning' },
+}
+
 // Surface a couple of the more useful raw sample fields inline, without
 // trying to render the whole arbitrary JSON blob — signal_strength in
 // particular helps an admin judge "is this actually near one of our APs"
@@ -44,6 +58,40 @@ function sampleSummary(sample: Record<string, unknown>): string {
   if (sample.signal_strength != null) parts.push(`${sample.signal_strength} dBm`)
   if (sample.online != null) parts.push(sample.online ? 'reporting online' : 'reporting offline')
   return parts.length ? parts.join(' · ') : 'No metrics reported yet'
+}
+
+// A quiet background refresh, so a device whose details get filled in by the
+// automatic retry updates on screen without anyone pressing anything. Only
+// while something is actually uncertain, and never while a form is open.
+let poller: ReturnType<typeof setInterval> | undefined
+onMounted(() => {
+  poller = setInterval(() => {
+    const unsure = sightings.value.some((s) => s.status === 'PENDING' && (roleOf(s) === 'uncertain' || !s.detected_name))
+    if (!document.hidden && unsure && !openId.value) refresh()
+  }, 15_000)
+})
+onBeforeUnmount(() => clearInterval(poller))
+
+// --- Re-check: ask the device again -----------------------------------------------
+const rechecking = ref<string | null>(null)
+const recheckMessage = reactive<Record<string, string>>({})
+async function handleRecheck(s: UnregisteredDeviceSighting) {
+  rechecking.value = s.id
+  delete recheckMessage[s.id]
+  const before = `${s.detected_role}|${s.detected_name}|${s.detected_model}`
+  try {
+    const updated = await redetectSighting(s.id)
+    const index = data.value?.results.findIndex((r) => r.id === s.id) ?? -1
+    if (index !== -1 && data.value) data.value.results[index] = updated
+    const learned = `${updated.detected_role}|${updated.detected_name}|${updated.detected_model}` !== before
+    recheckMessage[s.id] = learned
+      ? 'Updated from the device.'
+      : "The device didn't give us anything new. It may be offline, or it may not report its role — you can still register it yourself."
+  } catch (err) {
+    recheckMessage[s.id] = apiErrorMessage(err, "Couldn't re-check this device. Please try again.")
+  } finally {
+    rechecking.value = null
+  }
 }
 
 // --- Register panel ---------------------------------------------------------
@@ -73,14 +121,10 @@ const selectedAccessPointId = ref('')
 
 const deviceName = ref('')
 const notes = ref('')
+// Which kind of record the open form creates. Chosen by WHICH BUTTON the admin
+// pressed (Register AP / Register to a customer), so it always matches intent.
 const registerMode = ref<'station' | 'access-point'>('station')
 const apSite = ref('')
-
-function roleLabel(role: string) {
-  if (role === 'access-point') return 'Access Point'
-  if (role === 'station') return 'Station'
-  return 'Unknown role'
-}
 
 // Registering an access-point creates infrastructure, not a customer
 // device - so it needs a name and optional site, never a customer.
@@ -126,19 +170,16 @@ function handleConfirmApReplace() {
   handleRegisterAccessPoint(apReplaceConflict.value.sightingId, true)
 }
 
-function openRegisterForm(sighting: UnregisteredDeviceSighting) {
-  const id = sighting.id
-  openId.value = openId.value === id ? null : id
+// Opens (or closes, if already open in the same mode) the form for a sighting.
+function openRegisterForm(sighting: UnregisteredDeviceSighting, mode: 'station' | 'access-point') {
+  const same = openId.value === sighting.id && registerMode.value === mode
+  openId.value = same ? null : sighting.id
+  registerMode.value = mode
   registerError.value = ''
-  // Pre-fill from the auto-detected name (see devices.node_client.
-  // fetch_device_name on the backend) if Node was able to look one up
-  // when this sighting was first seen - still fully editable, just saves
-  // typing when it's right.
+  // Pre-fill from the name the device reported for itself, if we got one - still
+  // fully editable, just saves typing when it's right (and is left blank, not
+  // guessed, when we don't know).
   deviceName.value = sighting.detected_name || ''
-  // Default the form to whatever the device reported itself as - an
-  // access-point becomes infrastructure, a station becomes a customer's
-  // device. The admin can still override this either way.
-  registerMode.value = sighting.detected_role === 'access-point' ? 'access-point' : 'station'
   apSite.value = ''
   notes.value = ''
   selectedCustomerId.value = ''
@@ -244,6 +285,9 @@ async function handleDiscard(id: string) {
     discarding.value = null
   }
 }
+
+const field = 'w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent'
+const tab = (active: boolean) => (active ? 'bg-primary text-white' : 'text-text-secondary hover:text-text-primary')
 </script>
 
 <template>
@@ -251,30 +295,31 @@ async function handleDiscard(id: string) {
     <div>
       <h1 class="text-2xl font-semibold text-text-primary">Unregistered Devices</h1>
       <p class="mt-1 text-sm text-text-secondary">
-        Devices that pinged our network but aren't linked to a customer yet. Register them to
-        the right customer, or discard if it's not one of ours.
+        Devices that pinged our network but aren't registered yet. Access points are registered as access points;
+        stations are registered to the customer they belong to.
       </p>
     </div>
 
-    <div class="inline-flex flex-wrap rounded-card border border-border bg-surface p-0.5" role="tablist">
-      <button
-        v-for="t in [
-          { key: 'PENDING', label: 'Needs Review' },
-          { key: 'REGISTERED', label: 'Registered' },
-          { key: 'DISCARDED', label: 'Discarded' },
-          { key: '', label: 'All' },
-        ]"
-        :key="t.key"
-        type="button"
-        class="rounded-[0.4rem] px-4 py-1.5 text-sm font-medium transition-colors"
-        :class="statusFilter === t.key ? 'bg-primary text-white' : 'text-text-secondary hover:text-text-primary'"
-        @click="statusFilter = t.key as any; page = 1"
-      >
-        {{ t.label }}
-      </button>
+    <div class="overflow-x-auto">
+      <div class="inline-flex min-w-max rounded-card border border-border bg-surface p-0.5" role="tablist">
+        <button
+          v-for="t in [
+            { key: 'PENDING', label: 'Needs Review' },
+            { key: 'REGISTERED', label: 'Registered' },
+            { key: 'DISCARDED', label: 'Discarded' },
+            { key: '', label: 'All' },
+          ]"
+          :key="t.key" type="button" role="tab" :aria-selected="statusFilter === t.key"
+          class="whitespace-nowrap rounded-[0.4rem] px-4 py-1.5 text-sm font-medium transition-colors"
+          :class="tab(statusFilter === t.key)"
+          @click="statusFilter = t.key as any; page = 1"
+        >
+          {{ t.label }}
+        </button>
+      </div>
     </div>
 
-    <LoadingState v-if="pending" :rows="4" />
+    <LoadingState v-if="pending && !data" :rows="4" />
     <ErrorState v-else-if="error" @retry="refresh()" />
     <EmptyState
       v-else-if="!sightings.length"
@@ -284,170 +329,164 @@ async function handleDiscard(id: string) {
     />
     <template v-else>
       <div class="space-y-3">
-        <div
-          v-for="s in sightings"
-          :key="s.id"
-          class="rounded-card border border-border bg-surface p-4"
-        >
-          <div class="flex flex-wrap items-start justify-between gap-2">
-            <div>
-              <p class="font-mono text-sm font-semibold text-text-primary">{{ s.mac_address }}</p>
-              <p v-if="s.detected_name" class="mt-0.5 text-sm text-secondary">
-                Detected as "{{ s.detected_name }}"<span v-if="s.detected_model"> · {{ s.detected_model }}</span>
-              </p>
-              <p v-if="s.detected_role" class="mt-0.5">
-                <StatusBadge :label="roleLabel(s.detected_role)" :tone="s.detected_role === 'access-point' ? 'info' : 'neutral'" />
-              </p>
-              <p class="text-xs text-text-secondary">
-                First seen {{ formatDateTime(s.first_seen) }} · Last seen {{ formatRelativeTime(s.last_seen) }}
-                · {{ s.sighting_count }} {{ s.sighting_count === 1 ? 'ping' : 'pings' }}
-              </p>
-              <p class="mt-1 text-xs text-text-secondary">{{ sampleSummary(s.last_sample) }}</p>
+        <div v-for="s in sightings" :key="s.id" class="rounded-card border border-border bg-surface p-4">
+          <!-- Identity -->
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="truncate text-base font-semibold text-text-primary">{{ s.detected_name || 'Unnamed device' }}</p>
+              <p class="break-all font-mono text-xs text-text-secondary">{{ s.mac_address }}<span v-if="s.detected_model" class="font-sans"> · {{ s.detected_model }}</span></p>
             </div>
-            <StatusBadge :label="s.status" :tone="statusTone(s.status)" />
+            <div class="flex flex-wrap items-center gap-2">
+              <StatusBadge :label="roleView[roleOf(s)].label" :tone="roleView[roleOf(s)].tone" />
+              <StatusBadge :label="s.status === 'PENDING' ? 'Pending review' : s.status === 'REGISTERED' ? 'Registered' : 'Discarded'" :tone="statusTone(s.status)" />
+            </div>
           </div>
 
-          <div v-if="s.status === 'REGISTERED'" class="mt-2 text-sm text-text-secondary">
-            Registered as <span class="font-medium text-text-primary">{{ s.resolved_device_name }}</span>
+          <p class="mt-2 text-xs text-text-secondary">
+            First seen {{ formatDateTime(s.first_seen) }} · Last seen {{ formatRelativeTime(s.last_seen) }}
+            · {{ s.sighting_count }} {{ s.sighting_count === 1 ? 'ping' : 'pings' }}
+          </p>
+          <p class="text-xs text-text-secondary">{{ sampleSummary(s.last_sample) }}</p>
+
+          <!-- Uncertain: say so plainly, and offer another go -->
+          <div v-if="s.status === 'PENDING' && (roleOf(s) === 'uncertain' || !s.detected_name)" class="mt-3 rounded-card border border-warning/40 bg-warning/5 px-3 py-2">
+            <p class="text-sm text-text-primary">
+              <template v-if="roleOf(s) === 'uncertain'">
+                We couldn't tell whether this is an access point or a station — the device didn't answer, or didn't report enough.
+              </template>
+              <template v-else>We couldn't read this device's name.</template>
+              You can check again, or decide yourself below.
+            </p>
+            <p v-if="s.detection_checked_at" class="mt-0.5 text-xs text-text-secondary">Last checked {{ formatRelativeTime(s.detection_checked_at) }}.</p>
+            <div class="mt-2 flex flex-wrap items-center gap-2">
+              <button type="button" :disabled="rechecking === s.id" class="btn-secondary" @click="handleRecheck(s)">
+                {{ rechecking === s.id ? 'Checking…' : 'Check again' }}
+              </button>
+              <p v-if="recheckMessage[s.id]" role="status" class="text-xs text-text-secondary">{{ recheckMessage[s.id] }}</p>
+            </div>
+          </div>
+          <p v-else-if="recheckMessage[s.id]" role="status" class="mt-2 text-xs text-text-secondary">{{ recheckMessage[s.id] }}</p>
+
+          <div v-if="s.status === 'REGISTERED'" class="mt-3 text-sm text-text-secondary">
+            Registered<template v-if="s.resolved_device_name"> as <span class="font-medium text-text-primary">{{ s.resolved_device_name }}</span></template>
             by {{ s.resolved_by_name }} · {{ formatDateTime(s.resolved_at) }}
           </div>
-          <div v-else-if="s.status === 'DISCARDED'" class="mt-2 text-sm text-text-secondary">
+          <div v-else-if="s.status === 'DISCARDED'" class="mt-3 text-sm text-text-secondary">
             Discarded by {{ s.resolved_by_name }} · {{ formatDateTime(s.resolved_at) }}
           </div>
 
-          <div v-if="s.status === 'PENDING'" class="mt-3 flex gap-3">
+          <!-- Actions: the button matches the role; uncertain shows both -->
+          <div v-if="s.status === 'PENDING'" class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
             <button
-              type="button"
-              class="text-sm font-medium text-accent hover:underline"
-              @click="openRegisterForm(s)"
-            >
-              {{ openId === s.id ? 'Cancel' : 'Register to a customer' }}
-            </button>
+              v-if="roleOf(s) !== 'station'" type="button" class="btn-primary"
+              @click="openRegisterForm(s, 'access-point')"
+            >{{ openId === s.id && registerMode === 'access-point' ? 'Cancel' : 'Register AP' }}</button>
             <button
-              type="button"
-              :disabled="discarding === s.id"
-              class="text-sm font-medium text-text-secondary hover:underline disabled:opacity-50"
-              @click="handleDiscard(s.id)"
-            >
+              v-if="roleOf(s) !== 'access-point'" type="button" class="btn-primary"
+              @click="openRegisterForm(s, 'station')"
+            >{{ openId === s.id && registerMode === 'station' ? 'Cancel' : 'Register to a customer' }}</button>
+            <button type="button" :disabled="discarding === s.id" class="btn-secondary" @click="handleDiscard(s.id)">
               {{ discarding === s.id ? 'Discarding…' : 'Discard' }}
+            </button>
+            <!-- The detected role is a suggestion, never a restriction -->
+            <button
+              v-if="roleOf(s) !== 'uncertain'" type="button" class="text-left text-xs font-medium text-text-secondary hover:text-text-primary hover:underline sm:ml-auto"
+              @click="openRegisterForm(s, roleOf(s) === 'access-point' ? 'station' : 'access-point')"
+            >
+              {{ roleOf(s) === 'access-point' ? 'Actually a customer\'s station? Register it to a customer' : 'Actually an access point? Register it as one' }}
             </button>
           </div>
 
+          <!-- Register form -->
           <div v-if="openId === s.id" class="mt-4 space-y-3 border-t border-border pt-4">
-            <!-- What kind of record this becomes. Pre-set from the device's
-                 own reported role, but the admin has the final say. -->
-            <div>
-              <label class="mb-1 block text-sm font-medium text-text-primary">Register as</label>
-              <div class="inline-flex rounded-card border border-border bg-background p-0.5">
-                <button
-                  v-for="m in [{ key: 'station', label: 'Customer device' }, { key: 'access-point', label: 'Access point' }]"
-                  :key="m.key" type="button"
-                  class="rounded-[0.4rem] px-3 py-1.5 text-sm font-medium transition-colors"
-                  :class="registerMode === m.key ? 'bg-primary text-white' : 'text-text-secondary hover:text-text-primary'"
-                  @click="registerMode = m.key as any"
-                >{{ m.label }}</button>
-              </div>
-              <p v-if="s.detected_role === 'access-point' && registerMode === 'station'" class="mt-1 text-xs text-warning">
-                This device reports itself as an access point — registering it to a customer is unusual.
-              </p>
-            </div>
+            <p v-if="roleOf(s) === 'access-point' && registerMode === 'station'" class="rounded-card border border-warning/40 bg-warning/5 px-3 py-2 text-xs text-text-primary">
+              This device reports itself as an access point — registering it to a customer is unusual.
+            </p>
+            <p v-else-if="roleOf(s) === 'station' && registerMode === 'access-point'" class="rounded-card border border-warning/40 bg-warning/5 px-3 py-2 text-xs text-text-primary">
+              This device reports itself as a station — registering it as an access point is unusual.
+            </p>
 
-            <!-- Access point form -->
+            <!-- Access point -->
             <template v-if="registerMode === 'access-point'">
-              <div>
-                <label class="mb-1 block text-sm font-medium text-text-primary">Access point name</label>
-                <input v-model="deviceName" placeholder="e.g. Rooftop AP" class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
-              </div>
-              <div>
-                <label class="mb-1 block text-sm font-medium text-text-primary">Site (optional)</label>
-                <input v-model="apSite" placeholder="Where it's installed" class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-text-primary">Access point name</label>
+                  <input v-model="deviceName" placeholder="e.g. Rooftop AP" :class="field">
+                  <p v-if="s.detected_name" class="mt-1 text-xs text-text-secondary">Filled in from the device — change it if you like.</p>
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-text-primary">Site (optional)</label>
+                  <input v-model="apSite" placeholder="Where it's installed" :class="field">
+                </div>
               </div>
               <p v-if="registerError" role="alert" class="text-sm text-error">{{ registerError }}</p>
               <button type="button" :disabled="registering" class="btn-primary" @click="handleRegisterAccessPoint(s.id)">
-                {{ registering ? 'Registering…' : 'Register Access Point' }}
+                {{ registering ? 'Registering…' : 'Register AP' }}
               </button>
             </template>
 
-            <!-- Customer device form -->
+            <!-- Station / customer device -->
             <template v-else>
-            <div>
-              <div class="mb-1 flex items-center justify-between">
-                <label class="block text-sm font-medium text-text-primary">Customer</label>
-                <button type="button" class="text-xs font-medium text-secondary hover:underline" @click="showNewCustomerForm = !showNewCustomerForm">
-                  {{ showNewCustomerForm ? 'Cancel' : "Customer not in the system? Create one" }}
-                </button>
-              </div>
-              <form v-if="showNewCustomerForm" class="mb-3 grid grid-cols-1 gap-2 rounded-card border border-border bg-background/40 p-3 sm:grid-cols-2" @submit.prevent="handleCreateCustomer">
-                <input v-model="newCustomerForm.first_name" placeholder="First name" required class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
-                <input v-model="newCustomerForm.last_name" placeholder="Last name" required class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
-                <input v-model="newCustomerForm.email" type="email" placeholder="Email" required class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
-                <input v-model="newCustomerForm.password" placeholder="Temporary password" required class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
-                <input v-model="newCustomerForm.phone_number" placeholder="Phone (optional)" class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent sm:col-span-2">
-                <p v-if="newCustomerError" role="alert" class="text-xs text-error sm:col-span-2">{{ newCustomerError }}</p>
-                <button type="submit" :disabled="creatingCustomer" class="btn-primary sm:col-span-2">{{ creatingCustomer ? 'Creating…' : 'Create and select customer' }}</button>
-              </form>
-              <SearchInput v-model="customerSearch" placeholder="Search by name or email…" />
-              <div v-if="customerOptions.length" class="mt-2 max-h-40 overflow-y-auto rounded-card border border-border">
-                <button
-                  v-for="c in customerOptions"
-                  :key="c.id"
-                  type="button"
-                  class="block w-full px-3 py-2 text-left text-sm hover:bg-text-secondary/10"
-                  :class="selectedCustomerId === c.id ? 'bg-accent/10 text-accent' : 'text-text-primary'"
-                  @click="selectedCustomerId = c.id; customerSearch = `${c.user.first_name} ${c.user.last_name}`"
-                >
-                  {{ c.user.first_name }} {{ c.user.last_name }} — {{ c.user.email }}
-                </button>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <label class="mb-1 block text-sm font-medium text-text-primary">Device name</label>
-                <input
-                  v-model="deviceName"
-                  required
-                  placeholder="e.g. Rooftop Unit"
-                  class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
-                />
+                <div class="mb-1 flex flex-wrap items-center justify-between gap-2">
+                  <label class="block text-sm font-medium text-text-primary">Customer</label>
+                  <button type="button" class="text-xs font-medium text-secondary hover:underline" @click="showNewCustomerForm = !showNewCustomerForm">
+                    {{ showNewCustomerForm ? 'Cancel' : 'Customer not in the system? Create one' }}
+                  </button>
+                </div>
+                <form v-if="showNewCustomerForm" class="mb-3 grid grid-cols-1 gap-2 rounded-card border border-border bg-background p-3 sm:grid-cols-2" @submit.prevent="handleCreateCustomer">
+                  <input v-model="newCustomerForm.first_name" placeholder="First name" required :class="field">
+                  <input v-model="newCustomerForm.last_name" placeholder="Last name" required :class="field">
+                  <input v-model="newCustomerForm.email" type="email" placeholder="Email" required :class="field">
+                  <input v-model="newCustomerForm.password" placeholder="Temporary password" required :class="field">
+                  <input v-model="newCustomerForm.phone_number" placeholder="Phone (optional)" :class="field" class="sm:col-span-2">
+                  <p v-if="newCustomerError" role="alert" class="text-xs text-error sm:col-span-2">{{ newCustomerError }}</p>
+                  <button type="submit" :disabled="creatingCustomer" class="btn-primary sm:col-span-2">{{ creatingCustomer ? 'Creating…' : 'Create and select customer' }}</button>
+                </form>
+                <SearchInput v-model="customerSearch" placeholder="Search by name or email…" />
+                <div v-if="customerOptions.length" class="mt-2 max-h-44 overflow-y-auto rounded-card border border-border">
+                  <button
+                    v-for="c in customerOptions" :key="c.id" type="button"
+                    class="block w-full px-3 py-2 text-left text-sm transition-colors hover:bg-text-secondary/10"
+                    :class="selectedCustomerId === c.id ? 'bg-secondary/10 font-medium text-secondary' : 'text-text-primary'"
+                    @click="selectedCustomerId = c.id; customerSearch = `${c.user.first_name} ${c.user.last_name}`"
+                  >
+                    {{ c.user.first_name }} {{ c.user.last_name }} — {{ c.user.email }}
+                  </button>
+                </div>
               </div>
+
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-text-primary">Device name</label>
+                  <input v-model="deviceName" required placeholder="e.g. Rooftop Unit" :class="field">
+                  <p v-if="s.detected_name" class="mt-1 text-xs text-text-secondary">Filled in from the device — change it if you like.</p>
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-text-primary">Access point (optional)</label>
+                  <select v-model="selectedAccessPointId" :class="field">
+                    <option value="">None yet</option>
+                    <option v-for="ap in accessPointOptions" :key="ap.id" :value="ap.id">{{ ap.name }}</option>
+                  </select>
+                </div>
+              </div>
+
               <div>
-                <label class="mb-1 block text-sm font-medium text-text-primary">Access point (optional)</label>
-                <select
-                  v-model="selectedAccessPointId"
-                  class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
-                >
-                  <option value="">None yet</option>
-                  <option v-for="ap in accessPointOptions" :key="ap.id" :value="ap.id">{{ ap.name }}</option>
-                </select>
+                <label class="mb-1 block text-sm font-medium text-text-primary">Notes (optional)</label>
+                <textarea v-model="notes" rows="2" :class="field" />
               </div>
-            </div>
 
-            <div>
-              <label class="mb-1 block text-sm font-medium text-text-primary">Notes (optional)</label>
-              <textarea
-                v-model="notes"
-                rows="2"
-                class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
-              />
-            </div>
-
-            <p v-if="registerError" role="alert" class="text-sm text-error">{{ registerError }}</p>
-
-            <button
-              type="button"
-              :disabled="registering"
-              class="btn-primary"
-              @click="handleRegister(s.id)"
-            >
-              {{ registering ? 'Registering…' : 'Register Device' }}
-            </button>
+              <p v-if="registerError" role="alert" class="text-sm text-error">{{ registerError }}</p>
+              <button type="button" :disabled="registering" class="btn-primary" @click="handleRegister(s.id)">
+                {{ registering ? 'Registering…' : 'Register to a customer' }}
+              </button>
             </template>
           </div>
         </div>
       </div>
       <Pagination :current-page="page" :total-pages="totalPages" @change="page = $event" />
     </template>
+
     <ConfirmationDialog
       :open="!!apReplaceConflict"
       title="Replace the existing access point?"

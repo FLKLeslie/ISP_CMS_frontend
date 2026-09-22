@@ -13,15 +13,25 @@ const { data, pending, error, refresh } = await useAsyncData('customer-dashboard
       <div v-if="data.account_status === 'SUSPENDED'" class="rounded-card border border-error/40 bg-error/5 p-3 text-sm text-error">
         Your account is suspended. Please contact an administrator to restore access.
       </div>
+      <!-- Without a router linked to the account there's nothing to connect, so
+           no plan can be bought: say so instead of leaving them to find out. -->
+      <div v-if="!data.router_allocated" role="alert" class="rounded-card border border-warning/40 bg-warning/5 p-3">
+        <p class="text-sm font-medium text-text-primary">Your router isn't linked to your account yet</p>
+        <p class="mt-0.5 text-sm text-text-secondary">
+          You can't purchase a plan or get internet until an administrator links your router. Please contact them —
+          you'll get a notification as soon as it's done.
+        </p>
+      </div>
       <!-- Dashboard is a read-only summary - renewing/duplicating a plan
            happens on the Subscription page, not here. -->
       <SubscriptionCard
         :plan-name="data.is_blocked ? data.blocked_plan_name : (data.active_plan?.name ?? null)"
-        :remaining-days="data.remaining_days"
-        :expiry-date="data.expiry_date"
+        :remaining-seconds="data.remaining_seconds"
         :expires-at="data.expires_at"
+        :duration-minutes="data.active_plan?.duration_minutes"
         :blocked="data.is_blocked"
         :show-action="false"
+        @expired="refresh()"
       />
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div class="flex items-center gap-3 rounded-card border border-border bg-surface p-4">

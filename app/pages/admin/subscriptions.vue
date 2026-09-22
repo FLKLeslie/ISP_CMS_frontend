@@ -19,7 +19,7 @@ const plans = computed(() => plansData.value?.results ?? [])
 
 // --- Plan creation (now supports GENERAL vs SPECIFIC plans) -------------
 const showPlanForm = ref(false)
-const planName = ref(''); const planDesc = ref(''); const planDuration = ref(30); const planPrice = ref('')
+const planName = ref(''); const planDesc = ref(''); const planDuration = ref(30 * 1440) /* minutes */; const planPrice = ref('')
 const planType = ref<'GENERAL' | 'SPECIFIC'>('GENERAL')
 const planCustomerSearch = ref(''); const planCustomerIds = ref<string[]>([])
 const planCustomerLabels = reactive<Record<string, string>>({})
@@ -45,11 +45,11 @@ async function handleCreatePlan() {
   savingPlan.value = true
   try {
     await createPlan({
-      name: planName.value, description: planDesc.value, duration_days: planDuration.value,
+      name: planName.value, description: planDesc.value, duration_minutes: planDuration.value,
       price: planPrice.value, is_active: true, plan_type: planType.value,
       eligible_customer_ids: planType.value === 'SPECIFIC' ? planCustomerIds.value : [],
     })
-    planName.value = ''; planDesc.value = ''; planDuration.value = 30; planPrice.value = ''
+    planName.value = ''; planDesc.value = ''; planDuration.value = 30 * 1440; planPrice.value = ''
     planType.value = 'GENERAL'; planCustomerIds.value = []; planCustomerSearch.value = ''
     showPlanForm.value = false
     await refreshPlans()
@@ -79,7 +79,8 @@ const grantPlanId = ref(''); const grantAmount = ref(''); const grantStartDate =
 const granting = ref(false); const grantError = ref(''); const grantSuccess = ref(false)
 const { data: grantCustomerResults } = await useAsyncData(
   'admin-grant-customer-search',
-  () => grantCustomerSearch.value.length >= 2 ? listCustomers({ search: grantCustomerSearch.value, page_size: 10 }) : Promise.resolve(null),
+  // has_router: only customers with a MikroTik allocated can be given a plan - there'd be nothing to connect them through.
+  () => grantCustomerSearch.value.length >= 2 ? listCustomers({ search: grantCustomerSearch.value, page_size: 10, has_router: 'true' }) : Promise.resolve(null),
   { watch: [grantCustomerSearch] },
 )
 const grantCustomerOptions = computed(() => grantCustomerResults.value?.results ?? [])
@@ -95,7 +96,7 @@ async function handleGrant() {
     grantSuccess.value = true
     grantCustomerId.value = ''; grantCustomerSearch.value = ''; grantPlanId.value = ''; grantAmount.value = ''; grantStartDate.value = ''
     await refreshSubs()
-  } catch { grantError.value = "Couldn't grant this subscription. Check the fields and try again." }
+  } catch (err) { grantError.value = apiErrorMessage(err, "Couldn't grant this subscription. Check the fields and try again.") }
   finally { granting.value = false }
 }
 </script>
@@ -116,11 +117,11 @@ async function handleGrant() {
       <ErrorState v-else-if="subsError" @retry="refreshSubs()" />
       <EmptyState v-else-if="!subs.length" title="No subscriptions found" />
       <template v-else>
-        <DataTable :columns="[{key:'customer',label:'Customer'},{key:'plan',label:'Plan'},{key:'end_date',label:'Expires'},{key:'remaining',label:'Remaining'},{key:'status',label:'Status'},{key:'source',label:'Source'}]" :rows="subs" row-key="id">
+        <DataTable :columns="[{key:'customer',label:'Customer'},{key:'plan',label:'Plan'},{key:'ends_at',label:'Ends'},{key:'remaining',label:'Remaining'},{key:'status',label:'Status'},{key:'source',label:'Source'}]" :rows="subs" row-key="id">
           <template #cell-customer="{ row }"><NuxtLink :to="`/admin/customers/${row.customer.id}`" class="hover:underline">{{ row.customer.user.first_name }} {{ row.customer.user.last_name }}</NuxtLink></template>
-          <template #cell-plan="{ row }">{{ row.plan.name }}</template>
-          <template #cell-end_date="{ row }">{{ formatDate(row.end_date) }}</template>
-          <template #cell-remaining="{ row }">{{ formatRemainingDays(row.remaining_days) }}</template>
+          <template #cell-plan="{ row }">{{ row.plan.name }} <span class="text-xs text-text-secondary">· {{ row.plan.duration_label }}</span></template>
+          <template #cell-ends_at="{ row }">{{ formatDateTime(row.ends_at) }}</template>
+          <template #cell-remaining="{ row }">{{ row.status === 'ACTIVE' ? formatRemainingSeconds(row.remaining_seconds) : '—' }}</template>
           <template #cell-status="{ row }"><StatusBadge :label="SUBSCRIPTION_STATUS_LABEL[row.status as SubscriptionStatus] ?? row.status" :tone="row.status === 'ACTIVE' ? 'success' : row.status === 'EXPIRED' ? 'neutral' : 'error'" /></template>
           <template #cell-source="{ row }">{{ row.granted_by_name ? `Granted by ${row.granted_by_name}` : 'Customer purchase' }}</template>
         </DataTable>
@@ -139,8 +140,8 @@ async function handleGrant() {
           <input v-model="planPrice" required type="number" step="0.01" class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent" />
         </div>
         <div>
-          <label class="mb-1 block text-sm font-medium text-text-primary">Duration (days)</label>
-          <input v-model.number="planDuration" required type="number" min="1" class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent" />
+          <label class="mb-1 block text-sm font-medium text-text-primary">Duration</label>
+          <DurationInput v-model="planDuration" />
         </div>
         <div>
           <label class="mb-1 block text-sm font-medium text-text-primary">Plan type</label>
@@ -200,7 +201,8 @@ async function handleGrant() {
     <div v-else class="max-w-lg space-y-4">
       <p class="text-sm text-text-secondary">
         Record a plan granted directly to a customer - e.g. a cash payment taken in person. This
-        creates the subscription and a matching payment (method: Direct) exactly like a normal purchase.
+        creates the subscription and a matching payment (method: Direct) exactly like a normal purchase,
+        and switches the customer's router on automatically. Only customers with a router allocated are listed.
       </p>
       <form class="grid grid-cols-1 gap-3 rounded-card border border-border bg-surface p-5" @submit.prevent="handleGrant">
         <div>
@@ -210,11 +212,15 @@ async function handleGrant() {
             <button
               v-for="c in grantCustomerOptions" :key="c.id" type="button"
               class="block w-full px-3 py-2 text-left text-sm hover:bg-text-secondary/10"
-              :class="grantCustomerId === c.id ? 'bg-accent/10 text-accent' : 'text-text-primary'"
+              :class="grantCustomerId === c.id ? 'bg-secondary/10 font-medium text-secondary' : 'text-text-primary'"
               @click="grantCustomerId = c.id; grantCustomerSearch = `${c.user.first_name} ${c.user.last_name}`">
               {{ c.user.first_name }} {{ c.user.last_name }} · {{ c.user.email }}
             </button>
           </div>
+          <p v-else-if="grantCustomerSearch.length >= 2 && !grantCustomerId" class="mt-2 text-xs text-text-secondary">
+            No matching customer with a router. A customer needs a router allocated to them
+            (MikroTik Management → Needs allocation) before they can be given a plan.
+          </p>
         </div>
         <div>
           <label class="mb-1 block text-sm font-medium text-text-primary">Plan</label>
@@ -232,7 +238,7 @@ async function handleGrant() {
           <input v-model="grantStartDate" type="date" class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent" />
         </div>
         <p v-if="grantError" role="alert" class="text-sm text-error">{{ grantError }}</p>
-        <p v-if="grantSuccess" class="text-sm text-success">Subscription granted.</p>
+        <p v-if="grantSuccess" role="status" class="text-sm text-success">Subscription granted. Their router is being connected automatically — you'll be notified if that fails.</p>
         <button type="submit" :disabled="granting" class="btn-primary sm:w-fit">{{ granting ? 'Granting…' : 'Grant Subscription' }}</button>
       </form>
     </div>

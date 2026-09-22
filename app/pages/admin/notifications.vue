@@ -29,6 +29,7 @@ function typeTone(type: string) {
   if (type === 'ANNOUNCEMENT') return 'warning'
   if (type === 'SUGGESTION') return 'info'
   if (type === 'CUSTOMER') return 'neutral'
+  if (type === 'NETWORK') return 'warning' // connection events and their errors
   return 'neutral' // GENERAL
 }
 
@@ -172,6 +173,7 @@ async function handleSend() {
       <option value="ANNOUNCEMENT">Announcement</option>
       <option value="SUGGESTION">Suggestion</option>
       <option value="CUSTOMER">Customer</option>
+      <option value="NETWORK">Network</option>
       <option value="GENERAL">General</option>
     </select>
 

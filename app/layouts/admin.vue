@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Bell, CreditCard, Home, Map, Megaphone, MessageSquare, RadioTower, Router, Users, Wifi } from 'lucide-vue-next'
+import { Bell, CreditCard, Home, Map, Megaphone, MessageSquare, RadioTower, Router, TrendingUp, Users, Wifi } from 'lucide-vue-next'
 import type { NavItem } from '~/types/nav'
 
 const { fetchAdminDashboard } = useDashboardApi()
@@ -35,6 +35,7 @@ const navItems = computed<NavItem[]>(() => [
   { label: 'Customers', to: '/admin/customers', icon: Users },
   { label: 'Subscriptions', to: '/admin/subscriptions', icon: Wifi },
   { label: 'Payments', to: '/admin/payments', icon: CreditCard },
+  { label: 'Revenue', to: '/admin/revenue', icon: TrendingUp },
   { label: 'Devices', to: '/admin/devices', icon: Router },
   {
     label: 'Unregistered Devices',
