@@ -12,6 +12,9 @@ import type { Paginated } from '~/types/api/common'
 import type {
   DeviceCommand,
   DeviceConfiguration,
+  DeviceConsoleCloseResult,
+  DeviceConsoleOpenResult,
+  DeviceConsoleWriteResult,
   DeviceDetail,
   DeviceListItem,
   DeviceMetric,
@@ -163,4 +166,47 @@ export function useDeviceCommandsApi() {
   }
 
   return { listCommands, createCommand }
+}
+
+// Raw shell console on a device (Administrator only — see
+// devices/permissions.py DeviceConsolePermission). Nothing here is
+// persisted: `terminal_id` only means anything to Node's own in-memory
+// session map for the lifetime of that one session. Always call
+// closeConsole when the console panel closes (including on unmount) —
+// see components/domain/DeviceConsole.vue.
+export function useDeviceConsoleApi() {
+  // POST /api/devices/{id}/console/open/ — logs into the device's shell
+  // with the given credentials (never stored) and returns a terminal_id
+  // for the write/close calls below, plus whatever the device printed
+  // while logging in.
+  function openConsole(deviceId: string, username: string, password: string) {
+    return apiFetch<DeviceConsoleOpenResult>(`/api/devices/${deviceId}/console/open/`, {
+      method: 'POST',
+      body: { username, password },
+    })
+  }
+
+  // POST /api/devices/{id}/console/write/ — sends one line (a typed
+  // command) to an already-open session and waits for the device's
+  // response. `input` may be an empty string (pressing Enter with
+  // nothing typed is a normal terminal action).
+  function writeConsole(deviceId: string, terminalId: string, input: string) {
+    return apiFetch<DeviceConsoleWriteResult>(`/api/devices/${deviceId}/console/write/`, {
+      method: 'POST',
+      body: { terminal_id: terminalId, input },
+    })
+  }
+
+  // POST /api/devices/{id}/console/close/ — ends the session. Best-effort
+  // on the backend (still returns 200 even if Node itself couldn't be
+  // reached), so the frontend can always safely drop its local state
+  // after calling this.
+  function closeConsole(deviceId: string, terminalId: string) {
+    return apiFetch<DeviceConsoleCloseResult>(`/api/devices/${deviceId}/console/close/`, {
+      method: 'POST',
+      body: { terminal_id: terminalId },
+    })
+  }
+
+  return { openConsole, writeConsole, closeConsole }
 }

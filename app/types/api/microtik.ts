@@ -111,3 +111,26 @@ export interface MikroTikCommand {
   created_at: string
   updated_at: string
 }
+
+
+// Payload for POST /api/microtik/commands/send/ — send an "add to allowed
+// list" (reconnect) or "block" command for a MAC address directly, to one
+// APPROVED router or to all of them. Exactly one of router / allRouters.
+export interface SendMikroTikCommandPayload {
+  macAddress: string
+  commandType: MikroTikCommandType
+  router?: string
+  allRouters?: boolean
+}
+
+// One result per router the send was attempted against. Either a normal
+// command record (router_id added) or, when a previous command for that
+// device on that router is still awaiting confirmation, a conflict entry —
+// that router is skipped rather than failing the whole request.
+export type SendMikroTikCommandResult =
+  | (MikroTikCommand & { router_id: string })
+  | { router_id: string; router_identity: string; conflict: true; detail: string }
+
+export interface SendMikroTikCommandResponse {
+  results: SendMikroTikCommandResult[]
+}

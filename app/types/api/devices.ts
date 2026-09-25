@@ -237,6 +237,32 @@ export interface DeviceDetail {
 }
 
 // ---------------------------------------------------------------------------
+// Device Console (raw shell session via Node - see devices/node_client.py
+// open_terminal/write_terminal/close_terminal and the console/open,
+// console/write, console/close actions on DeviceViewSet). Administrator
+// only. Nothing here is persisted server-side - `terminal_id` only makes
+// sense to Node's own in-memory session map, and is lost if Node restarts.
+// ---------------------------------------------------------------------------
+export type ConsoleResultStatus = 'completed' | 'timeout' | 'failed'
+
+export interface DeviceConsoleOpenResult {
+  status: ConsoleResultStatus
+  terminal_id: string | null
+  output: string
+  error: string | null
+}
+
+export interface DeviceConsoleWriteResult {
+  status: ConsoleResultStatus
+  output: string
+  error: string | null
+}
+
+export interface DeviceConsoleCloseResult {
+  status: string
+}
+
+// ---------------------------------------------------------------------------
 // Unregistered Device Sighting — an unknown MAC pinged the Node service and
 // didn't match any registered Device. One row per MAC, not per ping — see
 // devices/models.py UnregisteredDeviceSighting docstring for why.

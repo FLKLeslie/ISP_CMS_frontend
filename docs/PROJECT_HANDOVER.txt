@@ -1,5 +1,5 @@
 ISP MANAGEMENT SYSTEM - PROJECT HANDOVER
-Last updated: 2026-09-21
+Last updated: 2026-09-25
 =================================================================
 
 PURPOSE OF THIS FILE
@@ -133,6 +133,39 @@ all three codebases.
     registers it as an AccessPoint, registers it as a customer's Device
     (a "station"), or discards the sighting.
 
+3.1.1 Device console (raw shell)
+  - An admin can open a live, interactive shell session on any PowerBeam
+    Device straight from its detail page ("Console" button, top right) -
+    log in with the device's own credentials, type commands, see the
+    device's real output, just like SSH/telnet into it directly.
+  - This proxies through Node exactly like everything else: Django never
+    talks to the device directly. Node already had the underlying
+    terminal/open, terminal/write, terminal/close endpoints built (a
+    separate 'sys'-socket shell channel from the 'udapi' one used for
+    status/config) - they just weren't wired to anything before
+    2026-09-25. See devices/node_client.py (open_terminal/write_terminal/
+    close_terminal) and DeviceViewSet.console_open/console_write/
+    console_close.
+  - Administrator only (devices.permissions.DeviceConsolePermission,
+    deliberately separate from the normal DeviceOwnedPermission split so
+    it can never be loosened by an unrelated change to that class) - a
+    raw device shell is materially more sensitive than reboot/config-push.
+  - Credentials are NEVER stored anywhere. Device has no password field by
+    design - the admin enters username/password fresh every time they
+    open a console, it's forwarded to Node for that one session, and
+    discarded. Only the open/close of a session is audit-logged
+    (DEVICE_CONSOLE_OPENED / DEVICE_CONSOLE_CLOSED), never the commands
+    typed or the password.
+  - Sessions are entirely in-memory on Node, keyed by a generated
+    terminal_id - nothing is persisted in Django. A Node restart silently
+    drops every open session; the frontend has no way to detect this
+    except the next write/close call failing, which it surfaces as a
+    normal error in the console panel.
+  - The frontend (components/domain/DeviceConsole.vue) always calls
+    console/close/ when the panel is closed, including via onUnmounted -
+    an admin navigating away without explicitly disconnecting still frees
+    the session, so it never sits open on the device indefinitely.
+
 3.2 MikroTik routers and client leases
   - A customer's Device (the receiver PowerBeam) sits behind a MikroTik
     router, which is what actually grants or denies that specific
@@ -152,6 +185,22 @@ all three codebases.
     deleted, so it isn't lost.
   - A lease with no matching customer is "unallocated" and appears under
     MikroTik Management > Needs allocation for an admin to assign.
+  - As well as blocking/connecting a device that already has a lease
+    record, an admin can send an "add to allowed list" or "block"
+    command straight to a MAC address that a router has never actually
+    reported seeing yet (MikroTik Management > Commands tab). This
+    matters for infrastructure devices - an access point, a backbone
+    link - that must never sit blocked just because they haven't shown
+    up in a report: the admin can pre-authorise the MAC in advance, to
+    one specific approved router or to all of them at once. Under the
+    hood this creates a MikroTikLease if one doesn't already exist
+    (offline, unallocated) purely so the normal pending/confirm
+    machinery has something to track - see
+    microtik/services.py:send_command_by_mac. This is the FIRST of what
+    is expected to be several command types sent this way; if you add
+    another, keep it going through the same "results: [...]" response
+    shape (one entry per router targeted) so the frontend's handling
+    doesn't need to special-case each command type.
   - Blocking/connecting a device is NOT instant. Django asks Node to
     queue the command; the router only picks it up on its next poll. The
     lease shows as PENDING until a later router report confirms the
@@ -211,14 +260,17 @@ nav label to the page file, for a developer.)
   Subscriptions       pages/admin/subscriptions.vue    - list, grant, plans
   Payments           pages/admin/payments.vue         - record a payment
   Revenue            pages/admin/revenue.vue          - analysis, see 3.4
-  Devices            pages/admin/devices/             - list, detail,
+  Devices            pages/admin/devices/             - list, detail
+                                                          (incl. Console -
+                                                          see 3.1.1),
                                                           configure, history,
                                                           map, unregistered
   Access Points      pages/admin/access-points/        - AP inventory
   MikroTik           pages/admin/microtik/index.vue    - routers, devices,
                                                           allocation, block/
-                                                          connect, command
-                                                          history
+                                                          connect, Commands
+                                                          (send by MAC),
+                                                          command history
   Suggestions        pages/admin/suggestions.vue       - customer feedback
   Announcements      pages/admin/announcements.vue     - broadcast messages
   Notifications      pages/admin/notifications.vue     - the admin's own
@@ -252,6 +304,10 @@ Customer nav (pages/customer/...):
   only. They use a completely different auth mechanism from the rest of
   the API (a shared bearer token, not a user's JWT). Never point the
   frontend at them.
+- Device console sessions (see 3.1.1) are stateful on Node only - Django
+  holds no record of an open terminal_id at all. Don't try to "list open
+  sessions" or reconnect to one from a fresh page load; the frontend
+  always starts a brand new session via console/open/.
 - common/maintenance.py's sweep is what makes automatic disconnect work
   without a scheduler - it rides along on whatever heartbeat/report
   request happens to arrive next, throttled by MAINTENANCE_INTERVAL_SECONDS.
@@ -313,6 +369,20 @@ Frontend: no automated test suite exists yet. Testing is manual -
 
 8. RECENT CHANGES (most recent first - keep this updated)
 ---------------------------------------------------------------
+- 2026-09-25  New device Console: an admin can open a live shell on any
+              PowerBeam Device (login, type commands, see real output)
+              straight from its detail page. Wires up terminal/open,
+              terminal/write, terminal/close on Node's device-comms
+              service, which already existed there but weren't
+              previously called from anywhere. Administrator only;
+              credentials are never stored. See section 3.1.1.
+- 2026-09-22  New MikroTik > Commands tab: send an "add to allowed list"
+              or "block" command directly to a MAC address, to one
+              chosen MikroTik or to all of them - works even if that
+              router has never reported seeing the device before (the
+              main use case: pre-authorising an access point/PowerBeam
+              before it ever joins the network). First of what's meant
+              to be several command types sent this way; see section 3.2.
 - 2026-09-21  Plans can last minutes or hours, not just whole days;
               subscriptions track exact start/end timestamps; the
               automatic disconnect sweep now runs every ~15s so a short

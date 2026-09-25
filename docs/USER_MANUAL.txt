@@ -1,5 +1,5 @@
 ISP MANAGEMENT SYSTEM - USER MANUAL
-Last updated: 2026-09-21
+Last updated: 2026-09-25
 =================================================================
 
 This guide explains how to use the system. There are two kinds of
@@ -148,7 +148,9 @@ a table, and there's a CSV download if you want the raw data elsewhere.
                         receiver), searchable, with online/offline
                         status.
   Device detail      - live status, signal, uptime and other metrics
-                        for one device, refreshed automatically.
+                        for one device, refreshed automatically. A
+                        "Console" button (top right) opens a live shell
+                        session on the device - see below.
   Configure          - push configuration to a device (currently
                         limited to what the hardware layer supports -
                         e.g. SSID, reboot scheduling).
@@ -170,6 +172,25 @@ a table, and there's a CSV download if you want the raw data elsewhere.
                         "Discard" removes it from the list without
                         registering it (it'll reappear if it connects
                         again later).
+  Console            - a live command-line session directly on the
+                        device's own shell, opened from the "Console"
+                        button on its detail page. Enter the device's
+                        username and password (these are the device's
+                        own login credentials, not your admin account -
+                        they're sent for that one session only and are
+                        never saved anywhere), then type commands and
+                        press Enter just like a normal terminal - use the
+                        Up/Down arrow keys to recall previous commands in
+                        the same session. Click "Disconnect" when done,
+                        or just navigate away/close the tab - either way
+                        the session is closed automatically so it doesn't
+                        sit open on the device. If the device doesn't
+                        respond, or the login is rejected, you'll see a
+                        clear message and can try again. This only works
+                        on a device that has communicated with the system
+                        at least once (i.e. has a known MAC address) - a
+                        freshly-registered device with no contact yet
+                        won't have the Console button enabled.
 
 -----------------------------------------------------------------
 2.7 Access Points
@@ -218,6 +239,27 @@ through the MikroTik routers in the field.
     - Forget - permanently remove an unallocated, offline device from
       the list. Only available when both those conditions are true. If
       it reconnects later it will simply reappear as unallocated.
+
+  Commands tab
+    Send an "Add to allowed list" or "Block" request straight to a MAC
+    address - this works even for a device that particular MikroTik has
+    never reported seeing yet. It exists mainly for devices like
+    PowerBeam access points that should never be without internet: as
+    soon as you know its MAC, you can pre-authorise it before it even
+    joins the network, so it's never accidentally blocked the moment it
+    connects.
+      1. Enter the MAC address, or click one of the registered access
+         points listed under "Quick pick" to fill it in automatically.
+      2. Choose which MikroTik to send it to, or "All MikroTiks" to send
+         it to every approved router at once.
+      3. Click "Add to allowed list" or "Block".
+    You'll see the result for each router the request was sent to. If a
+    router already has an earlier command still waiting for
+    confirmation on that same device, it's shown as "Already pending"
+    rather than being sent again - wait for that one to resolve (check
+    Command history) before sending another.
+    This is the first command available here; more are expected to be
+    added over time.
 
   Command history tab
     A log of every block/connect command ever sent, its status

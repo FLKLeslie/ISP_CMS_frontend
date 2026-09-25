@@ -97,6 +97,24 @@ export function useMikroTikApi() {
     )
   }
 
+  // POST /api/microtik/commands/send/ — send an "add to allowed list"
+  // (reconnect) or "block" command for a MAC address directly, whether or
+  // not that router has ever reported seeing it yet (the main use case:
+  // pre-authorising an access point/infrastructure device before it ever
+  // connects). Send to one APPROVED router, or every approved router at
+  // once. Always resolves — a router where a previous command is still
+  // pending comes back as a `conflict` entry in the results, rather than
+  // failing the whole request.
+  function sendCommandByMac(payload: SendMikroTikCommandPayload) {
+    return apiFetch<SendMikroTikCommandResponse>('/api/microtik/commands/send/', {
+      method: 'POST',
+      body: {
+        mac_address: payload.macAddress, command_type: payload.commandType,
+        ...(payload.allRouters ? { all_routers: true } : { router: payload.router }),
+      },
+    })
+  }
+
   // GET /api/microtik/commands/ — filterable by status/command_type/router/customer.
   function listCommands(params: Record<string, string | number> = {}) {
     return apiFetch<Paginated<MikroTikCommand>>('/api/microtik/commands/', { params })
@@ -129,6 +147,7 @@ export function useMikroTikApi() {
     blockLease,
     reconnectLease,
     listCommands,
+    sendCommandByMac,
     deleteCommand,
     clearCommands,
   }

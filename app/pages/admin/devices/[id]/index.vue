@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft, History, Settings } from 'lucide-vue-next'
+import { ArrowLeft, History, Settings, Terminal as TerminalIcon } from 'lucide-vue-next'
 import type { DeviceLiveStatus, NetworkHealth } from '~/utils/deviceFormat'
 
 definePageMeta({ layout: 'admin' })
@@ -46,6 +46,11 @@ onUnmounted(() => {
 
 const lastRefreshedAt = ref(new Date())
 watch(device, () => { lastRefreshedAt.value = new Date() })
+
+// Raw shell console modal (see DeviceConsole.vue) - a device with no
+// mac_address yet has never communicated with the system, so there's
+// nothing for Node to open a shell on (the backend also 400s this case).
+const consoleOpen = ref(false)
 
 // --- Derived display values ------------------------------------------------
 // Uses device.online (recency-aware - see Device.is_actually_online() on
@@ -157,6 +162,14 @@ function handleAutoDetectLocation() {
         <ArrowLeft class="h-4 w-4" /> Back to Devices
       </NuxtLink>
       <div class="flex items-center gap-4">
+        <button
+          type="button" :disabled="!device?.mac_address"
+          class="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline disabled:cursor-not-allowed disabled:text-text-secondary disabled:no-underline"
+          :title="!device?.mac_address ? 'This device has no known MAC address yet.' : ''"
+          @click="consoleOpen = true"
+        >
+          <TerminalIcon class="h-4 w-4" /> Console
+        </button>
         <NuxtLink
           :to="`/admin/devices/${deviceId}/configure`"
           class="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
@@ -171,6 +184,15 @@ function handleAutoDetectLocation() {
         </NuxtLink>
       </div>
     </div>
+
+    <!-- Raw shell console (Administrator only) - see
+         components/domain/DeviceConsole.vue and DeviceViewSet.console_open/
+         write/close on the backend. Rendered here rather than inline in the
+         page body since it's a full modal overlay, not a page section. -->
+    <DeviceConsole
+      :open="consoleOpen" :device-id="deviceId" :device-name="device?.device_name ?? ''"
+      @close="consoleOpen = false"
+    />
 
     <LoadingState v-if="pending && !device" :rows="6" />
     <ErrorState v-else-if="error && !device" @retry="refresh()" />

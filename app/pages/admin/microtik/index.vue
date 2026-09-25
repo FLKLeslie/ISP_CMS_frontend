@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { Router, Trash2, Wifi, WifiOff, UserX } from 'lucide-vue-next'
-import type { MikroTikCommand, MikroTikLease, MikroTikRouter } from '~/types/api/microtik'
+import { Radio, Router, Trash2, Wifi, WifiOff, UserX } from 'lucide-vue-next'
+import type {
+  MikroTikCommand, MikroTikLease, MikroTikRouter, SendMikroTikCommandResult,
+} from '~/types/api/microtik'
 
 definePageMeta({ layout: 'admin' })
 
@@ -8,9 +10,9 @@ const route = useRoute()
 const {
   listRouters, listLeases, getLeaseSummary, listCommands,
   approveRouter, rejectRouter, linkRouterToAccessPoint,
-  forgetLease, deleteCommand, clearCommands,
+  forgetLease, deleteCommand, clearCommands, sendCommandByMac,
 } = useMikroTikApi()
-const { listAccessPointsWithLocation } = useAccessPointsApi()
+const { listAccessPointsWithLocation, listAccessPoints } = useAccessPointsApi()
 
 // --- Tabs -----------------------------------------------------------------
 // MikroTiks    the routers themselves (approve / reject / link to an AP)
@@ -19,8 +21,8 @@ const { listAccessPointsWithLocation } = useAccessPointsApi()
 //              they stay on record and keep their customer
 // Needs allocation  devices not matched to any customer (online or not)
 // Commands     audit trail of every block / connect
-type Tab = 'routers' | 'online' | 'offline' | 'unallocated' | 'commands'
-const TAB_KEYS: Tab[] = ['routers', 'online', 'offline', 'unallocated', 'commands']
+type Tab = 'routers' | 'online' | 'offline' | 'unallocated' | 'send' | 'commands'
+const TAB_KEYS: Tab[] = ['routers', 'online', 'offline', 'unallocated', 'send', 'commands']
 const tab = ref<Tab>(TAB_KEYS.includes(route.query.tab as Tab) ? (route.query.tab as Tab) : 'routers')
 const isDeviceTab = computed(() => tab.value === 'online' || tab.value === 'offline' || tab.value === 'unallocated')
 
@@ -32,6 +34,7 @@ const tabs = computed(() => [
   { key: 'online' as Tab, label: 'Online', count: summary.value?.online },
   { key: 'offline' as Tab, label: 'Offline', count: summary.value?.offline },
   { key: 'unallocated' as Tab, label: 'Needs allocation', count: summary.value?.unallocated },
+  { key: 'send' as Tab, label: 'Commands', count: undefined as number | undefined },
   { key: 'commands' as Tab, label: 'Command history', count: undefined as number | undefined },
 ])
 
@@ -155,6 +158,80 @@ const emptyCopy = computed(() => {
   if (tab.value === 'offline') return { title: 'No offline devices', description: 'A device that a MikroTik has seen before but can no longer see appears here.' }
   return { title: 'Everything is allocated', description: 'Every device a MikroTik has reported is matched to a customer.' }
 })
+
+// --- Commands: send an add/block request by MAC address --------------------------
+// A full list of registered access points (not just mapped ones - this list is
+// for quick-picking a MAC, unlike accessPointOptions above which is for the
+// router-linking dropdown), for the common case of pre-authorising
+// infrastructure before it's ever been seen by a router.
+const { data: allAccessPointsData } = await useAsyncData(
+  'admin-microtik-send-aps', () => listAccessPoints({ page_size: 200 }),
+)
+const quickPickAccessPoints = computed(() =>
+  (allAccessPointsData.value?.results ?? []).filter((ap) => ap.mac_address),
+)
+
+const sendMac = ref('')
+const sendTarget = ref('') // a router id, or 'all'
+const sending = ref(false)
+const sendResults = ref<SendMikroTikCommandResult[] | null>(null)
+const sendFormError = ref('')
+
+// Only an approved router can actually receive anything - offering others
+// would just produce a guaranteed failure.
+const approvedRouters = computed(() => routers.value.filter((r) => r.status === 'APPROVED'))
+
+const MAC_RE = /^([0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}$|^[0-9a-fA-F]{12}$/
+const macLooksValid = computed(() => MAC_RE.test(sendMac.value.trim()))
+
+function pickAccessPoint(mac: string) {
+  sendMac.value = mac
+}
+
+const pendingSend = ref<{ commandType: 'block' | 'reconnect' } | null>(null)
+function askSend(commandType: 'block' | 'reconnect') {
+  sendFormError.value = ''
+  if (!macLooksValid.value) { sendFormError.value = 'Enter a valid MAC address (e.g. AA:BB:CC:DD:EE:FF).'; return }
+  if (!sendTarget.value) { sendFormError.value = 'Choose a MikroTik to send this to, or All MikroTiks.'; return }
+  pendingSend.value = { commandType }
+}
+
+const sendDialogDescription = computed(() => {
+  const commandType = pendingSend.value?.commandType
+  const verb = commandType === 'block' ? 'blocked' : 'added to the allowed list'
+  const where = sendTarget.value === 'all'
+    ? `all ${approvedRouters.value.length} MikroTiks`
+    : approvedRouters.value.find((r) => r.id === sendTarget.value)?.identity || 'that MikroTik'
+  return `${sendMac.value.trim()} will be ${verb} on ${where}. If the router hasn't reported this device before, `
+    + 'it will be tracked from now on and the change confirmed as soon as it does.'
+})
+
+async function confirmSend() {
+  if (!pendingSend.value) return
+  sending.value = true
+  sendResults.value = null
+  sendFormError.value = ''
+  try {
+    const response = await sendCommandByMac({
+      macAddress: sendMac.value.trim(), commandType: pendingSend.value.commandType,
+      ...(sendTarget.value === 'all' ? { allRouters: true } : { router: sendTarget.value }),
+    })
+    sendResults.value = response.results
+    await refreshAll()
+  } catch (err) {
+    sendFormError.value = apiErrorMessage(err, "Couldn't send this command. Please try again.")
+  } finally {
+    sending.value = false
+    pendingSend.value = null
+  }
+}
+
+function isConflict(result: SendMikroTikCommandResult): result is Extract<SendMikroTikCommandResult, { conflict: true }> {
+  return 'conflict' in result
+}
+function routerName(routerId: string): string {
+  return approvedRouters.value.find((r) => r.id === routerId)?.identity || 'Unnamed MikroTik'
+}
 
 // --- Block / connect + allocation -------------------------------------------
 const controls = useLeaseControls(() => refreshAll())
@@ -398,6 +475,85 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
       </template>
     </div>
 
+    <!-- Commands: send an add/block request by MAC address -->
+    <div v-else-if="tab === 'send'" class="space-y-4">
+      <p class="text-sm text-text-secondary">
+        Add a device to a MikroTik's allowed list, or block it, by MAC address - whether or not that
+        router has reported seeing it yet. This is mainly for infrastructure like access points that
+        should never sit blocked just because they haven't shown up in a report: enter its MAC and
+        authorise it in advance. Once it does connect, the change is confirmed automatically.
+      </p>
+
+      <div class="rounded-card border border-border bg-surface p-4 sm:p-5">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label for="send-mac" class="mb-1 block text-sm font-medium text-text-primary">MAC address</label>
+            <input
+              id="send-mac" v-model="sendMac" type="text" placeholder="AA:BB:CC:DD:EE:FF"
+              class="w-full rounded-card border border-border bg-background px-3 py-2 font-mono text-sm text-text-primary outline-none focus:border-accent"
+              :class="sendMac && !macLooksValid ? 'border-error/60' : ''"
+            >
+            <p v-if="sendMac && !macLooksValid" class="mt-1 text-xs text-error">That doesn't look like a MAC address.</p>
+          </div>
+          <div>
+            <label for="send-target" class="mb-1 block text-sm font-medium text-text-primary">Send to</label>
+            <select id="send-target" v-model="sendTarget" :class="selectClass" class="w-full">
+              <option value="" disabled>Choose a MikroTik…</option>
+              <option value="all">All MikroTiks ({{ approvedRouters.length }})</option>
+              <option v-for="r in approvedRouters" :key="r.id" :value="r.id">{{ r.identity || r.signature }}</option>
+            </select>
+            <p v-if="!approvedRouters.length" class="mt-1 text-xs text-warning">No approved MikroTiks yet.</p>
+          </div>
+        </div>
+
+        <!-- Quick-pick from registered access points, to avoid retyping a MAC by hand -->
+        <div v-if="quickPickAccessPoints.length" class="mt-4">
+          <p class="mb-1.5 text-xs font-medium text-text-secondary">Quick pick from registered access points</p>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="ap in quickPickAccessPoints" :key="ap.id" type="button"
+              class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors"
+              :class="sendMac === ap.mac_address ? 'border-secondary bg-secondary/10 text-secondary' : 'border-border text-text-secondary hover:text-text-primary'"
+              @click="pickAccessPoint(ap.mac_address!)"
+            >
+              <Radio class="h-3 w-3" aria-hidden="true" />{{ ap.name }}
+            </button>
+          </div>
+        </div>
+
+        <p v-if="sendFormError" role="alert" class="mt-4 rounded-card border border-error/30 bg-error/5 px-3 py-2 text-sm text-error">{{ sendFormError }}</p>
+
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button type="button" :disabled="sending" class="btn-primary" @click="askSend('reconnect')">Add to allowed list</button>
+          <button type="button" :disabled="sending" class="btn-danger" @click="askSend('block')">Block</button>
+        </div>
+      </div>
+
+      <!-- Result of the last send: one row per router attempted -->
+      <div v-if="sendResults" class="rounded-card border border-border bg-surface p-4">
+        <p class="mb-3 text-sm font-medium text-text-primary">Result</p>
+        <ul class="space-y-2">
+          <li v-for="(result, i) in sendResults" :key="i" class="flex items-center justify-between gap-3 rounded-card border border-border px-3 py-2 text-sm">
+            <span class="text-text-primary">{{ isConflict(result) ? result.router_identity : routerName(result.router_id) }}</span>
+            <StatusBadge
+              v-if="isConflict(result)" label="Already pending" tone="warning"
+            />
+            <StatusBadge
+              v-else :label="result.status === 'SENT' ? 'Sent' : result.status === 'CONFIRMED' ? 'Confirmed' : 'Failed'"
+              :tone="result.status === 'FAILED' ? 'error' : result.status === 'CONFIRMED' ? 'success' : 'info'"
+            />
+          </li>
+        </ul>
+        <p
+          v-for="(result, i) in sendResults.filter((r) => isConflict(r) || ('error_message' in r && r.error_message))"
+          :key="`err-${i}`" class="mt-2 text-xs text-error"
+        >
+          {{ isConflict(result) ? result.detail : ('error_message' in result ? result.error_message : '') }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Command history -->
     <!-- Command history -->
     <div v-else class="space-y-4">
       <div class="flex justify-end">
@@ -494,6 +650,15 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
       danger
       @confirm="handleClearHistory"
       @cancel="confirmClear = false"
+    />
+    <ConfirmationDialog
+      :open="!!pendingSend"
+      :title="pendingSend?.commandType === 'block' ? 'Block this device?' : 'Add this device to the allowed list?'"
+      :description="sendDialogDescription"
+      :confirm-label="sending ? 'Please wait…' : pendingSend?.commandType === 'block' ? 'Block' : 'Add'"
+      :danger="pendingSend?.commandType === 'block'"
+      @confirm="confirmSend"
+      @cancel="pendingSend = null"
     />
     <LeaseAllocationModal :lease="allocatingLease" @close="allocatingLease = null" @updated="refreshAll()" />
 
