@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { Bell, CreditCard, Home, Map, Megaphone, MessageSquare, RadioTower, Router, TrendingUp, Users, Wifi } from 'lucide-vue-next'
+// One distinct, self-explanatory icon per destination (no two items share one):
+// dashboard panels, people, a dated plan, a card, a rising line, a radio unit, a
+// scan for unknown units, a map pin, a mast, a router, an idea, a megaphone, a bell.
+import {
+  Bell, CalendarClock, CreditCard, LayoutDashboard, Lightbulb, MapPinned, Megaphone, Radio, RadioTower,
+  Router, ScanSearch, TrendingUp, Users,
+} from 'lucide-vue-next'
 import type { NavItem } from '~/types/nav'
 
 const { fetchAdminDashboard } = useDashboardApi()
@@ -31,19 +37,19 @@ onMounted(async () => {
 // Devices" badge updates reactively once pendingUnregisteredDevices loads
 // in, rather than being frozen at whatever it was on first render.
 const navItems = computed<NavItem[]>(() => [
-  { label: 'Dashboard', to: '/admin', icon: Home },
+  { label: 'Dashboard', to: '/admin', icon: LayoutDashboard },
   { label: 'Customers', to: '/admin/customers', icon: Users },
-  { label: 'Subscriptions', to: '/admin/subscriptions', icon: Wifi },
+  { label: 'Subscriptions', to: '/admin/subscriptions', icon: CalendarClock },
   { label: 'Payments', to: '/admin/payments', icon: CreditCard },
   { label: 'Revenue', to: '/admin/revenue', icon: TrendingUp },
-  { label: 'Devices', to: '/admin/devices', icon: Router },
+  { label: 'Devices', to: '/admin/devices', icon: Radio },
   {
     label: 'Unregistered Devices',
     to: '/admin/devices/unregistered',
-    icon: Router,
+    icon: ScanSearch,
     badge: pendingUnregisteredDevices.value,
   },
-  { label: 'Device Map', to: '/admin/devices/map', icon: Map },
+  { label: 'Device Map', to: '/admin/devices/map', icon: MapPinned },
   { label: 'Access Points', to: '/admin/access-points', icon: RadioTower },
   {
     label: 'MikroTik Routers',
@@ -51,7 +57,7 @@ const navItems = computed<NavItem[]>(() => [
     icon: Router,
     badge: pendingMikroTikRouters.value,
   },
-  { label: 'Suggestions', to: '/admin/suggestions', icon: MessageSquare },
+  { label: 'Suggestions', to: '/admin/suggestions', icon: Lightbulb },
   { label: 'Announcements', to: '/admin/announcements', icon: Megaphone },
   { label: 'Notifications', to: '/admin/notifications', icon: Bell },
 ])

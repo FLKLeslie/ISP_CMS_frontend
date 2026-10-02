@@ -10,6 +10,7 @@ const { listSubscriptions } = useSubscriptionsApi()
 const { listPayments } = usePaymentsApi()
 const { listSuggestions } = useSuggestionsApi()
 const { listLeases } = useMikroTikApi()
+const { listDevices } = useDevicesApi()
 const { data: customer, pending, error, refresh } = await useAsyncData(`customer-${id}`, () => fetchCustomer(id))
 const { data: subs, refresh: refreshSubs } = await useAsyncData(`customer-${id}-subs`, () => listSubscriptions({ customer: id, page_size: 100 }))
 const { data: payments } = await useAsyncData(`customer-${id}-payments`, () => listPayments({ customer: id }))
@@ -18,6 +19,11 @@ const { data: suggestions } = await useAsyncData(`customer-${id}-suggestions`, (
 // behind. Block / Connect / Reallocate here go through the same shared
 // controls as the MikroTik page, so both behave identically: a request
 // leaves the device Pending until the MikroTik's next report confirms it.
+// This customer's own radio(s) - model, picture and link state at a glance.
+const { data: devicesData } = await useAsyncData(
+  `customer-${id}-devices`, () => listDevices({ customer: id, page_size: 50 }),
+)
+const customerDevices = computed(() => devicesData.value?.results ?? [])
 const { data: leasesData, refresh: refreshLeases } = await useAsyncData(
   `customer-${id}-leases`, () => listLeases({ customer: id }),
 )
@@ -97,6 +103,8 @@ const editing = ref(false)
 const form = reactive({
   first_name: '', last_name: '', email: '', phone_number: '',
   address: '', city: '', country: '', router_ip: '', router_mac_address: '', router_hostname: '',
+  customer_type: 'RESIDENTIAL' as 'RESIDENTIAL' | 'BUSINESS', company_name: '', alternate_phone: '',
+  landmark: '', notes: '',
 })
 const saving = ref(false)
 function startEdit() {
@@ -111,6 +119,11 @@ function startEdit() {
   form.router_ip = customer.value.router_ip ?? ''
   form.router_mac_address = customer.value.router_mac_address
   form.router_hostname = customer.value.router_hostname
+  form.customer_type = customer.value.customer_type
+  form.company_name = customer.value.company_name
+  form.alternate_phone = customer.value.alternate_phone
+  form.landmark = customer.value.landmark
+  form.notes = customer.value.notes ?? ''
   editing.value = true
 }
 async function handleSave() {
@@ -122,7 +135,9 @@ async function handleSave() {
 }
 </script>
 <template>
-  <div class="max-w-3xl space-y-6">
+  <!-- Fills the width like every other admin page (no max-width). On wide screens the
+       sections below the header sit in two columns; below xl they stack. -->
+  <div class="space-y-6">
     <NuxtLink to="/admin/customers" class="text-sm text-text-secondary hover:text-text-primary">← Back to Customers</NuxtLink>
     <LoadingState v-if="pending" :rows="4" />
     <ErrorState v-else-if="error" @retry="refresh()" />
@@ -134,8 +149,14 @@ async function handleSave() {
       <div class="flex items-start justify-between gap-4 rounded-card border border-border bg-surface p-5">
         <div>
           <h1 class="text-xl font-semibold text-text-primary">{{ customer.user.first_name }} {{ customer.user.last_name }}</h1>
-          <p class="text-sm text-text-secondary">{{ customer.user.email }} · {{ customer.user.phone_number || 'No phone on file' }}</p>
+          <p class="text-sm text-text-secondary">
+            {{ customer.customer_type === 'BUSINESS' ? `Business customer${customer.company_name ? ` · ${customer.company_name}` : ''}` : 'Residential customer' }}
+          </p>
+          <p class="text-sm text-text-secondary">
+            {{ customer.user.email }} · {{ customer.user.phone_number || 'No phone on file' }}<template v-if="customer.alternate_phone"> · alt. {{ customer.alternate_phone }}</template>
+          </p>
           <p class="mt-1 text-sm text-text-secondary">{{ [customer.address, customer.city, customer.country].filter(Boolean).join(', ') || 'No address on file' }}</p>
+          <p v-if="customer.landmark" class="text-sm text-text-secondary">Landmark: {{ customer.landmark }}</p>
           <p class="mt-1 text-sm text-text-secondary">
             Router: <span class="font-mono text-xs">{{ customer.router_mac_address || 'MAC not set' }}</span>
             · {{ customer.router_ip || 'no IP' }}
@@ -163,6 +184,17 @@ async function handleSave() {
         <input v-model="form.router_ip" placeholder="Router IP (optional)" class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
         <input v-model="form.router_mac_address" placeholder="Router MAC address (links them to MikroTik reports)" class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
         <input v-model="form.router_hostname" placeholder="Router hostname (optional)" class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
+        <select v-model="form.customer_type" class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
+          <option value="RESIDENTIAL">Residential customer</option>
+          <option value="BUSINESS">Business customer</option>
+        </select>
+        <input v-model="form.company_name" placeholder="Company name (business customers)" class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
+        <input v-model="form.alternate_phone" placeholder="Alternate phone" class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
+        <input v-model="form.landmark" placeholder="Landmark / how to find the premises" class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
+        <div class="sm:col-span-2">
+          <label class="mb-1 block text-xs font-medium text-text-secondary">Internal notes <span class="font-normal">— visible to administrators only, never to the customer</span></label>
+          <textarea v-model="form.notes" rows="3" class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent" />
+        </div>
         <div class="flex gap-2 sm:col-span-2">
           <button type="submit" :disabled="saving" class="btn-primary">{{ saving ? 'Saving…' : 'Save changes' }}</button>
           <button type="button" class="btn-secondary" @click="editing = false">Cancel</button>
@@ -170,6 +202,34 @@ async function handleSave() {
       </form>
 
       <p v-if="blockError" role="alert" class="rounded-card border border-error/30 bg-error/5 px-4 py-3 text-sm text-error">{{ blockError }}</p>
+
+      <div class="grid grid-cols-1 items-start gap-6 xl:grid-cols-2">
+      <!-- Left column: the account and its current service. min-w-0 lets tables inside shrink instead of stretching the grid. -->
+      <div class="min-w-0 space-y-6">
+      <!-- Devices: this customer's own radios, with the picture stored from the detected model -->
+      <div class="rounded-card border border-border bg-surface p-5">
+        <h2 class="mb-3 text-sm font-semibold text-text-primary">Devices</h2>
+        <EmptyState v-if="!customerDevices.length" title="No device registered to this customer yet" />
+        <ul v-else class="divide-y divide-border">
+          <li v-for="d in customerDevices" :key="d.id">
+            <NuxtLink :to="`/admin/devices/${d.id}`" class="flex items-center gap-3 py-2 hover:bg-text-secondary/5">
+              <DeviceIcon :icon-id="d.icon_id" :title="d.product_name || d.model" />
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-medium text-text-primary">{{ d.device_name }}</p>
+                <p class="truncate text-xs text-text-secondary">{{ d.product_name || d.model || 'Model not detected yet' }}<template v-if="d.access_point_name"> · via {{ d.access_point_name }}</template></p>
+              </div>
+              <span class="inline-flex items-center gap-1.5 text-xs text-text-secondary">
+                <span class="h-2 w-2 rounded-full" :class="d.online ? 'bg-success' : 'bg-text-secondary/40'" />{{ d.online ? 'Online' : 'Offline' }}
+              </span>
+            </NuxtLink>
+          </li>
+        </ul>
+      </div>
+
+      <div v-if="customer.notes" class="rounded-card border border-border bg-surface p-5">
+        <h2 class="mb-1 text-sm font-semibold text-text-primary">Internal notes</h2>
+        <p class="whitespace-pre-line text-sm text-text-primary">{{ customer.notes }}</p>
+      </div>
 
       <div class="rounded-card border border-border bg-surface p-5">
         <h2 class="mb-1 text-sm font-semibold text-text-primary">Internet Connection</h2>
@@ -255,6 +315,10 @@ async function handleSave() {
         </div>
       </div>
 
+      </div>
+
+      <!-- Right column: history and everything that has happened -->
+      <div class="min-w-0 space-y-6">
       <!-- History: every other subscription, newest first -->
       <div class="rounded-card border border-border bg-surface p-5">
         <h2 class="mb-3 text-sm font-semibold text-text-primary">
@@ -304,6 +368,8 @@ async function handleSave() {
             <StatusBadge :label="s.status" tone="neutral" />
           </li>
         </ul>
+      </div>
+      </div>
       </div>
     </template>
     <ConfirmationDialog :open="confirmOpen" :title="customer?.status === 'ACTIVE' ? 'Suspend this account?' : 'Reactivate this account?'" description="A suspended customer can still log in, but can't make any changes until reactivated." :confirm-label="toggling ? 'Please wait…' : 'Confirm'" danger @confirm="handleToggleStatus" @cancel="confirmOpen = false" />

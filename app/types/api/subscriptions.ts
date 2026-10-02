@@ -20,8 +20,27 @@ export interface Plan {
 }
 
 export type CustomerStatus = 'ACTIVE' | 'SUSPENDED'
+export type CustomerType = 'RESIDENTIAL' | 'BUSINESS'
+export type CustomerSubscriptionState = 'ACTIVE' | 'BLOCKED' | 'EXPIRED' | 'NONE'
 export interface Customer {
   id: string; user: User; address: string; city: string; country: string
+  // Profile details kept for the ISP's own records.
+  customer_type: CustomerType; company_name: string; alternate_phone: string; landmark: string
+  // Internal administrator note. ONLY present in responses to an administrator -
+  // the backend drops it for a customer reading their own profile.
+  notes?: string
+  // At-a-glance summary - only present on /api/customers/ responses (not when a
+  // customer is nested inside a subscription/payment/device), hence optional.
+  device_count?: number
+  primary_device_model?: string | null
+  primary_device_product_name?: string | null
+  primary_device_icon_id?: string | null
+  plan_name?: string | null
+  subscription_status?: CustomerSubscriptionState
+  subscription_ends_at?: string | null
+  // true/false = whether any of their routers is reporting through a MikroTik;
+  // null = no router allocated yet.
+  router_online?: boolean | null
   // Router IP is separate from any Device's own ip_address - it's the
   // customer-site router, known independently of whether a device has
   // been registered yet.

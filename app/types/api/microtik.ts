@@ -7,6 +7,16 @@ export interface MikroTikRouter {
   model: string
   firmware: string
   mac_address: string
+  // Administrator-maintained details - never overwritten by the router's own
+  // reports. `label` is shown instead of `identity` when set.
+  label: string
+  site: string
+  notes: string
+  // Stored from the model via the product catalog - '' for models outside it
+  // (most MikroTiks), in which case the UI draws its router icon.
+  icon_id: string
+  product_name: string
+  product_line: string
   status: MikroTikRouterStatus
   // Nullable — a router can be approved before anyone's mapped it to a
   // physical Access Point record.

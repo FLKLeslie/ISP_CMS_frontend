@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ArrowLeft, History, Settings, Terminal as TerminalIcon } from 'lucide-vue-next'
+import { ArrowLeft, History, KeyRound, RefreshCw, Settings, Terminal as TerminalIcon } from 'lucide-vue-next'
+import type { DeviceStatus } from '~/types/api/devices'
 import type { DeviceLiveStatus, NetworkHealth } from '~/utils/deviceFormat'
 
 definePageMeta({ layout: 'admin' })
@@ -7,7 +8,7 @@ definePageMeta({ layout: 'admin' })
 const route = useRoute()
 const deviceId = route.params.id as string
 
-const { getDevice, updateDevice, addDeviceUser, removeDeviceUser } = useDevicesApi()
+const { getDevice, updateDevice, detectDeviceIdentity, addDeviceUser, removeDeviceUser } = useDevicesApi()
 const { listCustomers } = useCustomersApi()
 
 // Note: this page intentionally applies NO subscription-status check
@@ -51,6 +52,8 @@ watch(device, () => { lastRefreshedAt.value = new Date() })
 // mac_address yet has never communicated with the system, so there's
 // nothing for Node to open a shell on (the backend also 400s this case).
 const consoleOpen = ref(false)
+// Stored admin password view/generate/set (see DeviceCredentialsModal.vue).
+const credentialsOpen = ref(false)
 
 // --- Derived display values ------------------------------------------------
 // Uses device.online (recency-aware - see Device.is_actually_online() on
@@ -99,6 +102,125 @@ const linkStateLabel = computed(() => {
   if (raw === 'DOWN') return 'Down'
   return 'Unknown'
 })
+
+// --- Hardware, network and records ------------------------------------------
+// Three cards, three kinds of fact:
+//   Hardware - what the unit physically IS (model, MAC, serial, versions)
+//   Network  - how it is addressed (IP, gateway, DNS, time zone); read from the
+//              device, so display-only
+//   Records  - our own bookkeeping about it (name, status, install date, notes)
+// Hardware and Records have an explicit edit mode (rather than always-live inputs)
+// because this page re-fetches the device every 10 seconds: the forms work on their
+// own copy, so a background refresh can never overwrite what an administrator is typing.
+const field = 'w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent'
+
+const hwEditing = ref(false)
+const hwSaving = ref(false)
+const hwError = ref('')
+const hwNotice = ref('')
+const hwForm = reactive({ model: '', mac_address: '', serial_number: '', hardware_version: '', firmware_version: '' })
+function startHwEdit() {
+  if (!device.value) return
+  const d = device.value
+  Object.assign(hwForm, {
+    model: d.model, mac_address: d.mac_address ?? '', serial_number: d.serial_number ?? '',
+    hardware_version: d.hardware_version, firmware_version: d.firmware_version,
+  })
+  hwError.value = ''; hwNotice.value = ''
+  hwEditing.value = true
+}
+async function handleSaveHw() {
+  hwError.value = ''; hwNotice.value = ''; hwSaving.value = true
+  try {
+    // Blank unique fields go as null so two devices that both have "no serial yet"
+    // never collide. Saving a new model also refreshes the stored picture/product -
+    // the backend looks them up again from the model.
+    device.value = await updateDevice(deviceId, {
+      model: hwForm.model.trim(),
+      mac_address: hwForm.mac_address.trim() || null,
+      serial_number: hwForm.serial_number.trim() || null,
+      hardware_version: hwForm.hardware_version.trim(),
+      firmware_version: hwForm.firmware_version.trim(),
+    })
+    hwEditing.value = false
+    hwNotice.value = 'Hardware details saved.'
+  } catch (err) {
+    hwError.value = apiErrorMessage(err, "Couldn't save these details. Check the fields and try again.")
+  } finally { hwSaving.value = false }
+}
+
+// What the detect call changed, in words an administrator would use.
+const CHANGE_LABELS: Record<string, string> = {
+  model: 'model', ip_address: 'IP address',
+  'configuration.wireless_mode': 'wireless mode', 'configuration.ssid': 'network name',
+  'configuration.frequency': 'frequency', 'configuration.channel_width': 'channel width',
+  'configuration.device_alias': 'hostname', 'configuration.ip_assignment': 'IP assignment',
+  'configuration.static_ip': 'static IP', 'configuration.subnet_mask': 'subnet mask',
+  'configuration.gateway': 'gateway', 'configuration.primary_dns': 'primary DNS',
+  'configuration.secondary_dns': 'secondary DNS', 'configuration.time_zone': 'time zone',
+}
+// Ask the device itself what it is. Stores its model (which also picks the
+// picture), hostname, IP address and network settings, plus its running wireless
+// settings, replacing what is stored.
+const detectingIdentity = ref(false)
+async function handleDetectIdentity() {
+  hwError.value = ''; hwNotice.value = ''; detectingIdentity.value = true
+  try {
+    const result = await detectDeviceIdentity(deviceId)
+    device.value = result.device
+    hwNotice.value = result.changed.length
+      ? `Updated from the device: ${[...new Set(result.changed.map((c) => CHANGE_LABELS[c] ?? c))].join(', ')}.`
+      : 'The device reports the same details already stored.'
+  } catch (err) {
+    hwError.value = apiErrorMessage(err, "Couldn't reach this device - it may be offline.")
+  } finally { detectingIdentity.value = false }
+}
+
+const recEditing = ref(false)
+const recSaving = ref(false)
+const recError = ref('')
+const recNotice = ref('')
+const recForm = reactive({
+  device_name: '', status: 'ACTIVE' as DeviceStatus, installation_date: '', location_label: '',
+  network_device_id: '', notes: '',
+})
+function startRecEdit() {
+  if (!device.value) return
+  const d = device.value
+  Object.assign(recForm, {
+    device_name: d.device_name, status: d.status, installation_date: d.installation_date ?? '',
+    location_label: d.location_label, network_device_id: d.network_device_id ?? '', notes: d.notes,
+  })
+  recError.value = ''; recNotice.value = ''
+  recEditing.value = true
+}
+async function handleSaveRec() {
+  recError.value = ''; recNotice.value = ''; recSaving.value = true
+  try {
+    device.value = await updateDevice(deviceId, {
+      device_name: recForm.device_name.trim(),
+      status: recForm.status,
+      installation_date: recForm.installation_date || null,
+      location_label: recForm.location_label.trim(),
+      network_device_id: recForm.network_device_id.trim() || null,
+      notes: recForm.notes,
+    })
+    recEditing.value = false
+    recNotice.value = 'Records saved.'
+  } catch (err) {
+    recError.value = apiErrorMessage(err, "Couldn't save these records. Check the fields and try again.")
+  } finally { recSaving.value = false }
+}
+
+// Network details as read from the device (DeviceConfiguration, filled by
+// "Detect from device" and the automatic detection on heartbeats).
+const network = computed(() => device.value?.configuration ?? null)
+const hasNetworkDetails = computed(() => {
+  const c = network.value
+  return !!(device.value?.ip_address || c?.gateway || c?.subnet_mask || c?.primary_dns || c?.time_zone)
+})
+const dnsServers = computed(() => [network.value?.primary_dns, network.value?.secondary_dns].filter(Boolean).join(', '))
+const assignmentLabel = computed(() => ({ STATIC: 'Static', DHCP: 'DHCP' } as Record<string, string>)[network.value?.ip_assignment ?? ''] ?? '')
 
 // --- Associated customers (Device.associated_customers, independent of
 // the primary `device.customer`) ------------------------------------------
@@ -170,6 +292,12 @@ function handleAutoDetectLocation() {
         >
           <TerminalIcon class="h-4 w-4" /> Console
         </button>
+        <button
+          type="button" class="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
+          @click="credentialsOpen = true"
+        >
+          <KeyRound class="h-4 w-4" /> Password
+        </button>
         <NuxtLink
           :to="`/admin/devices/${deviceId}/configure`"
           class="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
@@ -193,6 +321,10 @@ function handleAutoDetectLocation() {
       :open="consoleOpen" :device-id="deviceId" :device-name="device?.device_name ?? ''"
       @close="consoleOpen = false"
     />
+    <DeviceCredentialsModal
+      :open="credentialsOpen" resource="devices" :id="deviceId" :label="device?.device_name ?? ''"
+      @close="credentialsOpen = false"
+    />
 
     <LoadingState v-if="pending && !device" :rows="6" />
     <ErrorState v-else-if="error && !device" @retry="refresh()" />
@@ -201,12 +333,20 @@ function handleAutoDetectLocation() {
       <!-- 1. Device Overview -->
       <div class="rounded-card border border-border bg-surface p-5">
         <div class="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 class="text-2xl font-semibold text-text-primary">{{ device.device_name }}</h1>
-            <p class="text-sm text-text-secondary">
-              {{ device.customer ? `${device.customer.user.first_name} ${device.customer.user.last_name}` : 'No primary customer assigned' }} ·
-              {{ device.access_point?.name || 'No access point assigned' }}
-            </p>
+          <div class="flex items-center gap-4">
+            <!-- The picture is stored on the device by the backend (looked up from its model);
+                 the generic icon shows when the model isn't in the catalog or has no image. -->
+            <DeviceIcon :icon-id="device.icon_id" size="lg" :title="device.product_name || device.model" />
+            <div>
+              <h1 class="text-2xl font-semibold text-text-primary">{{ device.device_name }}</h1>
+              <p class="text-sm text-text-secondary">
+                {{ device.product_name || device.model || 'Model not detected yet' }}<template v-if="device.product_line"> · {{ device.product_line }}</template>
+              </p>
+              <p class="text-sm text-text-secondary">
+                {{ device.customer ? `${device.customer.user.first_name} ${device.customer.user.last_name}` : 'No primary customer assigned' }} ·
+                {{ device.access_point?.name || 'No access point assigned' }}
+              </p>
+            </div>
           </div>
           <div class="flex items-center gap-2">
             <span class="h-2.5 w-2.5 rounded-full" :class="statusMeta[status].dot" />
@@ -225,8 +365,8 @@ function handleAutoDetectLocation() {
 
         <div class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
           <div>
-            <p class="text-xs text-text-secondary">Model</p>
-            <p class="text-sm font-medium text-text-primary">{{ device.model || '—' }}</p>
+            <p class="text-xs text-text-secondary">IP Address</p>
+            <p class="font-mono text-sm font-medium text-text-primary">{{ device.ip_address || '—' }}</p>
           </div>
           <div>
             <p class="text-xs text-text-secondary">Last Seen</p>
@@ -245,6 +385,74 @@ function handleAutoDetectLocation() {
             <p class="text-sm font-medium text-text-primary">{{ formatRelativeTime(lastRefreshedAt.toISOString()) }}</p>
           </div>
         </div>
+      </div>
+
+      <!-- 1b. Hardware - only what the unit physically is. The product name, line and
+           picture are looked up from the model by the backend, so correcting the
+           model here corrects them too. -->
+      <div class="rounded-card border border-border bg-surface p-5">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <h2 class="text-sm font-semibold text-text-primary">Hardware</h2>
+          <div class="flex items-center gap-4">
+            <button
+              type="button" :disabled="detectingIdentity || !device.mac_address"
+              class="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline disabled:cursor-not-allowed disabled:text-text-secondary disabled:no-underline"
+              :title="!device.mac_address ? 'This device has no known MAC address yet.' : 'Ask the device for its model, hostname and network settings'"
+              @click="handleDetectIdentity"
+            >
+              <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': detectingIdentity }" />
+              {{ detectingIdentity ? 'Asking the device…' : 'Detect from device' }}
+            </button>
+            <button v-if="!hwEditing" type="button" class="text-sm font-medium text-accent hover:underline" @click="startHwEdit">Edit</button>
+          </div>
+        </div>
+
+        <p v-if="hwError" role="alert" class="mb-3 text-sm text-error">{{ hwError }}</p>
+        <p v-if="hwNotice" role="status" class="mb-3 text-sm text-success">{{ hwNotice }}</p>
+
+        <!-- Read view: three rows of three - product, identifiers, versions -->
+        <dl v-if="!hwEditing" class="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div><dt class="text-xs text-text-secondary">Product</dt><dd class="text-sm font-medium text-text-primary">{{ device.product_name || '—' }}</dd></div>
+          <div><dt class="text-xs text-text-secondary">Model</dt><dd class="font-mono text-sm font-medium text-text-primary">{{ device.model || '—' }}</dd></div>
+          <div><dt class="text-xs text-text-secondary">Product line</dt><dd class="text-sm font-medium text-text-primary">{{ device.product_line || '—' }}</dd></div>
+          <div><dt class="text-xs text-text-secondary">MAC address</dt><dd class="font-mono text-sm font-medium text-text-primary">{{ device.mac_address || '—' }}</dd></div>
+          <div><dt class="text-xs text-text-secondary">Serial number</dt><dd class="text-sm font-medium text-text-primary">{{ device.serial_number || '—' }}</dd></div>
+          <div><dt class="text-xs text-text-secondary">Hostname</dt><dd class="text-sm font-medium text-text-primary">{{ device.configuration?.device_alias || '—' }}</dd></div>
+          <div><dt class="text-xs text-text-secondary">Hardware version</dt><dd class="text-sm font-medium text-text-primary">{{ device.hardware_version || '—' }}</dd></div>
+          <div><dt class="text-xs text-text-secondary">Firmware version</dt><dd class="text-sm font-medium text-text-primary">{{ device.firmware_version || '—' }}</dd></div>
+        </dl>
+
+        <!-- Edit form: only the facts an administrator can correct. Product name, line
+             and picture are not editable - they follow the model. -->
+        <form v-else class="space-y-4" @submit.prevent="handleSaveHw">
+          <div class="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <label class="mb-1 block text-xs font-medium text-text-secondary">Model</label>
+              <input v-model="hwForm.model" placeholder="e.g. PBE-5AC-Gen2" :class="field" class="font-mono">
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-text-secondary">MAC address</label>
+              <input v-model="hwForm.mac_address" placeholder="aa:bb:cc:dd:ee:ff" :class="field" class="font-mono">
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-text-secondary">Serial number</label>
+              <input v-model="hwForm.serial_number" :class="field">
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-text-secondary">Hardware version</label>
+              <input v-model="hwForm.hardware_version" :class="field">
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-text-secondary">Firmware version</label>
+              <input v-model="hwForm.firmware_version" :class="field">
+            </div>
+          </div>
+          <p class="text-xs text-text-secondary">The product name, product line and picture are worked out from the model, so they update when you change it.</p>
+          <div class="flex gap-2">
+            <button type="submit" :disabled="hwSaving" class="btn-primary">{{ hwSaving ? 'Saving…' : 'Save' }}</button>
+            <button type="button" :disabled="hwSaving" class="btn-secondary" @click="hwEditing = false">Cancel</button>
+          </div>
+        </form>
       </div>
 
       <!-- 2. Device Health -->
@@ -340,6 +548,22 @@ function handleAutoDetectLocation() {
           </div>
         </div>
       </div>
+      <!-- 5b. Network - how the device is addressed, as the device itself reports it
+           (read by "Detect from device" and automatically on heartbeats). Display-only. -->
+      <div class="rounded-card border border-border bg-surface p-5">
+        <h2 class="mb-3 text-sm font-semibold text-text-primary">Network</h2>
+        <dl v-if="hasNetworkDetails" class="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div><dt class="text-xs text-text-secondary">IP address</dt><dd class="font-mono text-sm font-medium text-text-primary">{{ device.ip_address || '—' }}</dd></div>
+          <div><dt class="text-xs text-text-secondary">Assignment</dt><dd class="text-sm font-medium text-text-primary">{{ assignmentLabel || '—' }}</dd></div>
+          <div><dt class="text-xs text-text-secondary">Subnet mask</dt><dd class="font-mono text-sm font-medium text-text-primary">{{ network?.subnet_mask || '—' }}</dd></div>
+          <div><dt class="text-xs text-text-secondary">Default gateway</dt><dd class="font-mono text-sm font-medium text-text-primary">{{ network?.gateway || '—' }}</dd></div>
+          <div><dt class="text-xs text-text-secondary">DNS servers</dt><dd class="font-mono text-sm font-medium text-text-primary">{{ dnsServers || '—' }}</dd></div>
+          <div><dt class="text-xs text-text-secondary">Time zone</dt><dd class="text-sm font-medium text-text-primary">{{ network?.time_zone || '—' }}</dd></div>
+        </dl>
+        <EmptyState v-else title="Network details haven't been read from this device yet" description="Use “Detect from device” in the Hardware card when the device is online." />
+        <p v-if="network?.last_synced" class="mt-3 text-xs text-text-secondary">Last read from the device {{ formatRelativeTime(network.last_synced) }}.</p>
+      </div>
+
       <!-- 6. Location (manual entry, or auto-detect if the admin is on
            site - both write straight to the device's latitude/longitude,
            the same fields a customer's own "set my location" writes to) -->
@@ -361,6 +585,63 @@ function handleAutoDetectLocation() {
         </form>
         <p v-if="locationError" role="alert" class="mt-2 text-sm text-error">{{ locationError }}</p>
         <p v-if="locationSuccess" role="status" class="mt-2 text-sm text-success">Location saved.</p>
+      </div>
+
+      <!-- 6b. Records - our own bookkeeping about the device, not read from it. -->
+      <div class="rounded-card border border-border bg-surface p-5">
+        <div class="mb-4 flex items-center justify-between gap-2">
+          <h2 class="text-sm font-semibold text-text-primary">Records</h2>
+          <button v-if="!recEditing" type="button" class="text-sm font-medium text-accent hover:underline" @click="startRecEdit">Edit</button>
+        </div>
+
+        <p v-if="recError" role="alert" class="mb-3 text-sm text-error">{{ recError }}</p>
+        <p v-if="recNotice" role="status" class="mb-3 text-sm text-success">{{ recNotice }}</p>
+
+        <dl v-if="!recEditing" class="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div><dt class="text-xs text-text-secondary">Device name</dt><dd class="text-sm font-medium text-text-primary">{{ device.device_name }}</dd></div>
+          <div><dt class="text-xs text-text-secondary">Record status</dt><dd class="text-sm font-medium text-text-primary">{{ device.status }}</dd></div>
+          <div><dt class="text-xs text-text-secondary">Installed</dt><dd class="text-sm font-medium text-text-primary">{{ device.installation_date ? formatDate(device.installation_date) : '—' }}</dd></div>
+          <div><dt class="text-xs text-text-secondary">Location note</dt><dd class="text-sm font-medium text-text-primary">{{ device.location_label || '—' }}</dd></div>
+          <div><dt class="text-xs text-text-secondary">Network device ID</dt><dd class="text-sm font-medium text-text-primary">{{ device.network_device_id || '—' }}</dd></div>
+          <div class="sm:col-span-2 lg:col-span-3"><dt class="text-xs text-text-secondary">Notes</dt><dd class="whitespace-pre-line text-sm text-text-primary">{{ device.notes || '—' }}</dd></div>
+        </dl>
+
+        <form v-else class="space-y-4" @submit.prevent="handleSaveRec">
+          <div class="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <label class="mb-1 block text-xs font-medium text-text-secondary">Device name</label>
+              <input v-model="recForm.device_name" required :class="field">
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-text-secondary">Record status</label>
+              <select v-model="recForm.status" :class="field">
+                <option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option>
+                <option value="SUSPENDED">Suspended</option><option value="FAULTY">Faulty</option>
+                <option value="DECOMMISSIONED">Decommissioned</option>
+              </select>
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-text-secondary">Installation date</label>
+              <input v-model="recForm.installation_date" type="date" :class="field">
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-text-secondary">Location note</label>
+              <input v-model="recForm.location_label" placeholder="e.g. Roof mount, behind the house" :class="field">
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-text-secondary">Network device ID</label>
+              <input v-model="recForm.network_device_id" :class="field">
+            </div>
+            <div class="sm:col-span-2 lg:col-span-3">
+              <label class="mb-1 block text-xs font-medium text-text-secondary">Notes</label>
+              <textarea v-model="recForm.notes" rows="3" :class="field" />
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button type="submit" :disabled="recSaving" class="btn-primary">{{ recSaving ? 'Saving…' : 'Save' }}</button>
+            <button type="button" :disabled="recSaving" class="btn-secondary" @click="recEditing = false">Cancel</button>
+          </div>
+        </form>
       </div>
 
       <!-- 7. Associated Customers (Device.associated_customers - separate

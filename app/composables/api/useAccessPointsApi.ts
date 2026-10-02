@@ -4,7 +4,9 @@
 // least read. Only call this composable from pages under /admin/; a
 // customer session will get a 403 on every method here, including list.
 import type { Paginated } from '~/types/api/common'
-import type { AccessPoint, AccessPointWritePayload, DeviceListItem } from '~/types/api/devices'
+import type {
+  AccessPoint, AccessPointWritePayload, DetectAccessPointIdentityResult, DeviceListItem,
+} from '~/types/api/devices'
 
 export function useAccessPointsApi() {
   // GET /api/access-points/ — filterable by status, site (icontains),
@@ -57,10 +59,33 @@ export function useAccessPointsApi() {
     })
   }
 
+  // POST /api/access-points/{id}/scan/ — manually triggers what otherwise
+  // happens automatically every couple of minutes in the background (see
+  // devices.services.scan_stale_access_points_for_unknown_devices on the
+  // backend): a live radio-neighborhood scan through this AP, flagging any
+  // MAC it sees that isn't already in our database as an "unknown device"
+  // over in Unregistered Devices (useUnregisteredDevicesApi). Useful to
+  // check right now rather than waiting for the next automatic cycle.
+  function scanAccessPoint(id: string) {
+    return apiFetch<{ scanned: boolean; neighbors_seen: number; unknown_found: number }>(
+      `/api/access-points/${id}/scan/`, { method: 'POST' },
+    )
+  }
+
+  // POST /api/access-points/{id}/detect-identity/ - asks the AP what model it is
+  // and stores it (replacing what was there). 502 if it can't be reached.
+  function detectAccessPointIdentity(id: string) {
+    return apiFetch<DetectAccessPointIdentityResult>(
+      `/api/access-points/${id}/detect-identity/`, { method: 'POST' },
+    )
+  }
+
   return {
+    detectAccessPointIdentity,
     listAccessPointDevices,
     attachDeviceToAccessPoint,
     detachDeviceFromAccessPoint,
+    scanAccessPoint,
     listAccessPoints,
     getAccessPoint,
     createAccessPoint,

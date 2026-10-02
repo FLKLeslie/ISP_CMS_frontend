@@ -27,6 +27,14 @@ export function useMikroTikApi() {
     })
   }
 
+  // Edit the administrator-maintained details (friendly name, site, notes). The router's own reported fields stay read-only on the server.
+  function updateRouterDetails(
+    id: string,
+    payload: Partial<Pick<MikroTikRouter, 'label' | 'site' | 'notes'>>,
+  ) {
+    return apiFetch<MikroTikRouter>(`/api/microtik/routers/${id}/`, { method: 'PATCH', body: payload })
+  }
+
   function approveRouter(id: string) {
     return apiFetch<MikroTikRouter>(`/api/microtik/routers/${id}/approve/`, { method: 'POST' })
   }
@@ -136,6 +144,7 @@ export function useMikroTikApi() {
     listRouters,
     getRouter,
     linkRouterToAccessPoint,
+    updateRouterDetails,
     approveRouter,
     rejectRouter,
     listLeases,

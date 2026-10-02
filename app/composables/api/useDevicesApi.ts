@@ -15,6 +15,7 @@ import type {
   DeviceConsoleCloseResult,
   DeviceConsoleOpenResult,
   DeviceConsoleWriteResult,
+  DetectIdentityResult,
   DeviceDetail,
   DeviceListItem,
   DeviceMetric,
@@ -53,6 +54,15 @@ export function useDevicesApi() {
   // message if they aren't linked to any device yet.
   function setMyLocation(latitude: number, longitude: number) {
     return apiFetch<DeviceDetail>('/api/devices/my-location/', { method: 'POST', body: { latitude, longitude } })
+  }
+
+  // POST /api/devices/{id}/detect-identity/ (Administrator only) - asks the
+  // device itself what it is (the same wireless-mode call that decides access
+  // point vs station) and stores the answer: model (which picks the icon) plus
+  // the running wireless mode, SSID, frequency and channel width. Replaces what
+  // is stored. Throws a 502 ApiError if the device can't be reached.
+  function detectDeviceIdentity(id: string) {
+    return apiFetch<DetectIdentityResult>(`/api/devices/${id}/detect-identity/`, { method: 'POST' })
   }
 
   function deleteDevice(id: string) {
@@ -112,6 +122,7 @@ export function useDevicesApi() {
     getDevice,
     createDevice,
     updateDevice,
+    detectDeviceIdentity,
     deleteDevice,
     deactivateDevice,
     restoreDevice,

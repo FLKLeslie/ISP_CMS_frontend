@@ -40,13 +40,52 @@ export interface AccessPoint {
   latitude: string | null
   longitude: string | null
   location_label: string
+  // Stored admin login (devices.DeviceCredentialsMixin on the backend) —
+  // used both for opening a Console session and, per has_admin_password,
+  // as the reusable "known-good password" offered when adopting a device
+  // this AP discovered (see UnregisteredDeviceSighting below). The actual
+  // password is never included here — only DeviceCredentials (via
+  // useDeviceCredentialsApi) ever carries the plaintext.
+  admin_username: string
+  has_admin_password: boolean
+  // When this AP was last actively scanned for nearby unknown devices —
+  // null means never. See scanAccessPoint in useUnregisteredDevicesApi.
+  last_discovery_scan_at: string | null
+  // Looked up in the backend's product catalog from `model` and STORED on the
+  // record, so the picture is always read from the database. All three are ''
+  // when the model isn't in the catalog (the UI then draws its generic icon).
+  // Read-only: correct the model and they follow. See utils/deviceIcons.ts.
+  icon_id: string // picture file name (without .png) in frontend/devices/
+  product_name: string // e.g. 'NanoStation M5'
+  product_line: string // e.g. 'airMAX'
+  // When the AP was last asked what model it is (automatic detection throttle).
+  identity_checked_at: string | null
   created_at: string
   updated_at: string
 }
 
 // Payload shape for create/update — same fields as AccessPoint minus the
-// server-generated ones (id/created_at/updated_at are read-only).
-export type AccessPointWritePayload = Omit<AccessPoint, 'id' | 'created_at' | 'updated_at'>
+// server-generated/read-only ones.
+export type AccessPointWritePayload = Omit<
+  AccessPoint,
+  'id' | 'device_count' | 'has_admin_password' | 'last_discovery_scan_at' | 'icon_id'
+  | 'product_name' | 'product_line' | 'identity_checked_at' | 'created_at' | 'updated_at'
+>
+
+// ---------------------------------------------------------------------------
+// Device/Access Point admin credentials — GET/POST .../credentials/ (see
+// devices.views.DeviceCredentialsActionMixin on the backend). Administrator
+// only. Deliberately includes the plaintext password on read - the whole
+// point of this endpoint is that a stored password is viewable, not just
+// settable. Shared shape for both Device and AccessPoint.
+// ---------------------------------------------------------------------------
+export interface DeviceCredentials {
+  username: string
+  password: string | null
+  has_password: boolean
+  updated_at: string | null
+  updated_by_name: string | null
+}
 
 // ---------------------------------------------------------------------------
 // Device Configuration (1-1 with Device)
@@ -172,14 +211,34 @@ export interface DeviceListItem {
   customer_name: string | null
   access_point: string | null
   access_point_name: string | null
+  access_point_site: string | null
+  customer_phone: string | null
+  customer_email: string | null
   device_name: string
   model: string
+  // Stored picture / product / line looked up from the model - see AccessPoint above.
+  icon_id: string
+  product_name: string
+  product_line: string
+  mac_address: string | null
+  serial_number: string | null
+  firmware_version: string
+  installation_date: string | null
   status: DeviceStatus
   ip_address: string | null
   last_seen: string | null
   online: boolean | null
+  // Latest-heartbeat figures for at-a-glance link quality; null until the
+  // device has reported at least once.
+  link_state: LinkState | '' | null
+  signal_strength: string | null
+  rx_rate: string | null
+  tx_rate: string | null
   latitude: string | null
   longitude: string | null
+  location_label: string
+  // See AccessPoint.has_admin_password above - same reasoning.
+  has_admin_password: boolean
 }
 
 // One row of Device.associated_customers - a customer explicitly granted
@@ -206,6 +265,9 @@ export interface DeviceDetail {
   serial_number: string | null
   mac_address: string | null
   model: string
+  icon_id: string
+  product_name: string
+  product_line: string
   hardware_version: string
   firmware_version: string
   protocol_version: string
@@ -214,6 +276,8 @@ export interface DeviceDetail {
   installation_date: string | null
   status: DeviceStatus
   last_seen: string | null
+  // When the device was last asked what model it is (automatic detection throttle).
+  identity_checked_at: string | null
   // Recency-aware: true only if the last heartbeat reported online AND
   // it arrived recently (see Device.is_actually_online() on the
   // backend) - null means this device has never sent a heartbeat at
@@ -230,6 +294,9 @@ export interface DeviceDetail {
   associated_customers: DeviceCustomerAccess[]
   is_deleted: boolean
   deleted_at: string | null
+  // See AccessPoint.admin_username/has_admin_password above.
+  admin_username: string
+  has_admin_password: boolean
   configuration: DeviceConfiguration | null
   current_status: DeviceCurrentStatus | null
   created_at: string
@@ -287,6 +354,11 @@ export interface UnregisteredDeviceSighting {
   // device didn't report a usable one.
   detected_name: string
   detected_model: string
+  // Picture/product/line looked up from detected_model (not stored on the
+  // sighting - they are stored on the Device when it is registered).
+  detected_icon_id: string
+  detected_product_name: string
+  detected_product_line: string
   // What the device reports itself as. "station" -> register it to a
   // customer as a normal Device. "access-point" -> it's institution
   // infrastructure, register it as an AccessPoint instead. Empty string
@@ -303,6 +375,34 @@ export interface UnregisteredDeviceSighting {
   resolved_by: string | null
   resolved_by_name: string | null
   resolved_at: string | null
+  // How this sighting was found. 'heartbeat' (the original path) means the
+  // device pinged us directly with an unknown MAC. 'ap_scan' means we've
+  // never heard from the device at all - one of our own access points saw
+  // it sitting on its network during a discovery scan (see
+  // scanAccessPoint/the automatic background scan) and reported it as a
+  // neighbor. The UI badges these "Unknown device" and offers Adopt
+  // (adoptSighting) instead of/alongside the normal register flow.
+  source: 'heartbeat' | 'ap_scan'
+  // Set only when source is 'ap_scan' - which AP found it, and the LAN IP
+  // it reported. Both required to adopt it.
+  discovered_via_access_point: string | null
+  discovered_via_access_point_name: string | null
+  discovered_ip_address: string | null
+  // Adoption (ap_scan sightings only) - pushing a not-yet-managed device
+  // under our management, distinct from `status`/register() above, which
+  // is the separate later step of assigning an already-managed device to
+  // a customer. 'adopting'/'failed' are both normal, retryable states
+  // while the underlying adoption script is still being finalized.
+  adoption_status: 'not_adopted' | 'adopting' | 'adopted' | 'failed'
+  adoption_attempted_at: string | null
+  // Node's raw response from the last adopt attempt, for troubleshooting -
+  // never contains the password that was sent.
+  adoption_result: Record<string, unknown>
+  // Whether an admin-chosen password from a previous adopt attempt is
+  // waiting to be transferred onto the Device this sighting eventually
+  // becomes (see services.transfer_pending_credentials on the backend) -
+  // never the password itself.
+  has_pending_credentials: boolean
   created_at: string
   updated_at: string
 }
@@ -358,4 +458,16 @@ export interface DeviceWritePayload {
   latitude?: string | null
   longitude?: string | null
   location_label?: string
+}
+
+// POST /api/devices/{id}/detect-identity/ - asks the device what it is and
+// stores the answer. `changed` lists what was updated (e.g. ['model',
+// 'configuration.ssid']); empty means the device already matched.
+export interface DetectIdentityResult {
+  changed: string[]
+  device: DeviceDetail
+}
+export interface DetectAccessPointIdentityResult {
+  changed: string[]
+  access_point: AccessPoint
 }

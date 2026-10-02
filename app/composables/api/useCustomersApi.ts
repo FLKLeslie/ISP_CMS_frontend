@@ -1,17 +1,20 @@
 import type { Paginated } from '~/types/api/common'
-import type { Customer, CustomerStatus } from '~/types/api/subscriptions'
+import type { Customer, CustomerStatus, CustomerType } from '~/types/api/subscriptions'
 
 export interface CustomerCreatePayload {
   email: string; first_name: string; last_name: string; password: string
   phone_number?: string; address?: string; city?: string; country?: string
   router_ip?: string | null; status?: CustomerStatus
+  customer_type?: CustomerType; company_name?: string; alternate_phone?: string
+  landmark?: string; notes?: string
 }
 // address/city/country/router_ip/status are editable by the customer
 // themself or an admin. first_name/last_name/email/phone_number are
 // admin-only - the backend rejects them from a non-admin with a 400 (see
 // customers.serializers.CustomerSerializer.update on the backend).
 export interface CustomerUpdatePayload extends Partial<
-  Pick<Customer, 'address' | 'city' | 'country' | 'router_ip' | 'router_mac_address' | 'router_hostname' | 'status'>
+  Pick<Customer, 'address' | 'city' | 'country' | 'router_ip' | 'router_mac_address' | 'router_hostname' | 'status'
+    | 'customer_type' | 'company_name' | 'alternate_phone' | 'landmark' | 'notes'>
 > {
   first_name?: string; last_name?: string; email?: string; phone_number?: string
 }

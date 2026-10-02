@@ -1,5 +1,5 @@
 ISP MANAGEMENT SYSTEM - PROJECT HANDOVER
-Last updated: 2026-09-25
+Last updated: 2026-09-27
 =================================================================
 
 PURPOSE OF THIS FILE
@@ -58,6 +58,12 @@ Three moving parts, three separate codebases:
                                         useMikroTikApi, useRevenueApi, etc)
                 app/types/api/  TypeScript shapes matching the Django
                                 serializers, one file per backend app
+  Pictures    : frontend/devices/  holds the product images
+                (<icon id>.png) and the catalog JSON that names them.
+                It sits OUTSIDE public/, so nuxt.config.ts serves it
+                at /devices/ (see 3.1.4). Drawn by
+                components/domain/DeviceIcon.vue; URL helpers live in
+                app/utils/deviceIcons.ts.
   Run it      : npm install && npm run dev  (expects the backend's URL in
                 the runtime config / .env - check nuxt.config.ts)
 
@@ -75,7 +81,11 @@ Three moving parts, three separate codebases:
     payments       - payment records, and the revenue analytics endpoints
     devices        - PowerBeam radios: registered customer Devices and
                      institutional AccessPoints, heartbeats, metrics,
-                     commands, and the "unregistered device" review queue
+                     commands, and the "unregistered device" review queue.
+                     Also devices/catalog.py + devices/data/ (the product
+                     catalog - model -> picture/product name/line, see
+                     3.1.4) and devices/identity.py (parsing what a
+                     device says about itself)
     microtik       - MikroTik routers, the client devices they report,
                      block/connect commands, and reconciling what actually
                      happened
@@ -165,6 +175,163 @@ all three codebases.
     console/close/ when the panel is closed, including via onUnmounted -
     an admin navigating away without explicitly disconnecting still frees
     the session, so it never sits open on the device indefinitely.
+
+3.1.2 Device/access-point admin credentials (stored, viewable, editable)
+  - Device and AccessPoint both now store their own admin login
+    (devices.models.DeviceCredentialsMixin: admin_username,
+    admin_password_encrypted + who/when it was last set). An administrator
+    can view the actual password (not just "is one set"), generate a
+    strong one, or set a specific one - "Password" button on the device
+    detail page and on each row in Access Points. See
+    DeviceCredentialsActionMixin.credentials on both DeviceViewSet and
+    AccessPointViewSet (GET/POST .../credentials/), and
+    DeviceCredentialsModal.vue on the frontend.
+  - The password is encrypted at rest (common/crypto.py, Fernet -
+    reversible, NOT hashed, since it has to be readable back in plaintext
+    to actually be useful) under settings.DEVICE_CREDENTIAL_ENCRYPTION_KEY.
+    Losing/rotating that key means every stored password becomes
+    unreadable (decrypt_secret returns None, logged as a warning, not a
+    crash) - back it up like any other production secret.
+  - Generating/setting a password requires the device/AP to be currently
+    connected - Node dispatches a live 'rpc-sys password_set' call (its
+    already-built /internal/devices/{mac}/credentials/ endpoint, actions
+    login/generate/set - wasn't wired to anything before 2026-09-27). A
+    device that's never connected (no known MAC) can't have a password set
+    this way - see 3.1.3 for how a device gets its FIRST password before
+    it's ever connected to us at all.
+  - Administrator only (devices.permissions.DeviceCredentialsPermission -
+    its own class, same reasoning as DeviceConsolePermission: so it can't
+    be loosened by an unrelated change elsewhere).
+
+3.1.3 AP-scan device discovery ("unknown devices") and adoption
+  - A SECOND, independent way an UnregisteredDeviceSighting can appear,
+    alongside the original heartbeat path (a device that pinged us with an
+    unknown MAC). Here, one of our own access points actively scans its
+    own radio neighborhood (Node's discovery/ endpoint - the same
+    udapi-refreshNeighbors AirOS "Discover" tool - already built, wasn't
+    wired to anything before 2026-09-27) and reports back every device it
+    can see, whether or not that device has ever spoken to US directly.
+    Any MAC in that list not already a Device/AccessPoint becomes a
+    sighting with source=ap_scan - shown in Unregistered Devices as
+    "Unknown device" rather than "Unregistered device", since we've never
+    heard from it at all. See devices.services.
+    scan_access_point_for_unknown_devices and parse_discovered_neighbors.
+  - IMPORTANT CAVEAT: parse_discovered_neighbors's field-name guesses
+    (mac/ip/hostname/product/etc, with several aliases each) were NOT
+    verified against a real captured udapi-getNeighbors/refreshNeighbors
+    response - no sample was available when this was written. If real
+    scans come back with different field names, widen the alias tuples in
+    that function. Test this against a real AP before relying on it.
+  - Runs automatically in the background, piggy-backed on the existing
+    heartbeat-driven maintenance mechanism (common/maintenance.py -
+    NO new scheduler/Celery/cron was introduced). Unlike the other
+    maintenance steps this is a real over-the-air radio scan, so only
+    settings.AP_DISCOVERY_SCAN_BATCH_SIZE access points (the least
+    recently scanned, via AccessPoint.last_discovery_scan_at) get scanned
+    per maintenance tick, cycling through all APs over
+    settings.AP_DISCOVERY_SCAN_INTERVAL_SECONDS. An admin can also trigger
+    one immediately - "Scan now" on an access point's row, POST
+    /api/access-points/{id}/scan/.
+  - Adoption ("Adopt" button on an unknown-device row, POST
+    /api/unregistered-devices/{id}/adopt/) pushes an adoption request to
+    the device using the discovering access point's live connection as a
+    relay (Node's already-built discovery/adopt endpoint - see
+    docs/adoption-mechanism.txt - also unwired before 2026-09-27).
+    - The device isn't adopted yet, so it's assumed to still carry the
+      SAME default/shared password our own gear ships with - the AP's own
+      password is reused as the CURRENT login credential to authenticate
+      the adoption call. If that AP has no password saved yet, the admin
+      is asked for it once and it's saved on the AP going forward - even
+      if the adoption call that follows then fails, so a retry never has
+      to ask again.
+    - Separately, the admin picks (or auto-generates) a NEW password to be
+      applied to the device as part of adoption. This is held ENCRYPTED on
+      the sighting itself (pending_admin_username/
+      pending_admin_password_encrypted) until the sighting is later
+      registered into a real Device via the existing register/ action, at
+      which point it's transferred onto the Device's own credential fields
+      automatically (services.transfer_pending_credentials) and cleared
+      from the sighting.
+    - adopt/ deliberately does NOT resolve the sighting (status stays
+      PENDING) - it's a separate, retryable step from register/, tracked
+      instead via its own adoption_status (not_adopted/adopting/adopted/
+      failed). THE REAL ADOPTION SCRIPT/PAYLOAD IS STILL BEING FINALIZED
+      OUTSIDE THIS CODEBASE - settings.DEVICE_ADOPTION_TARGET_PATH and
+      DEVICE_ADOPTION_CONTROLLER_URL are explicit placeholders (see their
+      settings.py comments) until that's ready, so failed/rejected adopt
+      attempts are expected for now, not a bug. Node's response is stored
+      on adoption_result (minus any credentials) for troubleshooting.
+
+3.1.4 Device model, pictures and detected details
+  WHERE THE INFORMATION COMES FROM. Node exposes two read calls that
+  together describe a unit (both already existed; Django now uses both):
+    wireless-mode  -> the product MODEL (e.g. "PBE-5AC-Gen2"), whether it
+                      is an access point or a station, and its running
+                      wireless settings (SSID, frequency, channel width).
+                      The model arrives in the SAME response that decides
+                      AP vs station, so tracking it costs no extra call.
+    system-info    -> the model again, the HOSTNAME set on the device, and
+                      its management network: IP address, subnet mask
+                      (from the CIDR), default gateway, DNS servers,
+                      static-vs-DHCP, time zone.
+  The Wi-Fi passphrase (in wireless-mode) and the device's user list (in
+  system-info) are never read or stored. When both calls report a model,
+  the wireless-mode one wins (it is the full product code).
+
+  WHEN IT IS READ. (1) The first time an unknown device is seen (the
+  sighting records its model and name). (2) Registering a sighting copies
+  the model onto the new Device - the admin can correct it in the form.
+  (3) A registered device/AP that still has something unknown (no model,
+  no wireless mode, no hostname) is asked again on its own heartbeat, at
+  most once every 5 minutes, only FILLING BLANKS - it never overwrites
+  what an admin typed, and a failure can never fail the heartbeat.
+  (4) "Detect from device" on a device's Hardware card, and "Detect
+  model" on an access point row, re-read it now and REPLACE what is
+  stored. Routes: POST /api/devices/{id}/detect-identity/ and
+  POST /api/access-points/{id}/detect-identity/ (admin only; 502 if the
+  device can't be reached).
+
+  PICTURES. The product catalog is Ubiquiti's own list
+  (backend devices/data/device_icons_lines_products.json): each entry has
+  an icon id, a product name, a product line and the SHORTNAMES devices
+  report as their model. The backend looks a device's model up (exact,
+  case-insensitive, then ignoring spaces/punctuation - it never guesses
+  by prefix) and STORES three things on the record: icon_id,
+  product_name, product_line. They are re-read every time the model
+  changes, so correcting a wrong model corrects the picture; they are
+  read-only through the API. The frontend only turns icon_id into an
+  address - /devices/<icon_id>.png - and draws that image. If there is
+  no icon_id (model not in the catalog), no such file, or the image fails
+  to load, DeviceIcon draws a generic icon instead (a radio; a router for
+  MikroTik). A failed image is remembered for the session so it is
+  requested once, not once per row.
+    - To add pictures: put <icon id>.png in frontend/devices/. Nothing
+      else to change.
+    - To recognise a new model: add its shortname to the catalog JSON in
+      the backend (then re-save or re-detect existing devices, or run a
+      small backfill like migration devices/0013).
+    - A bare "P5B" is deliberately NOT matched: the catalog only lists
+      P5B-300 / P5B-400 / P5B-620 (different antennas) and guessing would
+      show the wrong product. It falls back to the generic icon.
+    - Sightings show a picture too, but it is looked up on the fly from
+      detected_model, not stored (it is stored once the device is
+      registered).
+
+  WHERE IT SHOWS. Device detail has three cards: HARDWARE (product, model,
+  product line, MAC, serial, hostname, hardware and firmware version -
+  editable: model, MAC, serial, versions), NETWORK (IP, assignment,
+  subnet, gateway, DNS, time zone - display only, it is read from the
+  device) and RECORDS (name, status, install date, location note,
+  network device ID, notes - editable). The device and access-point
+  lists, customer list/detail, unregistered-device cards and MikroTik
+  cards all show the picture. The customers list shows the customer's
+  device by product name.
+
+  MAC ADDRESSES are stored lowercase, colon-separated everywhere
+  (common/macs.py) - Device, AccessPoint and sightings normalise on save
+  and the serializers normalise before checking for duplicates. Before
+  this, an AP-scan or hand-typed MAC (uppercase) never matched Node's
+  lowercase heartbeat MAC. Migration devices/0012 fixed existing rows.
 
 3.2 MikroTik routers and client leases
   - A customer's Device (the receiver PowerBeam) sits behind a MikroTik
@@ -256,16 +423,25 @@ all three codebases.
 nav label to the page file, for a developer.)
 
   Dashboard          pages/admin/index.vue           - top-line counts
-  Customers          pages/admin/customers/           - list + detail
+  Customers          pages/admin/customers/           - list + detail (the
+                                                          detail page fills
+                                                          the screen: two
+                                                          columns from xl up)
   Subscriptions       pages/admin/subscriptions.vue    - list, grant, plans
   Payments           pages/admin/payments.vue         - record a payment
   Revenue            pages/admin/revenue.vue          - analysis, see 3.4
   Devices            pages/admin/devices/             - list, detail
                                                           (incl. Console -
-                                                          see 3.1.1),
+                                                          see 3.1.1, and
+                                                          Password - 3.1.2),
                                                           configure, history,
                                                           map, unregistered
-  Access Points      pages/admin/access-points/        - AP inventory
+                                                          (incl. unknown
+                                                          devices/Adopt -
+                                                          see 3.1.3)
+  Access Points      pages/admin/access-points/        - AP inventory,
+                                                          Password (3.1.2),
+                                                          Scan now (3.1.3)
   MikroTik           pages/admin/microtik/index.vue    - routers, devices,
                                                           allocation, block/
                                                           connect, Commands
@@ -279,6 +455,16 @@ nav label to the page file, for a developer.)
 Customer nav (pages/customer/...):
   Dashboard, Subscription (buy/renew/history), Suggestions, Notifications,
   Account (profile + change password).
+
+Navigation icons (layouts/admin.vue and layouts/customer.vue). Every item
+has its own icon - keep it that way when adding pages (lucide-vue-next):
+  Dashboard LayoutDashboard | Customers Users | Subscriptions CalendarClock
+  Payments CreditCard | Revenue TrendingUp | Devices Radio
+  Unregistered Devices ScanSearch | Device Map MapPinned
+  Access Points RadioTower | MikroTik Routers Router
+  Suggestions Lightbulb | Announcements Megaphone | Notifications Bell
+  (customer: Dashboard LayoutDashboard, Subscription CalendarClock,
+  Notifications Bell, Suggestions Lightbulb, Account User)
 
 
 5. THINGS THAT ARE EASY TO GET WRONG (READ BEFORE CHANGING)
@@ -308,12 +494,55 @@ Customer nav (pages/customer/...):
   holds no record of an open terminal_id at all. Don't try to "list open
   sessions" or reconnect to one from a fresh page load; the frontend
   always starts a brand new session via console/open/.
+- Device/AP passwords (3.1.2) are encrypted with
+  DEVICE_CREDENTIAL_ENCRYPTION_KEY - if that env var differs between
+  environments (or gets rotated without a migration plan), every
+  previously-stored password becomes silently unreadable (returns None,
+  not an error) rather than throwing. Keep it consistent per environment
+  and treat it as seriously as any other production secret.
+- AP-scan discovery (3.1.3) is a REAL radio scan on live hardware, not a
+  cheap DB query - that's why it's rate-limited per-AP
+  (AP_DISCOVERY_SCAN_INTERVAL_SECONDS) and batched
+  (AP_DISCOVERY_SCAN_BATCH_SIZE), unlike the other maintenance steps.
+  Don't lower the interval or raise the batch size without thinking about
+  how many APs you actually have and how disruptive frequent scans are to
+  their normal operation.
+- Device adoption (3.1.3) is genuinely expected to fail right now for real
+  devices - the adoption script/payload it sends is a placeholder pending
+  work outside this codebase (settings.DEVICE_ADOPTION_TARGET_PATH /
+  DEVICE_ADOPTION_CONTROLLER_URL). Don't treat a failed adopt/ call as a
+  regression until those are finalized and confirmed against real
+  hardware.
 - common/maintenance.py's sweep is what makes automatic disconnect work
   without a scheduler - it rides along on whatever heartbeat/report
   request happens to arrive next, throttled by MAINTENANCE_INTERVAL_SECONDS.
   There is also a `python manage.py expire_subscriptions` management
   command that does the same work, kept as a backup for real schedulers
   (e.g. Heroku Scheduler) - both are safe to run at the same time.
+- icon_id / product_name / product_line (3.1.4) are DERIVED from the
+  model and re-read on every save. Don't make them editable or set them
+  by hand - change the model. If you bulk-update models with
+  queryset.update() (which skips save()) the derived fields will not
+  follow; re-save the rows or backfill them.
+- The product pictures are NOT in public/ and NOT served by Django. They
+  live in frontend/devices/ and nuxt.config.ts maps that folder to
+  /devices/ with a nitro:config hook (Nitro needs an absolute path; a
+  relative one is silently ignored). If pictures stop appearing, check
+  that hook first, then the file name == icon_id + ".png".
+- Customer.notes (internal admin notes) must never reach a customer: the
+  serializer drops it for non-admins and rejects a non-admin writing it.
+  Any new customer-facing endpoint that serializes a Customer must go
+  through CustomerSerializer, not a hand-rolled dict.
+- CustomerSerializer's summary fields (device_count, plan, router online,
+  ...) are only computed on the customers endpoint
+  (context["include_summary"]) because the same serializer is nested in
+  subscription/payment/device responses, where they'd cost several
+  queries per row. Don't turn them on globally.
+- Run the backend tests with explicit app labels
+  (python manage.py test devices customers microtik ...). The repo has
+  stray duplicate copies of some apps nested under microtik/ and
+  dashboard/ that make a bare "manage.py test" fail with duplicate-model
+  errors; they are not in INSTALLED_APPS and should be deleted.
 
 
 6. ENVIRONMENT VARIABLES (NAMES ONLY - GET ACTUAL VALUES SEPARATELY)
@@ -335,6 +564,19 @@ Backend (Django):
                                         switch described in 3.3
   MAINTENANCE_INTERVAL_SECONDS         default 15 - see section 5
   DEVICE_OFFLINE_THRESHOLD_SECONDS     used for Devices/AccessPoints too
+  DEVICE_CREDENTIAL_ENCRYPTION_KEY     required to store/read any device or
+                                        access-point password (3.1.2) - see
+                                        that section's warning about what
+                                        happens if this changes/is lost
+  AP_DISCOVERY_SCAN_INTERVAL_SECONDS,
+  AP_DISCOVERY_SCAN_BATCH_SIZE         AP-scan discovery cadence (3.1.3),
+                                        default 120s / 1 AP per tick
+  DEVICE_ADOPTION_HTTPS_PORT,
+  DEVICE_ADOPTION_TARGET_PATH,
+  DEVICE_ADOPTION_CONTROLLER_URL       device-adoption call defaults (3.1.3)
+                                        - TARGET_PATH/CONTROLLER_URL are
+                                        placeholders pending the real
+                                        adoption script
   (check backend/isms_backend/settings.py for the full, current list -
   this is not guaranteed exhaustive)
 
@@ -369,6 +611,60 @@ Frontend: no automated test suite exists yet. Testing is manual -
 
 8. RECENT CHANGES (most recent first - keep this updated)
 ---------------------------------------------------------------
+- 2026-10-02  Device pictures now come from the product catalog and are
+              STORED. A device's model is looked up in
+              backend devices/data/device_icons_lines_products.json and
+              its icon_id, product_name and product_line are saved on
+              the Device/AccessPoint/MikroTikRouter (re-read whenever the
+              model changes; migrations devices/0013 and microtik/0005
+              backfill existing rows). The frontend draws
+              /devices/<icon_id>.png from frontend/devices/ and falls
+              back to a generic icon when there is none. This replaces
+              the short-lived "icon_key + admin override" scheme from the
+              day before (removed - the picture now follows the model).
+              "Detect from device" now also reads system-info: hostname,
+              IP address, subnet, gateway, DNS, time zone. Device detail
+              was reorganised into Hardware / Network / Records cards;
+              Hardware shows only hardware facts. Customer detail now
+              fills the screen (two columns from xl). Every nav item has
+              its own distinct icon (section 4). See 3.1.4.
+- 2026-10-01  Device model tracking and richer, editable records. The
+              model is read from the wireless-mode call (same one that
+              decides AP vs station) and kept on the device: copied on
+              registration, filled in automatically on heartbeats while
+              unknown, refreshed on demand ("Detect from device"). The
+              register action previously never copied the detected model
+              onto the Device - that was the root cause of blank models.
+              Device/AP/customer/MikroTik storage-only fields became
+              editable in the UI (customer type, company, alternate
+              phone, landmark, admin-only notes; AP firmware and status;
+              MikroTik label/site/notes; device serial, versions,
+              install date, notes). Customers list shows device, plan,
+              router state. MACs normalised to lowercase (see 3.1.4).
+- 2026-09-27  Device/access-point admin credentials are now stored,
+              viewable and editable (generate or set your own, per
+              device/AP - "Password" button), and a new AP-scan discovery
+              mechanism finds devices sitting on an access point's network
+              that have never contacted us directly ("unknown devices" in
+              Unregistered Devices, with an Adopt action). Both wire up
+              Node endpoints (/credentials/, /discovery/, /discovery/adopt/)
+              that already existed there but weren't previously called
+              from anywhere - see sections 3.1.2 and 3.1.3. The AP scan
+              runs automatically in the background (piggy-backed on the
+              existing maintenance mechanism, no new scheduler) and can
+              also be triggered manually ("Scan now"). The real device
+              adoption script is still being finalized outside this
+              codebase - failed adoption attempts are expected for now.
+- 2026-09-25  Device Console output was showing a garbled "ok" glued onto
+              the front of every command's output (e.g. "pwd" displayed
+              as "okpwd\n/var/etc/persistent") - the device firmware
+              sends a bare "ok" protocol ack as its own message right
+              before the real echoed command + output, and Node's
+              buffering concatenated the two with no separator. Fixed in
+              uisp_communication/app.js (resolveTerminalOutput) by
+              dropping any shell-message fragment that is exactly "ok"
+              before it gets appended. Confirmed against a real PowerBeam
+              console session.
 - 2026-09-25  New device Console: an admin can open a live shell on any
               PowerBeam Device (login, type commands, see real output)
               straight from its detail page. Wires up terminal/open,
@@ -438,6 +734,17 @@ Frontend: no automated test suite exists yet. Testing is manual -
 - No self-service password reset ("forgot password") flow exists yet -
   only change-password while already logged in. Customer accounts are
   created by an admin, not self-registered.
+- The product images themselves must be placed in frontend/devices/
+  (named <icon id>.png, as the catalog JSON references them). Until a
+  device's image is there, that device shows the generic icon - the
+  feature works without them, just without pictures.
+- The catalog is Ubiquiti's. MikroTik routers (and any unlisted model)
+  get no stored picture and show the generic router/radio icon. Adding
+  aliases for board codes the catalog doesn't list (e.g. bare "P5B") is a
+  data task, not a code change.
+- Device detail's Network card is display-only: IP/gateway/DNS are what
+  the device reports, and editing them there would not change the device.
+  Changing a device's network settings is not implemented.
 - No automated frontend test suite.
 - If you find something else that's missing or broken, add it here
   rather than only mentioning it in chat/Slack, so it doesn't get lost.

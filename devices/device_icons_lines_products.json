@@ -1,0 +1,7842 @@
+[
+  {
+    "icon": {
+      "id": "0da32da2-b540-4b03-92c0-4ee5e25da040"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airCube",
+      "name": "airCube"
+    },
+    "shortnames": [
+      "ACB"
+    ]
+  },
+  {
+    "icon": {
+      "id": "0d482159-5482-4cf7-b8ab-cfd1c798bab9"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airCube AC",
+      "name": "airCube AC"
+    },
+    "shortnames": [
+      "ACB-AC"
+    ]
+  },
+  {
+    "icon": {
+      "id": "0b6d0790-dea7-47a0-a1a6-929b85b0f247"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airCube ISP",
+      "name": "airCube ISP"
+    },
+    "shortnames": [
+      "ACB-ISP"
+    ]
+  },
+  {
+    "icon": {
+      "id": "a07933f2-26f8-4170-83e3-0445a9901bb2"
+    },
+    "line": {
+      "id": "airfiber",
+      "name": "AirFiber"
+    },
+    "product": {
+      "abbrev": "airFiber 11FX",
+      "name": "airFiber 11FX"
+    },
+    "shortnames": [
+      "AF-11FX",
+      "AF11FX"
+    ]
+  },
+  {
+    "icon": {
+      "id": "7145b7f3-2cf0-4a83-aeb0-9fe1d346d21a"
+    },
+    "line": {
+      "id": "airfiber",
+      "name": "AirFiber"
+    },
+    "product": {
+      "abbrev": "airFiber X 11G35 Antenna",
+      "name": "airFiber X 11G35 Antenna"
+    },
+    "shortnames": [
+      "AirFiber X 11G35 Antenna"
+    ]
+  },
+  {
+    "icon": {
+      "id": "266cbe73-ce3c-4577-a440-a8671c0f6d8a"
+    },
+    "line": {
+      "id": "airfiber",
+      "name": "AirFiber"
+    },
+    "product": {
+      "abbrev": "airFiber 24",
+      "name": "airFiber 24"
+    },
+    "shortnames": [
+      "AF24"
+    ]
+  },
+  {
+    "icon": {
+      "id": "43fd32b4-5399-42a4-bcbf-b016abb32be2"
+    },
+    "line": {
+      "id": "airfiber",
+      "name": "AirFiber"
+    },
+    "product": {
+      "abbrev": "airFiber 24HD",
+      "name": "airFiber 24HD"
+    },
+    "shortnames": [
+      "AF24HD"
+    ]
+  },
+  {
+    "icon": {
+      "id": "416085e0-8e0b-4b0c-a8e6-b1375b0bb5fc"
+    },
+    "line": {
+      "id": "airfiber",
+      "name": "AirFiber"
+    },
+    "product": {
+      "abbrev": "airFiber X 2G24-S45 Antenna",
+      "name": "airFiber X 2G24-S45 Antenna"
+    },
+    "shortnames": [
+      "AirFiber X 2G24-S45 Antenna"
+    ]
+  },
+  {
+    "icon": {
+      "id": "8cd0e804-9c59-44a0-b52f-10788859cbd9"
+    },
+    "line": {
+      "id": "airfiber",
+      "name": "AirFiber"
+    },
+    "product": {
+      "abbrev": "airFiber 2X",
+      "name": "airFiber 2X"
+    },
+    "shortnames": [
+      "AF2X"
+    ]
+  },
+  {
+    "icon": {
+      "id": "cbf68562-367a-441f-be87-80c6b51ecf54"
+    },
+    "line": {
+      "id": "airfiber",
+      "name": "AirFiber"
+    },
+    "product": {
+      "abbrev": "airFiber X 3G26-S45 Antenna",
+      "name": "airFiber X 3G26-S45 Antenna"
+    },
+    "shortnames": [
+      "AirFiber X 3G26-S45 Antenna"
+    ]
+  },
+  {
+    "icon": {
+      "id": "81e8c7a0-378b-4ef9-b7fa-35a4a801d12f"
+    },
+    "line": {
+      "id": "airfiber",
+      "name": "AirFiber"
+    },
+    "product": {
+      "abbrev": "airFiber 4X",
+      "name": "airFiber 4X"
+    },
+    "shortnames": [
+      "AF4X"
+    ]
+  },
+  {
+    "icon": {
+      "id": "f8eeff66-dd31-44b9-b242-ae9e7259a18f"
+    },
+    "line": {
+      "id": "airfiber",
+      "name": "AirFiber"
+    },
+    "product": {
+      "abbrev": "airFiber 5",
+      "name": "airFiber 5"
+    },
+    "shortnames": [
+      "AF5"
+    ]
+  },
+  {
+    "icon": {
+      "id": "c8a03889-e5a0-470e-b6e9-0e635a5cfcf9"
+    },
+    "line": {
+      "id": "airfiber",
+      "name": "AirFiber"
+    },
+    "product": {
+      "abbrev": "airFiber X 5G23-S45 Antenna",
+      "name": "airFiber X 5G23-S45 Antenna"
+    },
+    "shortnames": [
+      "AirFiber X 5G23-S45 Antenna"
+    ]
+  },
+  {
+    "icon": {
+      "id": "75647c84-fb87-42e8-b95b-3cd6dae801f1"
+    },
+    "line": {
+      "id": "airfiber",
+      "name": "AirFiber"
+    },
+    "product": {
+      "abbrev": "airFiber X 5G30-S45 Antenna",
+      "name": "airFiber X 5G30-S45 Antenna"
+    },
+    "shortnames": [
+      "AirFiber X 5G30-S45 Antenna"
+    ]
+  },
+  {
+    "icon": {
+      "id": "6f8a665e-62e0-47e4-8b8b-1260d8636bfd"
+    },
+    "line": {
+      "id": "airfiber",
+      "name": "AirFiber"
+    },
+    "product": {
+      "abbrev": "airFiber X 5G34-S45 Antenna",
+      "name": "airFiber X 5G34-S45 Antenna"
+    },
+    "shortnames": [
+      "AirFiber X 5G34-S45 Antenna"
+    ]
+  },
+  {
+    "icon": {
+      "id": "18c98ed2-2c5c-41a4-bb61-358640051e21"
+    },
+    "line": {
+      "id": "airfiber",
+      "name": "AirFiber"
+    },
+    "product": {
+      "abbrev": "airFiber 5U",
+      "name": "airFiber 5U"
+    },
+    "shortnames": [
+      "AF5U",
+      "AirFiber 5U"
+    ]
+  },
+  {
+    "icon": {
+      "id": "4eaff23f-26be-4764-a248-072b1ddb7a15"
+    },
+    "line": {
+      "id": "ltu",
+      "name": "LTU"
+    },
+    "product": {
+      "abbrev": "airFiber 5XHD",
+      "name": "airFiber 5XHD"
+    },
+    "shortnames": [
+      "AF-5XHD"
+    ]
+  },
+  {
+    "icon": {
+      "id": "5f6dedfd-efc2-4905-a8fb-c7bd2f292a48"
+    },
+    "line": {
+      "id": "ltu",
+      "name": "LTU"
+    },
+    "product": {
+      "abbrev": "airFiber LTU",
+      "name": "airFiber LTU"
+    },
+    "shortnames": [
+      "AF-LTU"
+    ]
+  },
+  {
+    "icon": {
+      "id": "ed7f7932-138d-4e41-8dc9-740f6986a270"
+    },
+    "line": {
+      "id": "airfiber",
+      "name": "AirFiber"
+    },
+    "product": {
+      "abbrev": "airFiber NxN",
+      "name": "airFiber NxN"
+    },
+    "shortnames": [
+      "AirFiber NxN"
+    ]
+  },
+  {
+    "icon": {
+      "id": "91dfb212-549a-42be-96bb-e4b1f44bba1a"
+    },
+    "line": {
+      "id": "airfiber",
+      "name": "AirFiber"
+    },
+    "product": {
+      "abbrev": "airFiber X Antenna",
+      "name": "airFiber X Antenna"
+    },
+    "shortnames": [
+      "AirFiber X Antenna"
+    ]
+  },
+  {
+    "icon": {
+      "id": "72f36f95-1ae5-45a4-9286-5ea1dfd5d275"
+    },
+    "line": {
+      "id": "airfiber",
+      "name": "AirFiber"
+    },
+    "product": {
+      "abbrev": "AF3X",
+      "name": "airFiber 3X"
+    },
+    "shortnames": [
+      "AF3X"
+    ]
+  },
+  {
+    "icon": {
+      "id": "c79de5e4-1048-4ede-8e4d-cbc802591fb0"
+    },
+    "line": {
+      "id": "airfiber",
+      "name": "AirFiber"
+    },
+    "product": {
+      "abbrev": "AF60",
+      "name": "airFiber 60"
+    },
+    "shortnames": [
+      "AF60"
+    ]
+  },
+  {
+    "icon": {
+      "id": "7dd640f3-cd1e-4f1d-b38f-99fd50befca8"
+    },
+    "line": {
+      "id": "airfiber",
+      "name": "AirFiber"
+    },
+    "product": {
+      "abbrev": "AF60",
+      "name": "airFiber 60"
+    },
+    "shortnames": [
+      "AF60-HD",
+      "AF60HD"
+    ]
+  },
+  {
+    "icon": {
+      "id": "b3317651-21c6-42da-a3c7-01c1c9c4dd12"
+    },
+    "line": {
+      "id": "airfiber",
+      "name": "AirFiber"
+    },
+    "product": {
+      "abbrev": "AF60",
+      "name": "airFiber 60"
+    },
+    "shortnames": [
+      "AF60-LR"
+    ]
+  },
+  {
+    "icon": {
+      "id": "3fc5481a-bafb-4346-9121-1a18b664efa4"
+    },
+    "line": {
+      "id": "airfiber",
+      "name": "AirFiber"
+    },
+    "product": {
+      "abbrev": "AF60",
+      "name": "airFiber 60"
+    },
+    "shortnames": [
+      "AF60-XG",
+      "AF60XG",
+      "AirFiber 60 XG"
+    ]
+  },
+  {
+    "icon": {
+      "id": "2123961d-7171-4484-af4d-cbe204d56862"
+    },
+    "line": {
+      "id": "airfiber",
+      "name": "AirFiber"
+    },
+    "product": {
+      "abbrev": "AF60 XR",
+      "name": "airFiber 60 Xtreme-Range"
+    },
+    "shortnames": [
+      "AF60-XR"
+    ]
+  },
+  {
+    "icon": {
+      "id": "94255258-1085-4a07-91c5-5ed59adaf8cd"
+    },
+    "line": {
+      "id": "amplifi",
+      "name": "AmpliFi"
+    },
+    "product": {
+      "abbrev": "AmpliFi Alien Mesh point",
+      "name": "AmpliFi Alien Mesh point"
+    },
+    "shortnames": [
+      "AFi-ALN-P"
+    ]
+  },
+  {
+    "icon": {
+      "id": "c134faea-3d1f-457d-a008-5dbfcf2ea257"
+    },
+    "line": {
+      "id": "amplifi",
+      "name": "AmpliFi"
+    },
+    "product": {
+      "abbrev": "AmpliFi Alien Router",
+      "name": "AmpliFi Alien Router"
+    },
+    "shortnames": [
+      "AFi-ALN-R"
+    ]
+  },
+  {
+    "icon": {
+      "id": "59091973-2a6a-4e32-833d-b211e7c6811c"
+    },
+    "line": {
+      "id": "amplifi",
+      "name": "AmpliFi"
+    },
+    "product": {
+      "abbrev": "AmpliFi Instant Mesh Point",
+      "name": "AmpliFi Instant Mesh Point"
+    },
+    "shortnames": [
+      "AFi-INS-P"
+    ]
+  },
+  {
+    "icon": {
+      "id": "c26ec81d-5793-4abb-aee4-9b6c9299c24c"
+    },
+    "line": {
+      "id": "amplifi",
+      "name": "AmpliFi"
+    },
+    "product": {
+      "abbrev": "AmpliFi Instant Router",
+      "name": "AmpliFi Instant Router"
+    },
+    "shortnames": [
+      "AFi-INS-R"
+    ]
+  },
+  {
+    "icon": {
+      "id": "71c8ceb7-855a-467c-813f-881188960bd5"
+    },
+    "line": {
+      "id": "amplifi",
+      "name": "AmpliFi"
+    },
+    "product": {
+      "abbrev": "AmpliFi Mesh WiFi System",
+      "name": "AmpliFi Mesh WiFi System"
+    },
+    "shortnames": [
+      "AmpliFi Mesh WiFi System"
+    ]
+  },
+  {
+    "icon": {
+      "id": "a6a90de8-7415-44cb-aa3e-183aa9106bcc"
+    },
+    "line": {
+      "id": "amplifi",
+      "name": "AmpliFi"
+    },
+    "product": {
+      "abbrev": "AmpliFi Mesh WiFi System Gamer's Edition",
+      "name": "AmpliFi Mesh WiFi System Gamer's Edition"
+    },
+    "shortnames": [
+      "AmpliFi Mesh Wi-Fi System Gamer's Edition"
+    ]
+  },
+  {
+    "icon": {
+      "id": "02ba9992-9fa1-4e10-bbd0-c6a78afe7198"
+    },
+    "line": {
+      "id": "amplifi",
+      "name": "AmpliFi"
+    },
+    "product": {
+      "abbrev": "AmpliFi HD Mesh Point",
+      "name": "AmpliFi HD Mesh Point"
+    },
+    "shortnames": [
+      "AFi-P"
+    ]
+  },
+  {
+    "icon": {
+      "id": "f1acf7e7-4fad-41ef-a126-3bb871df91bf"
+    },
+    "line": {
+      "id": "amplifi",
+      "name": "AmpliFi"
+    },
+    "product": {
+      "abbrev": "AmpliFi HD Mesh Point",
+      "name": "AmpliFi HD Mesh Point"
+    },
+    "shortnames": [
+      "AFi-P-G"
+    ]
+  },
+  {
+    "icon": {
+      "id": "97bd12c7-03c9-46a4-ac31-d9bb996eb477"
+    },
+    "line": {
+      "id": "amplifi",
+      "name": "AmpliFi"
+    },
+    "product": {
+      "abbrev": "AmpliFi HD Mesh Point",
+      "name": "AmpliFi HD Mesh Point"
+    },
+    "shortnames": [
+      "AFi-P-HD"
+    ]
+  },
+  {
+    "icon": {
+      "id": "12fefe74-8d72-4947-b584-f4cb9219b260"
+    },
+    "line": {
+      "id": "amplifi",
+      "name": "AmpliFi"
+    },
+    "product": {
+      "abbrev": "AmpliFi HD Mesh Point",
+      "name": "AmpliFi HD Mesh Point"
+    },
+    "shortnames": [
+      "AFi-P-LR"
+    ]
+  },
+  {
+    "icon": {
+      "id": "3b4cb889-ad90-470a-aac6-fedfc7c2533e"
+    },
+    "line": {
+      "id": "amplifi",
+      "name": "AmpliFi"
+    },
+    "product": {
+      "abbrev": "AmpliFi PowerBox",
+      "name": "AmpliFi PowerBox"
+    },
+    "shortnames": [
+      "AFi-PB",
+      "AmpliFi Power Box"
+    ]
+  },
+  {
+    "icon": {
+      "id": "65515691-0626-47ea-a7c8-a8e9c005dbdc"
+    },
+    "line": {
+      "id": "amplifi",
+      "name": "AmpliFi"
+    },
+    "product": {
+      "abbrev": "AmpliFi HD Router",
+      "name": "AmpliFi HD Router"
+    },
+    "shortnames": [
+      "AFi-R"
+    ]
+  },
+  {
+    "icon": {
+      "id": "03016122-d234-4566-8bd6-0816eb2509cd"
+    },
+    "line": {
+      "id": "amplifi",
+      "name": "AmpliFi"
+    },
+    "product": {
+      "abbrev": "AmpliFi HD Router",
+      "name": "AmpliFi HD Router"
+    },
+    "shortnames": [
+      "AFi-R-BK"
+    ]
+  },
+  {
+    "icon": {
+      "id": "caad5c5d-3464-492a-929f-4cbabb71ae49"
+    },
+    "line": {
+      "id": "amplifi",
+      "name": "AmpliFi"
+    },
+    "product": {
+      "abbrev": "AmpliFi HD Router",
+      "name": "AmpliFi HD Router"
+    },
+    "shortnames": [
+      "AFi-R-G"
+    ]
+  },
+  {
+    "icon": {
+      "id": "2c3b469f-b1e2-4b9d-9102-194af9c8cf43"
+    },
+    "line": {
+      "id": "amplifi",
+      "name": "AmpliFi"
+    },
+    "product": {
+      "abbrev": "AmpliFi HD Router",
+      "name": "AmpliFi HD Router"
+    },
+    "shortnames": [
+      "AFi-R-HD"
+    ]
+  },
+  {
+    "icon": {
+      "id": "8d62fcc2-8548-4d40-b599-e467fee6442d"
+    },
+    "line": {
+      "id": "amplifi",
+      "name": "AmpliFi"
+    },
+    "product": {
+      "abbrev": "AmpliFi HD Router",
+      "name": "AmpliFi HD Router"
+    },
+    "shortnames": [
+      "AFi-R-LR"
+    ]
+  },
+  {
+    "icon": {
+      "id": "af03cf84-042c-4640-9da3-78555b24783a"
+    },
+    "line": {
+      "id": "amplifi",
+      "name": "AmpliFi"
+    },
+    "product": {
+      "abbrev": "AmpliFi SmartPlug",
+      "name": "AmpliFi SmartPlug"
+    },
+    "shortnames": [
+      "AFi-SP"
+    ]
+  },
+  {
+    "icon": {
+      "id": "33ba7714-3b16-44fc-89b1-da9f016ef130"
+    },
+    "line": {
+      "id": "amplifi",
+      "name": "AmpliFi"
+    },
+    "product": {
+      "abbrev": "AmpliFi Teleport",
+      "name": "AmpliFi Teleport"
+    },
+    "shortnames": [
+      "AFi-T"
+    ]
+  },
+  {
+    "icon": {
+      "id": "e90212c1-68b2-4cd7-9fdf-e3e5ff02d21d"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airGrid M2 HP 2G16",
+      "name": "airGrid M2 HP 2G16"
+    },
+    "shortnames": [
+      "AG-HP-2G16"
+    ]
+  },
+  {
+    "icon": {
+      "id": "22bbcadc-fe1b-4edf-a274-64b6f588d226"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airGrid M2 HP 2G20",
+      "name": "airGrid M2 HP 2G20"
+    },
+    "shortnames": [
+      "AG-HP-2G20"
+    ]
+  },
+  {
+    "icon": {
+      "id": "2149255f-aa39-4dd5-95de-c3a707e43259"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airGrid M5 HP",
+      "name": "airGrid M5 HP"
+    },
+    "shortnames": [
+      "AG-HP-5G23"
+    ]
+  },
+  {
+    "icon": {
+      "id": "eee8402b-5935-4fd0-8435-5c49c82595bd"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airGrid M5 HP",
+      "name": "airGrid M5 HP"
+    },
+    "shortnames": [
+      "AG-HP-5G27"
+    ]
+  },
+  {
+    "icon": {
+      "id": "10e3ab49-07dc-4287-93e4-cb334de97e59"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airGrid M5",
+      "name": "airGrid M5"
+    },
+    "shortnames": [
+      "AG5"
+    ]
+  },
+  {
+    "icon": {
+      "id": "4831047f-2945-45bc-a428-cac414b2fc1e"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airGateway",
+      "name": "airGateway"
+    },
+    "shortnames": [
+      "AGW"
+    ]
+  },
+  {
+    "icon": {
+      "id": "c700d141-0cca-4366-9fe5-adeaf489d4e4"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airGateway Professional Installer",
+      "name": "airGateway Professional Installer"
+    },
+    "shortnames": [
+      "AGW-Installer"
+    ]
+  },
+  {
+    "icon": {
+      "id": "38e6ed7d-b7cf-4f9a-b63a-2e2e0fd09d93"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airGateway LR",
+      "name": "airGateway LR"
+    },
+    "shortnames": [
+      "AGW-LR"
+    ]
+  },
+  {
+    "icon": {
+      "id": "a5f2a8c7-cddb-43aa-857f-3e6eed2a30ce"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airGateway Professional",
+      "name": "airGateway Professional"
+    },
+    "shortnames": [
+      "AGW-Pro"
+    ]
+  },
+  {
+    "icon": {
+      "id": "63408ba9-692b-4675-a9de-a1d5c240a752"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX Sector Antenna 2.4Ghz 15-120",
+      "name": "airMAX Sector Antenna 2.4Ghz 15-120"
+    },
+    "shortnames": [
+      "AirMAX Sector Antenna 2.4Ghz 15-120"
+    ]
+  },
+  {
+    "icon": {
+      "id": "fd76be91-75e2-47a9-8ce7-0f6290074ffb"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX Sector Antenna 2.4Ghz 16-90",
+      "name": "airMAX Sector Antenna 2.4Ghz 16-90"
+    },
+    "shortnames": [
+      "AirMAX Sector Antenna 2.4Ghz 16-90"
+    ]
+  },
+  {
+    "icon": {
+      "id": "632996d4-2451-4eaf-b867-abc3e0fb20bb"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX Sector Antenna 3Ghz 18-120",
+      "name": "airMAX Sector Antenna 3Ghz 18-120"
+    },
+    "shortnames": [
+      "AirMAX Sector Antenna 3Ghz 18-120"
+    ]
+  },
+  {
+    "icon": {
+      "id": "2b387b19-9acb-43c9-a15e-a02a36ac37cf"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX AC Sector Antenna",
+      "name": "airMAX AC Sector Antenna"
+    },
+    "shortnames": [
+      "AirMAX AC Sector Antenna"
+    ]
+  },
+  {
+    "icon": {
+      "id": "66e513cd-f2ac-42cf-9639-fb9b4e7e48ad"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX Sector Antenna 5Ghz 16-120",
+      "name": "airMAX Sector Antenna 5Ghz 16-120"
+    },
+    "shortnames": [
+      "AirMAX Sector Antenna 5Ghz 16-120"
+    ]
+  },
+  {
+    "icon": {
+      "id": "14aa2b23-8ec4-454c-8083-4dd1b69a253d"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX Sector Antenna 5Ghz 17-90",
+      "name": "airMAX Sector Antenna 5Ghz 17-90"
+    },
+    "shortnames": [
+      "AirMAX Sector Antenna 5Ghz 17-90"
+    ]
+  },
+  {
+    "icon": {
+      "id": "54dc0660-03dd-4662-9141-885ff7871c74"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX Sector Antenna 5Ghz 19-120",
+      "name": "airMAX Sector Antenna 5Ghz 19-120"
+    },
+    "shortnames": [
+      "AirMAX Sector Antenna 5Ghz 19-120"
+    ]
+  },
+  {
+    "icon": {
+      "id": "d784ed40-4bee-45c3-b1da-11a2f95eb457"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX Sector Antenna 5Ghz 20-90",
+      "name": "airMAX Sector Antenna 5Ghz 20-90"
+    },
+    "shortnames": [
+      "AirMAX Sector Antenna 5Ghz 20-90"
+    ]
+  },
+  {
+    "icon": {
+      "id": "e2fc90db-0fc5-4514-bc1a-55c82bfa5643"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX Sector Antenna  900Mhz",
+      "name": "airMAX Sector Antenna  900Mhz"
+    },
+    "shortnames": [
+      "AirMAX Sector Antenna  900Mhz"
+    ]
+  },
+  {
+    "icon": {
+      "id": "3fdb84b6-661d-438e-9796-83bf2c02678a"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX Omni  2Ghz-10",
+      "name": "airMAX Omni  2Ghz-10"
+    },
+    "shortnames": [
+      "AirMAX Omni  2Ghz-10"
+    ]
+  },
+  {
+    "icon": {
+      "id": "7a7d0e4a-d51b-4c52-8b1e-1a6a820575fe"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX Omni  2.4Ghz-13",
+      "name": "airMAX Omni  2.4Ghz-13"
+    },
+    "shortnames": [
+      "AirMAX Omni  2.4Ghz-13"
+    ]
+  },
+  {
+    "icon": {
+      "id": "01bec49d-a5c5-4dab-af04-dd9cbaadb22c"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX Omni  3Ghz-12",
+      "name": "airMAX Omni  3Ghz-12"
+    },
+    "shortnames": [
+      "AirMAX Omni  3Ghz-12"
+    ]
+  },
+  {
+    "icon": {
+      "id": "8397955c-cce7-40c2-989b-2a471da289dd"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX Omni  5Ghz-10",
+      "name": "airMAX Omni  5Ghz-10"
+    },
+    "shortnames": [
+      "AirMAX Omni  5Ghz-10"
+    ]
+  },
+  {
+    "icon": {
+      "id": "38cf8e86-ffd1-4b08-9bb4-edd349a3a8ad"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX Omni  5Ghz-13",
+      "name": "airMAX Omni  5Ghz-13"
+    },
+    "shortnames": [
+      "AirMAX Omni  5Ghz-13"
+    ]
+  },
+  {
+    "icon": {
+      "id": "c120f339-2ff9-4169-bc09-84d8ee094811"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airPRISM HD Sector Antenna",
+      "name": "airPRISM HD Sector Antenna"
+    },
+    "shortnames": [
+      "AirPrism HD Sector Antenna"
+    ]
+  },
+  {
+    "icon": {
+      "id": "72f52fd6-9b06-47bb-9482-2387a6d30843"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "airCam Mini",
+      "name": "airCam Mini"
+    },
+    "shortnames": [
+      "Ubiquiti AirCam Mini"
+    ]
+  },
+  {
+    "icon": {
+      "id": "8cf569b1-2f27-448b-8300-89bc2d72b9dc"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Bullet AC",
+      "name": "Bullet AC"
+    },
+    "shortnames": [
+      "B-DB-AC"
+    ]
+  },
+  {
+    "icon": {
+      "id": "34c5ceec-05bd-43cf-9fc9-5d16cc12358c"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Bullet M2 Titanium",
+      "name": "Bullet M2 Titanium"
+    },
+    "shortnames": [
+      "B2T"
+    ]
+  },
+  {
+    "icon": {
+      "id": "c6730374-bd06-4be1-a6e8-db13b7efa2c7"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Bullet M5 HP",
+      "name": "Bullet M5 HP"
+    },
+    "shortnames": [
+      "B5N"
+    ]
+  },
+  {
+    "icon": {
+      "id": "a8fc33a7-bbaa-4df5-8f32-d72c88a6dbbb"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Bullet M5 Titanium",
+      "name": "Bullet M5 Titanium"
+    },
+    "shortnames": [
+      "B5T"
+    ]
+  },
+  {
+    "icon": {
+      "id": "45eb6eeb-a1ca-4721-918e-25449fbf39be"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Bullet M5 HP",
+      "name": "Bullet M5 HP"
+    },
+    "shortnames": [
+      "BS5-HP"
+    ]
+  },
+  {
+    "icon": {
+      "id": "c435fe47-e902-4a97-a33d-0ac8b241fe26"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Bullet AC-IP67",
+      "name": "Bullet AC-IP67"
+    },
+    "shortnames": [
+      "BulletAC-IP67"
+    ]
+  },
+  {
+    "icon": {
+      "id": "5c2c11b0-639a-4ea7-8414-352090e29dd1"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Bullet M2 HP",
+      "name": "Bullet M2 HP"
+    },
+    "shortnames": [
+      "B2N"
+    ]
+  },
+  {
+    "icon": {
+      "id": "c6600a2a-6dcc-4330-a452-735252aa5eb4"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "Cloud Console",
+      "name": "Cloud Console"
+    },
+    "shortnames": [
+      "CLOUD",
+      "CLOUD-CONSOLE"
+    ]
+  },
+  {
+    "icon": {
+      "id": "d7b20b4f-ce6b-483d-98af-d171f31e7677"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "CRM Point",
+      "name": "CRM Point"
+    },
+    "shortnames": [
+      "CRM-P"
+    ]
+  },
+  {
+    "icon": {
+      "id": "b83475be-3836-4ba0-86f7-6d630855ffdc"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgePower 24V 72W",
+      "name": "EdgePower 24V 72W"
+    },
+    "shortnames": [
+      "EP-24V-72W"
+    ]
+  },
+  {
+    "icon": {
+      "id": "48a28a3f-8954-4237-b960-9f4e1164c883"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgePower 54V 150W",
+      "name": "EdgePower 54V 150W"
+    },
+    "shortnames": [
+      "EP-54V-150W"
+    ]
+  },
+  {
+    "icon": {
+      "id": "8a787d4c-4cf8-4599-b9b8-b583b6d7d6d2"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgePower 54V 72W",
+      "name": "EdgePower 54V 72W"
+    },
+    "shortnames": [
+      "EP-54V-72W"
+    ]
+  },
+  {
+    "icon": {
+      "id": "a4c97faf-21b0-475e-abaf-6ae6b162d6d3"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeMAX EdgePoint R6",
+      "name": "EdgeMAX EdgePoint R6"
+    },
+    "shortnames": [
+      "EP-6P"
+    ]
+  },
+  {
+    "icon": {
+      "id": "762f014c-eeb1-462b-8b52-f9270c8b49a2"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgePoint R6",
+      "name": "EdgePoint R6"
+    },
+    "shortnames": [
+      "EP-R6"
+    ]
+  },
+  {
+    "icon": {
+      "id": "7be4c1b7-98f0-43b9-aa3a-cea9f8408329"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgePoint R8",
+      "name": "EdgePoint R8"
+    },
+    "shortnames": [
+      "EP-R8"
+    ]
+  },
+  {
+    "icon": {
+      "id": "f43fbade-7472-4418-8492-025d708c2b1d"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgePoint S16",
+      "name": "EdgePoint S16"
+    },
+    "shortnames": [
+      "EP-S16"
+    ]
+  },
+  {
+    "icon": {
+      "id": "45036a5a-5a2d-4a89-bd9f-6dab86158db2"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeMAX EdgeRouter 10X",
+      "name": "EdgeMAX EdgeRouter 10X"
+    },
+    "shortnames": [
+      "ER-10-XG"
+    ]
+  },
+  {
+    "icon": {
+      "id": "61b71f51-e762-4cbf-bde1-92ceb6f5edf9"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeRouter 10X",
+      "name": "EdgeRouter 10X"
+    },
+    "shortnames": [
+      "ER-10-X",
+      "ER-10X"
+    ]
+  },
+  {
+    "icon": {
+      "id": "94417c01-26f1-4972-940e-72f87d33bd70"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeRouter 12",
+      "name": "EdgeRouter 12"
+    },
+    "shortnames": [
+      "ER-12"
+    ]
+  },
+  {
+    "icon": {
+      "id": "dd77e9cf-12ef-4ced-8505-263c5ec2123b"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeRouter 12P",
+      "name": "EdgeRouter 12P"
+    },
+    "shortnames": [
+      "ER-12P"
+    ]
+  },
+  {
+    "icon": {
+      "id": "7fb11401-5f46-48b1-b53d-656bb501a212"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeRouter 4",
+      "name": "EdgeRouter 4"
+    },
+    "shortnames": [
+      "ER-4"
+    ]
+  },
+  {
+    "icon": {
+      "id": "5678c887-3162-4aef-a0c7-3c45f8f47a5f"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeRouter 6P",
+      "name": "EdgeRouter 6P"
+    },
+    "shortnames": [
+      "ER-6P"
+    ]
+  },
+  {
+    "icon": {
+      "id": "89d5d131-bc72-410c-8c1a-9e16b4a31a4d"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeRouter 8",
+      "name": "EdgeRouter 8"
+    },
+    "shortnames": [
+      "ER-8",
+      "EdgeMAX EdgeRouter 8"
+    ]
+  },
+  {
+    "icon": {
+      "id": "4c0b06c3-3ff1-435b-acfe-7e72347a5ece"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeRouter Infinity",
+      "name": "EdgeRouter Infinity"
+    },
+    "shortnames": [
+      "ER-8-XG"
+    ]
+  },
+  {
+    "icon": {
+      "id": "5f1fe772-6277-4266-9d57-886872f36705"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeRouter X",
+      "name": "EdgeRouter X"
+    },
+    "shortnames": [
+      "ER-X"
+    ]
+  },
+  {
+    "icon": {
+      "id": "51be70ba-ea07-4689-a3be-226881d3f7cb"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeRouter X SFP",
+      "name": "EdgeRouter X SFP"
+    },
+    "shortnames": [
+      "ER-X-SFP"
+    ]
+  },
+  {
+    "icon": {
+      "id": "bb660a42-f0ff-485b-8516-a7490da6ce92"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeRouter Lite",
+      "name": "EdgeRouter Lite"
+    },
+    "shortnames": [
+      "ERLite-3"
+    ]
+  },
+  {
+    "icon": {
+      "id": "32fba9a9-32fc-4c3c-a857-2dda19258f0d"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeRouter 5 PoE",
+      "name": "EdgeRouter 5 PoE"
+    },
+    "shortnames": [
+      "ERPoe-5"
+    ]
+  },
+  {
+    "icon": {
+      "id": "08c9e2a0-0d93-4252-a148-66eebd438bf1"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeRouter 8 Professional",
+      "name": "EdgeRouter 8 Professional"
+    },
+    "shortnames": [
+      "ERPro-8"
+    ]
+  },
+  {
+    "icon": {
+      "id": "04a17349-e53b-4d04-b680-3ec48b2b64dc"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeSwitch 10X",
+      "name": "EdgeSwitch 10X"
+    },
+    "shortnames": [
+      "ES-10X",
+      "EdgeSwitch 10X"
+    ]
+  },
+  {
+    "icon": {
+      "id": "82f47fb8-4980-4f86-a92b-2de84961f4ed"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeSwitch 10XP",
+      "name": "EdgeSwitch 10XP"
+    },
+    "shortnames": [
+      "ES-10XP"
+    ]
+  },
+  {
+    "icon": {
+      "id": "251ed170-e28d-4490-9456-0ccc01e98437"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeSwitch 12 Fiber",
+      "name": "EdgeSwitch 12 Fiber"
+    },
+    "shortnames": [
+      "ES-12F"
+    ]
+  },
+  {
+    "icon": {
+      "id": "9a0b7324-cd78-487f-93b5-45cdb87f2639"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeSwitch 16 150W",
+      "name": "EdgeSwitch 16 150W"
+    },
+    "shortnames": [
+      "ES-16-150W"
+    ]
+  },
+  {
+    "icon": {
+      "id": "136a5b7a-a762-4927-bc17-c94b7ffdb6d7"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeSwitch 16 XG",
+      "name": "EdgeSwitch 16 XG"
+    },
+    "shortnames": [
+      "ES-16-XG"
+    ]
+  },
+  {
+    "icon": {
+      "id": "6ee65037-7b2e-4893-8e40-fcd18b626031"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeSwitch 16XP",
+      "name": "EdgeSwitch 16XP"
+    },
+    "shortnames": [
+      "ES-16XP"
+    ]
+  },
+  {
+    "icon": {
+      "id": "70e75839-2e1b-4094-9d6b-9fbccaf1bc32"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeSwitch 18X",
+      "name": "EdgeSwitch 18X"
+    },
+    "shortnames": [
+      "ES-18X"
+    ]
+  },
+  {
+    "icon": {
+      "id": "1d395bc5-48d5-4ea7-a416-2dea75c4f8e8"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeSwitch 24 250W",
+      "name": "EdgeSwitch 24 250W"
+    },
+    "shortnames": [
+      "ES-24-250W"
+    ]
+  },
+  {
+    "icon": {
+      "id": "aaeafbd8-51b9-408e-aafc-f4c223943ec5"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeSwitch 24 500W",
+      "name": "EdgeSwitch 24 500W"
+    },
+    "shortnames": [
+      "ES-24-500W"
+    ]
+  },
+  {
+    "icon": {
+      "id": "e257630c-c30b-4b34-91d7-7dd5b91d193c"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeSwitch 24 Lite",
+      "name": "EdgeSwitch 24 Lite"
+    },
+    "shortnames": [
+      "ES-24-Lite"
+    ]
+  },
+  {
+    "icon": {
+      "id": "cfb8e1c1-483d-41b5-b7d2-e247ae6e10c0"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeSwitch 48 500W",
+      "name": "EdgeSwitch 48 500W"
+    },
+    "shortnames": [
+      "ES-48-500W"
+    ]
+  },
+  {
+    "icon": {
+      "id": "ef529122-5400-4fd0-9226-724ac7288faf"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeSwitch 48 750W",
+      "name": "EdgeSwitch 48 750W"
+    },
+    "shortnames": [
+      "ES-48-750W"
+    ]
+  },
+  {
+    "icon": {
+      "id": "f89556a7-79dc-4b24-a9c8-3add5b52fcdd"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeSwitch 48 Lite",
+      "name": "EdgeSwitch 48 Lite"
+    },
+    "shortnames": [
+      "ES-48-Lite"
+    ]
+  },
+  {
+    "icon": {
+      "id": "63af681b-6f0d-4c19-b710-761245579e5d"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeSwitch 5XP",
+      "name": "EdgeSwitch 5XP"
+    },
+    "shortnames": [
+      "TSW-5-POE",
+      "TSW-PoE"
+    ]
+  },
+  {
+    "icon": {
+      "id": "2bb8b622-fa0a-4689-a5b4-5e87a7f2d921"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeSwitch 8 150W",
+      "name": "EdgeSwitch 8 150W"
+    },
+    "shortnames": [
+      "ES-8-150W"
+    ]
+  },
+  {
+    "icon": {
+      "id": "57212013-7160-46f4-8152-b397aa971350"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "ETH SP G2",
+      "name": "Ethernet Surge Protector"
+    },
+    "shortnames": [
+      "UBI"
+    ]
+  },
+  {
+    "icon": {
+      "id": "db12f943-a6dc-42f9-bcee-a41c8fd3e353"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "GigaBEAM",
+      "name": "GigaBEAM"
+    },
+    "shortnames": [
+      "GBE",
+      "GigaBeam",
+      "GigaBeam AP"
+    ]
+  },
+  {
+    "icon": {
+      "id": "571911a2-5fb2-445c-a239-aef2982a9a56"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "GigaBEAM LR",
+      "name": "GigaBEAM LR"
+    },
+    "shortnames": [
+      "GBE-LR",
+      "GigaBeam LR"
+    ]
+  },
+  {
+    "icon": {
+      "id": "8cf5c520-8910-4dba-a0fb-a1289a8f4502"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "GigaBeam Plus",
+      "name": "GigaBeam Plus"
+    },
+    "shortnames": [
+      "GBE-Plus",
+      "GigaBeam Plus"
+    ]
+  },
+  {
+    "icon": {
+      "id": "d364969c-319a-43ec-858c-97159f51ecb3"
+    },
+    "line": {
+      "id": "unknown",
+      "name": "Unknown"
+    },
+    "product": {
+      "abbrev": "airMAX Horn Antenna 5 30",
+      "name": "airMAX Horn Antenna 5 30"
+    },
+    "shortnames": [
+      "AirMAX Horn Antenna 5 30"
+    ]
+  },
+  {
+    "icon": {
+      "id": "5b9fcb98-0649-435d-b702-dfd580a8c1f9"
+    },
+    "line": {
+      "id": "unknown",
+      "name": "Unknown"
+    },
+    "product": {
+      "abbrev": "airMAX Horn Antenna 5 45",
+      "name": "airMAX Horn Antenna 5 45"
+    },
+    "shortnames": [
+      "AirMAX Horn Antenna 5 45"
+    ]
+  },
+  {
+    "icon": {
+      "id": "5e9c5b95-72ee-407c-8357-5c17b9c9ad98"
+    },
+    "line": {
+      "id": "unknown",
+      "name": "Unknown"
+    },
+    "product": {
+      "abbrev": "airMAX Horn Antenna 5 60",
+      "name": "airMAX Horn Antenna 5 60"
+    },
+    "shortnames": [
+      "AirMAX Horn Antenna 5 60"
+    ]
+  },
+  {
+    "icon": {
+      "id": "74cd5746-5566-49f5-a799-090722082f65"
+    },
+    "line": {
+      "id": "unknown",
+      "name": "Unknown"
+    },
+    "product": {
+      "abbrev": "airMAX Horn Antenna 5 90",
+      "name": "airMAX Horn Antenna 5 90"
+    },
+    "shortnames": [
+      "AirMAX Horn Antenna 5 90"
+    ]
+  },
+  {
+    "icon": {
+      "id": "7e0aa130-5b6f-4e0c-b4bb-941f629344e8"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "ISO Station 5AC",
+      "name": "ISO Station 5AC"
+    },
+    "shortnames": [
+      "IS-5AC"
+    ]
+  },
+  {
+    "icon": {
+      "id": "df26820d-2eae-4372-b6eb-d7fdece754ff"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "ISO Station M5",
+      "name": "ISO Station M5"
+    },
+    "shortnames": [
+      "IS-M5"
+    ]
+  },
+  {
+    "icon": {
+      "id": "ee442a01-525c-4cb6-9ab3-1ca219a1d1ad"
+    },
+    "line": {
+      "id": "airfiber",
+      "name": "AirFiber"
+    },
+    "product": {
+      "abbrev": "airFiber IsoBeam",
+      "name": "airFiber IsoBeam"
+    },
+    "shortnames": [
+      "AirFiber IsoBeam"
+    ]
+  },
+  {
+    "icon": {
+      "id": "12e760ad-f40e-4d97-a945-91e8f40ec120"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "PowerBeam M5 620",
+      "name": "PowerBeam M5 620"
+    },
+    "shortnames": [
+      "P5B-620"
+    ]
+  },
+  {
+    "icon": {
+      "id": "471cb4ff-3fd4-485b-ba5f-3e7dd2ed2e4d"
+    },
+    "line": {
+      "id": "mfi",
+      "name": "mFi"
+    },
+    "product": {
+      "abbrev": "In-Wall Outlet",
+      "name": "In-Wall Outlet"
+    },
+    "shortnames": [
+      "IWO2U"
+    ]
+  },
+  {
+    "icon": {
+      "id": "4af0883f-5287-43e0-a70b-fb01f4e69e36"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airRouter",
+      "name": "airRouter"
+    },
+    "shortnames": [
+      "LAP"
+    ]
+  },
+  {
+    "icon": {
+      "id": "d30f9787-1bd9-423c-a4ab-cad0fc229bca"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "LAP-120",
+      "name": "LAP-120"
+    },
+    "shortnames": [
+      "LAP-120"
+    ]
+  },
+  {
+    "icon": {
+      "id": "c86cea62-acd1-4099-9ff9-84e937472f07"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "LiteAP GPS",
+      "name": "LiteAP GPS"
+    },
+    "shortnames": [
+      "LAP-GPS"
+    ]
+  },
+  {
+    "icon": {
+      "id": "3c8ad25e-80ea-49b8-a6d8-93c4fd79bf51"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airRouter HP",
+      "name": "airRouter HP"
+    },
+    "shortnames": [
+      "LAP-HP"
+    ]
+  },
+  {
+    "icon": {
+      "id": "4ba7b346-72c3-40c1-9e66-1de6980ce54c"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "LiteBeam 5AC",
+      "name": "LiteBeam 5AC"
+    },
+    "shortnames": [
+      "LBE-5AC-Gen2"
+    ]
+  },
+  {
+    "icon": {
+      "id": "d7786ca3-40f1-4e3f-a7bc-88cb76a596b1"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "LiteBeam 5AC 23",
+      "name": "LiteBeam 5AC 23"
+    },
+    "shortnames": [
+      "LBE-5AC-23"
+    ]
+  },
+  {
+    "icon": {
+      "id": "1df30367-3e0c-41f1-918d-71f907419f87"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "LiteBeam 5AC LR",
+      "name": "LiteBeam 5AC LR"
+    },
+    "shortnames": [
+      "LBE-5AC-LR"
+    ]
+  },
+  {
+    "icon": {
+      "id": "654ad227-436a-4311-aae3-a6678853d3e0"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "LiteBeam AC XR",
+      "name": "LiteBeam AC XR"
+    },
+    "shortnames": [
+      "LBE-5AC-XR"
+    ]
+  },
+  {
+    "icon": {
+      "id": "69644d8b-9b6e-4473-b8e6-04600e6a09ca"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "LiteBeam AX",
+      "name": "LiteBeam AX"
+    },
+    "shortnames": [
+      "LBE-AX"
+    ]
+  },
+  {
+    "icon": {
+      "id": "bb51301d-190b-4ec4-a738-4dea51deb207"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "LiteBeam M5",
+      "name": "LiteBeam M5"
+    },
+    "shortnames": [
+      "LB5"
+    ]
+  },
+  {
+    "icon": {
+      "id": "42e49d3c-ab12-4235-a847-851a24cc4f19"
+    },
+    "line": {
+      "id": "ltu",
+      "name": "LTU"
+    },
+    "product": {
+      "abbrev": "LTU Instant",
+      "name": "LTU Instant"
+    },
+    "shortnames": [
+      "LTU-Instant"
+    ]
+  },
+  {
+    "icon": {
+      "id": "ca6a8559-4f33-4fa8-829f-8d81859c5a32"
+    },
+    "line": {
+      "id": "ltu",
+      "name": "LTU"
+    },
+    "product": {
+      "abbrev": "LTU LR",
+      "name": "LTU LR"
+    },
+    "shortnames": [
+      "LTU-LR"
+    ]
+  },
+  {
+    "icon": {
+      "id": "4be90270-1242-43c1-97b1-f6095d390f30"
+    },
+    "line": {
+      "id": "ltu",
+      "name": "LTU"
+    },
+    "product": {
+      "abbrev": "LTU Lite",
+      "name": "LTU Lite"
+    },
+    "shortnames": [
+      "LTU-LITE",
+      "LTU-Lite"
+    ]
+  },
+  {
+    "icon": {
+      "id": "54f6bdcf-4eb9-4240-80a0-7822454d2ffa"
+    },
+    "line": {
+      "id": "ltu",
+      "name": "LTU"
+    },
+    "product": {
+      "abbrev": "LTU Professional",
+      "name": "LTU Professional"
+    },
+    "shortnames": [
+      "LTU-Pro"
+    ]
+  },
+  {
+    "icon": {
+      "id": "78283cd0-8f46-4ed4-b3ab-2d192390eb88"
+    },
+    "line": {
+      "id": "ltu",
+      "name": "LTU"
+    },
+    "product": {
+      "abbrev": "LTU Rocket",
+      "name": "LTU Rocket"
+    },
+    "shortnames": [
+      "LTU-ROCKET",
+      "LTU-Rocket"
+    ]
+  },
+  {
+    "icon": {
+      "id": "85756e75-21a4-4b16-9160-495a353a0003"
+    },
+    "line": {
+      "id": "ltu",
+      "name": "LTU"
+    },
+    "product": {
+      "abbrev": "LTU XR",
+      "name": "LTU XR"
+    },
+    "shortnames": [
+      "LTU-XR"
+    ]
+  },
+  {
+    "icon": {
+      "id": "f28f0b16-0bdd-4fc7-913a-53fa13d44983"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "NanoStation 5AC loco",
+      "name": "NanoStation 5AC loco"
+    },
+    "shortnames": [
+      "Loco5AC"
+    ]
+  },
+  {
+    "icon": {
+      "id": "bc8cbd02-cd2c-448a-a10a-59ed3f4a4c1d"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "NanoStation loco M2",
+      "name": "NanoStation loco M2"
+    },
+    "shortnames": [
+      "LM2"
+    ]
+  },
+  {
+    "icon": {
+      "id": "07289d4a-167b-464d-827d-a215aae6ba0d"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "NanoStation loco M5",
+      "name": "NanoStation loco M5"
+    },
+    "shortnames": [
+      "LM5"
+    ]
+  },
+  {
+    "icon": {
+      "id": "ddbdc1fa-1230-41dd-8163-135a0cd80bfc"
+    },
+    "line": {
+      "id": "mfi",
+      "name": "mFi"
+    },
+    "product": {
+      "abbrev": "mPort",
+      "name": "mPort"
+    },
+    "shortnames": [
+      "M2M"
+    ]
+  },
+  {
+    "icon": {
+      "id": "b70a5007-d1a5-447f-9e6e-c2d56dc82576"
+    },
+    "line": {
+      "id": "mfi",
+      "name": "mFi"
+    },
+    "product": {
+      "abbrev": "mPort Serial",
+      "name": "mPort Serial"
+    },
+    "shortnames": [
+      "M2S"
+    ]
+  },
+  {
+    "icon": {
+      "id": "b26177b2-6b3e-4521-aaa5-c94d5c5c1ac0"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "NanoSwitch",
+      "name": "NanoSwitch"
+    },
+    "shortnames": [
+      "NanoSwitch"
+    ]
+  },
+  {
+    "icon": {
+      "id": "1aa752f7-ec34-4c09-95f8-549620d6cdd2"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "NanoBeam M2 13",
+      "name": "NanoBeam M2 13"
+    },
+    "shortnames": [
+      "N2B-13"
+    ]
+  },
+  {
+    "icon": {
+      "id": "174b4dad-3300-4d15-accd-99852d5deb36"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "NanoBeam M5 19",
+      "name": "NanoBeam M5 19"
+    },
+    "shortnames": [
+      "N5B-19"
+    ]
+  },
+  {
+    "icon": {
+      "id": "d3968aef-0024-40f2-b4bb-77fa320127c9"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "NanoStation M5",
+      "name": "NanoStation M5"
+    },
+    "shortnames": [
+      "N5N"
+    ]
+  },
+  {
+    "icon": {
+      "id": "3c388034-2595-42dc-95ac-160042e91069"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "NanoStation loco M900",
+      "name": "NanoStation loco M900"
+    },
+    "shortnames": [
+      "N9N"
+    ]
+  },
+  {
+    "icon": {
+      "id": "c3fd6d52-d027-4548-83a7-debac068b4c6"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "NanoBridge M2",
+      "name": "NanoBridge M2"
+    },
+    "shortnames": [
+      "NB2"
+    ]
+  },
+  {
+    "icon": {
+      "id": "aeb91a5b-ba35-4379-bbe0-b18843ac670f"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "NanoBridge M3",
+      "name": "NanoBridge M3"
+    },
+    "shortnames": [
+      "NB3"
+    ]
+  },
+  {
+    "icon": {
+      "id": "1cc4dfa8-f595-406a-81c5-d1f0a9bb125a"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "NanoBridge M900",
+      "name": "NanoBridge M900"
+    },
+    "shortnames": [
+      "NB9"
+    ]
+  },
+  {
+    "icon": {
+      "id": "19cce56e-c074-4e6a-b609-fd55bcdaee80"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "NanoBeam 2AC 13",
+      "name": "NanoBeam 2AC 13"
+    },
+    "shortnames": [
+      "NBE-2AC-13"
+    ]
+  },
+  {
+    "icon": {
+      "id": "219edbac-c600-4a10-8e14-202ea914cd9c"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "NanoBeam 5AC",
+      "name": "NanoBeam 5AC"
+    },
+    "shortnames": [
+      "NBE-5AC-Gen2"
+    ]
+  },
+  {
+    "icon": {
+      "id": "5de19a89-b376-488b-ac8e-e722c3db2642"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "NanoBeam 5AC 16",
+      "name": "NanoBeam 5AC 16"
+    },
+    "shortnames": [
+      "NBE-5AC-16"
+    ]
+  },
+  {
+    "icon": {
+      "id": "7d510f59-88af-4f58-bfbe-9f4c85378b68"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "NanoBeam 5AC 19",
+      "name": "NanoBeam 5AC 19"
+    },
+    "shortnames": [
+      "NBE-5AC-19"
+    ]
+  },
+  {
+    "icon": {
+      "id": "7a0b2be2-815b-4db7-b1e1-506b61771754"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "NanoBeam M5 16",
+      "name": "NanoBeam M5 16"
+    },
+    "shortnames": [
+      "N5B",
+      "N5B-16"
+    ]
+  },
+  {
+    "icon": {
+      "id": "7f59806b-aeca-4130-aaab-761a0ef94244"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "NanoBridge M365",
+      "name": "NanoBridge M365"
+    },
+    "shortnames": [
+      "AirMAX NanoBridge M",
+      "B36"
+    ]
+  },
+  {
+    "icon": {
+      "id": "2848669b-21a8-4ef9-8b1d-da08be911410"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "NanoBridge M5",
+      "name": "NanoBridge M5"
+    },
+    "shortnames": [
+      "NBM5"
+    ]
+  },
+  {
+    "icon": {
+      "id": "788d950f-b018-42c1-9ed7-37b4f1961aae"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "NanoStation 5AC",
+      "name": "NanoStation 5AC"
+    },
+    "shortnames": [
+      "NS-5AC"
+    ]
+  },
+  {
+    "icon": {
+      "id": "68a1a96b-5132-4377-af06-d264f7c888bc"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "NanoStation M3",
+      "name": "NanoStation M3"
+    },
+    "shortnames": [
+      "NS3"
+    ]
+  },
+  {
+    "icon": {
+      "id": "2348885e-3677-4ec4-8876-6a8da579e92a"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "NanoStation M2",
+      "name": "NanoStation M2"
+    },
+    "shortnames": [
+      "N2N"
+    ]
+  },
+  {
+    "icon": {
+      "id": "dcb71ec3-48e4-4a07-86f6-2d7c64041d1d"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "NanoStation M365",
+      "name": "NanoStation M365"
+    },
+    "shortnames": [
+      "N36"
+    ]
+  },
+  {
+    "icon": {
+      "id": "18b34619-b3c4-406d-9569-ffdfa9fb07c6"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "UNVR",
+      "name": "Network Video Recorder"
+    },
+    "shortnames": [
+      "NVR"
+    ]
+  },
+  {
+    "icon": {
+      "id": "515f4bf4-78c9-4a8c-888e-f2937b6049a8"
+    },
+    "line": {
+      "id": "mfi",
+      "name": "mFi"
+    },
+    "product": {
+      "abbrev": "mPower mini",
+      "name": "mPower mini"
+    },
+    "shortnames": [
+      "P1E"
+    ]
+  },
+  {
+    "icon": {
+      "id": "dee28427-2228-46a6-8326-8d0f678796b0"
+    },
+    "line": {
+      "id": "mfi",
+      "name": "mFi"
+    },
+    "product": {
+      "abbrev": "mPower mini",
+      "name": "mPower mini"
+    },
+    "shortnames": [
+      "P1U"
+    ]
+  },
+  {
+    "icon": {
+      "id": "80e2b659-d874-45f8-a4d6-6e0a92a440dc"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "PowerBridge M365",
+      "name": "PowerBridge M365"
+    },
+    "shortnames": [
+      "P36"
+    ]
+  },
+  {
+    "icon": {
+      "id": "d50de2d2-0424-42e0-8a0a-97e7d03d19bc"
+    },
+    "line": {
+      "id": "mfi",
+      "name": "mFi"
+    },
+    "product": {
+      "abbrev": "mPower",
+      "name": "mPower"
+    },
+    "shortnames": [
+      "P3E"
+    ]
+  },
+  {
+    "icon": {
+      "id": "49b7dc9a-c322-4b9b-b0ca-1b680f54bf9b"
+    },
+    "line": {
+      "id": "mfi",
+      "name": "mFi"
+    },
+    "product": {
+      "abbrev": "mPower",
+      "name": "mPower"
+    },
+    "shortnames": [
+      "P3U"
+    ]
+  },
+  {
+    "icon": {
+      "id": "f0788e0f-c1ab-4513-a9f2-737582814e22"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "PowerBeam M5 400-ISO",
+      "name": "PowerBeam M5 400-ISO"
+    },
+    "shortnames": [
+      "P5B-400-ISO"
+    ]
+  },
+  {
+    "icon": {
+      "id": "f7384e14-d8f8-464b-a7cd-415fcc446e05"
+    },
+    "line": {
+      "id": "mfi",
+      "name": "mFi"
+    },
+    "product": {
+      "abbrev": "mPower Professional",
+      "name": "mPower Professional"
+    },
+    "shortnames": [
+      "P6E"
+    ]
+  },
+  {
+    "icon": {
+      "id": "7a93ccb6-0a6e-44cb-a75b-2ddb442248b6"
+    },
+    "line": {
+      "id": "mfi",
+      "name": "mFi"
+    },
+    "product": {
+      "abbrev": "mPower Professional",
+      "name": "mPower Professional"
+    },
+    "shortnames": [
+      "P8U"
+    ]
+  },
+  {
+    "icon": {
+      "id": "d2f6e7d5-c9c7-43ad-9222-c60035c08b58"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "PowerBridge M3",
+      "name": "PowerBridge M3"
+    },
+    "shortnames": [
+      "PB3"
+    ]
+  },
+  {
+    "icon": {
+      "id": "7a7c6293-d5f7-47e5-8d7a-eb6a8b1e726b"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "PowerBridge M5",
+      "name": "PowerBridge M5"
+    },
+    "shortnames": [
+      "PB5"
+    ]
+  },
+  {
+    "icon": {
+      "id": "f695c994-792c-4c65-a442-7854359c38ce"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "PowerBeam 2AC 400",
+      "name": "PowerBeam 2AC 400"
+    },
+    "shortnames": [
+      "PBE-2AC-400"
+    ]
+  },
+  {
+    "icon": {
+      "id": "b3567182-7fa9-467c-a409-0d8fc3b9dc5b"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "PowerBeam 5AC",
+      "name": "PowerBeam 5AC"
+    },
+    "shortnames": [
+      "PBE-5AC-Gen2"
+    ]
+  },
+  {
+    "icon": {
+      "id": "6b2de4eb-f5dd-41ca-921c-a45199c919de"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "PowerBeam 5AC 300",
+      "name": "PowerBeam 5AC 300"
+    },
+    "shortnames": [
+      "AirMAX PowerBeam 5AC 300",
+      "PBE-5AC-300"
+    ]
+  },
+  {
+    "icon": {
+      "id": "91c4e08d-f859-45b6-a7eb-4813693a4ae2"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "PowerBeam 5AC 300 ISO",
+      "name": "PowerBeam 5AC 300 ISO"
+    },
+    "shortnames": [
+      "PBE-5AC-300-ISO"
+    ]
+  },
+  {
+    "icon": {
+      "id": "56ae022c-43b2-41e5-8e60-bebb6cd7619a"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "PowerBeam 5AC 400",
+      "name": "PowerBeam 5AC 400"
+    },
+    "shortnames": [
+      "AirMAX PowerBeam 5AC 400",
+      "PBE-5AC-400"
+    ]
+  },
+  {
+    "icon": {
+      "id": "5f698222-f47a-46db-9b8a-536b124fd9d8"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "PowerBeam 5AC 400 ISO",
+      "name": "PowerBeam 5AC 400 ISO"
+    },
+    "shortnames": [
+      "PBE-5AC-400-ISO"
+    ]
+  },
+  {
+    "icon": {
+      "id": "ef5b4ad2-3fce-4003-9ae3-d69d6abd95dd"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "PowerBeam 5AC 500",
+      "name": "PowerBeam 5AC 500"
+    },
+    "shortnames": [
+      "PBE-5AC-500"
+    ]
+  },
+  {
+    "icon": {
+      "id": "4dd60274-c886-4125-8904-896287b6ba37"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "PowerBeam 5AC 500 ISO",
+      "name": "PowerBeam 5AC 500 ISO"
+    },
+    "shortnames": [
+      "AirMAX PowerBeam 5AC 500 ISO",
+      "PBE-5AC-500-ISO"
+    ]
+  },
+  {
+    "icon": {
+      "id": "9787bc52-d917-4289-8491-c87f0e229bb6"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX PowerBeam 5AC ISO  Gen 2",
+      "name": "airMAX PowerBeam 5AC ISO  Gen 2"
+    },
+    "shortnames": [
+      "AirMAX PowerBeam 5AC ISO  Gen 2"
+    ]
+  },
+  {
+    "icon": {
+      "id": "4ce7d0f8-6562-4055-a6ad-80373e5f9967"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "PowerBeam 5AC 620",
+      "name": "PowerBeam 5AC 620"
+    },
+    "shortnames": [
+      "PBE-5AC-620"
+    ]
+  },
+  {
+    "icon": {
+      "id": "062809c1-94f1-4cc5-91a3-d80dac5761fb"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "PowerBeam 5AC ISO",
+      "name": "PowerBeam 5AC ISO"
+    },
+    "shortnames": [
+      "PBE-5AC-ISO-Gen2"
+    ]
+  },
+  {
+    "icon": {
+      "id": "64bfd869-a1f7-4a50-ae6f-b24df25fc8d6"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "PowerBeam M2 400",
+      "name": "PowerBeam M2 400"
+    },
+    "shortnames": [
+      "P2B-400"
+    ]
+  },
+  {
+    "icon": {
+      "id": "3ffe53db-d90e-4b12-b478-5782c5a95102"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "PowerBeam M5 300",
+      "name": "PowerBeam M5 300"
+    },
+    "shortnames": [
+      "AirMAX PowerBeam M5 300",
+      "P5B-300"
+    ]
+  },
+  {
+    "icon": {
+      "id": "1e712fb7-5601-4b90-ba6d-31fea2fc161e"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "PowerBeam M5 300-ISO",
+      "name": "PowerBeam M5 300-ISO"
+    },
+    "shortnames": [
+      "P5B-300-ISO"
+    ]
+  },
+  {
+    "icon": {
+      "id": "1cffbbd9-4c33-4f30-8c27-e57a2388d498"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "PowerBeam M5 400",
+      "name": "PowerBeam M5 400"
+    },
+    "shortnames": [
+      "P5B"
+    ]
+  },
+  {
+    "icon": {
+      "id": "1cffbbd9-4c33-4f30-8c27-e57a2388d498"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "PowerBeam M5 400",
+      "name": "PowerBeam M5 400"
+    },
+    "shortnames": [
+      "P5B-400"
+    ]
+  },
+  {
+    "icon": {
+      "id": "a0127066-0fd5-439f-9252-c98c4b041c1f"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX PowerBeam M5 400-ISO",
+      "name": "airMAX PowerBeam M5 400-ISO"
+    },
+    "shortnames": [
+      "AirMAX PowerBeam M5 400-ISO"
+    ]
+  },
+  {
+    "icon": {
+      "id": "2752ae39-f810-4f1a-bc79-78465d3dcbb5"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "PowerBridge M10",
+      "name": "PowerBridge M10"
+    },
+    "shortnames": [
+      "PBM10"
+    ]
+  },
+  {
+    "icon": {
+      "id": "1a431afe-91c6-400f-bd34-c2eeffec263d"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX PicoStation M2",
+      "name": "airMAX PicoStation M2"
+    },
+    "shortnames": [
+      "P2N",
+      "p2N"
+    ]
+  },
+  {
+    "icon": {
+      "id": "ced9ebcf-10dc-48be-ba4c-cc7a529d4399"
+    },
+    "line": {
+      "id": "airfiber",
+      "name": "AirFiber"
+    },
+    "product": {
+      "abbrev": "airFiber 5X",
+      "name": "airFiber 5X"
+    },
+    "shortnames": [
+      "AF5X"
+    ]
+  },
+  {
+    "icon": {
+      "id": "df548d33-1321-450d-9726-f43f9b059d0e"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "PrismStation 5AC",
+      "name": "PrismStation 5AC"
+    },
+    "shortnames": [
+      "PS-5AC"
+    ]
+  },
+  {
+    "icon": {
+      "id": "e444d67c-823d-471f-ba1d-f3b10597e976"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Rocket 2AC Prism",
+      "name": "Rocket 2AC Prism"
+    },
+    "shortnames": [
+      "AirMAX R2AC-US Rocket AC",
+      "R2AC",
+      "R2AC-PRISM"
+    ]
+  },
+  {
+    "icon": {
+      "id": "eaa64d5b-8f8b-4ce5-9c1b-1f2942cb7a98"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Rocket M2 Titanium",
+      "name": "Rocket M2 Titanium"
+    },
+    "shortnames": [
+      "R2T"
+    ]
+  },
+  {
+    "icon": {
+      "id": "c2df43cb-343f-42dd-8088-6d8abd0ef113"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Rocket M365",
+      "name": "Rocket M365"
+    },
+    "shortnames": [
+      "R36"
+    ]
+  },
+  {
+    "icon": {
+      "id": "86f4bd7d-13d5-456b-9165-29f916d5563a"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Rocket M365",
+      "name": "Rocket M365"
+    },
+    "shortnames": [
+      "R36-GPS"
+    ]
+  },
+  {
+    "icon": {
+      "id": "daa0c8af-8df3-455c-acec-aab27bf14c8e"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Rocket 5AC Lite",
+      "name": "Rocket 5AC Lite"
+    },
+    "shortnames": [
+      "R5AC-Lite"
+    ]
+  },
+  {
+    "icon": {
+      "id": "a7e62b5f-e57a-4c2a-80ac-276211b84da4"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Rocket 5AC Prism",
+      "name": "Rocket 5AC Prism"
+    },
+    "shortnames": [
+      "R5AC-PRISM-M"
+    ]
+  },
+  {
+    "icon": {
+      "id": "3aa67234-64d9-455f-8e0e-d61ec9dc0bbe"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Rocket 5AC PTMP",
+      "name": "Rocket 5AC PTMP"
+    },
+    "shortnames": [
+      "AirMAX Rocket 5AC PTMP",
+      "R5AC-PTMP"
+    ]
+  },
+  {
+    "icon": {
+      "id": "118d5587-c450-4682-91d4-73c82ee38ca1"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Rocket 5AC PTP",
+      "name": "Rocket 5AC PTP"
+    },
+    "shortnames": [
+      "AirMAX Rocket 5AC PTP",
+      "R5AC-PTP"
+    ]
+  },
+  {
+    "icon": {
+      "id": "c3f621a0-c72d-4afb-867b-42e045015964"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Rocket M5",
+      "name": "Rocket M5"
+    },
+    "shortnames": [
+      "R5N-GPS"
+    ]
+  },
+  {
+    "icon": {
+      "id": "990695dd-5443-46ac-8495-06edd14134da"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Rocket M5 Titanium",
+      "name": "Rocket M5 Titanium"
+    },
+    "shortnames": [
+      "R5T-GPS"
+    ]
+  },
+  {
+    "icon": {
+      "id": "e0382f07-989e-4cff-93af-9541059c9ff4"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Rocket M6",
+      "name": "Rocket M6"
+    },
+    "shortnames": [
+      "R6N"
+    ]
+  },
+  {
+    "icon": {
+      "id": "697f4954-a6c1-46f9-acbc-74273f78b4eb"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Rocket M900",
+      "name": "Rocket M900"
+    },
+    "shortnames": [
+      "R9N"
+    ]
+  },
+  {
+    "icon": {
+      "id": "da9bc442-9422-4b51-91fb-321d3f92ed9b"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Rocket M900",
+      "name": "Rocket M900"
+    },
+    "shortnames": [
+      "R9N-GPS"
+    ]
+  },
+  {
+    "icon": {
+      "id": "ebcdac04-563b-4850-a5b1-6a21213b1307"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX 2.4 Ghz 24",
+      "name": "airMAX 2.4 Ghz 24"
+    },
+    "shortnames": [
+      "AirMAX 2.4 Ghz 24",
+      "AirMAX RocketDish 2G-24"
+    ]
+  },
+  {
+    "icon": {
+      "id": "4f30fcb3-f7f1-4585-9372-a8b4e6382cb6"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX 3 Ghz 26",
+      "name": "airMAX 3 Ghz 26"
+    },
+    "shortnames": [
+      "AirMAX 3 Ghz 26",
+      "AirMAX RocketDish 3G-26"
+    ]
+  },
+  {
+    "icon": {
+      "id": "791e8a7c-8032-41e9-8d92-94ce59e06062"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX 5 Ghz 30",
+      "name": "airMAX 5 Ghz 30"
+    },
+    "shortnames": [
+      "AirMAX 5 Ghz 30",
+      "AirMAX RocketDish 5G-30"
+    ]
+  },
+  {
+    "icon": {
+      "id": "dc5692d9-b410-4d1d-9248-e77d4e5a7d49"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX RocketDish 5G30-LW",
+      "name": "airMAX RocketDish 5G30-LW"
+    },
+    "shortnames": [
+      "AirMAX RocketDish 5G30-LW"
+    ]
+  },
+  {
+    "icon": {
+      "id": "7dfa47c2-ad88-4cd8-bca0-2a2969296a77"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX RocketDish 5G31-AC",
+      "name": "airMAX RocketDish 5G31-AC"
+    },
+    "shortnames": [
+      "AirMAX RocketDish 5G31-AC",
+      "AirMAX RocketDish AC Antenna 5Ghz"
+    ]
+  },
+  {
+    "icon": {
+      "id": "3d414b1e-35c1-4aec-95fa-f93376cf13d5"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX 5 Ghz 34",
+      "name": "airMAX 5 Ghz 34"
+    },
+    "shortnames": [
+      "AirMAX 5 Ghz 34",
+      "AirMAX RocketDish 5G-34"
+    ]
+  },
+  {
+    "icon": {
+      "id": "6d29c405-2cec-4121-8f90-568320ff7f5e"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX Rocket M2 Titanium",
+      "name": "airMAX Rocket M2 Titanium"
+    },
+    "shortnames": [
+      "AirMAX Rocket M2 Titanium"
+    ]
+  },
+  {
+    "icon": {
+      "id": "150e4f47-3d0f-4f88-861b-1e4196ab610e"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Rocket M3",
+      "name": "Rocket M3"
+    },
+    "shortnames": [
+      "RM3"
+    ]
+  },
+  {
+    "icon": {
+      "id": "f70db56b-e291-4ead-86b5-f3339ee30302"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Rocket M3",
+      "name": "Rocket M3"
+    },
+    "shortnames": [
+      "RM3-GPS"
+    ]
+  },
+  {
+    "icon": {
+      "id": "1e18ea8b-9752-4cf1-8bbd-6ccfaf8109ac"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Rocket M5",
+      "name": "Rocket M5"
+    },
+    "shortnames": [
+      "R5N"
+    ]
+  },
+  {
+    "icon": {
+      "id": "52a61baf-07b1-4d5d-aa45-3748fe5ca1b4"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Rocket Prism 5AC",
+      "name": "Rocket Prism 5AC"
+    },
+    "shortnames": [
+      "AirMAX Rocket 5AC Prism",
+      "R5AC-PRISM",
+      "RP-5AC-Gen2"
+    ]
+  },
+  {
+    "icon": {
+      "id": "344a4ca3-ece7-44b8-b569-38513b62f307"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "Rocket M2",
+      "name": "Rocket M2"
+    },
+    "shortnames": [
+      "AirMAX Rocket M2",
+      "R2N",
+      "R2N-GPS"
+    ]
+  },
+  {
+    "icon": {
+      "id": "9861a425-051e-44f8-962a-c079b2cad854"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "Self Hosted Network Server",
+      "name": "Self Hosted Network Server"
+    },
+    "shortnames": [
+      "SELF-HOSTED-NETWORK-SERVER",
+      "controller"
+    ]
+  },
+  {
+    "icon": {
+      "id": "7d971c71-74d9-4ef4-8292-0705dbff5222"
+    },
+    "line": {
+      "id": "sunmax",
+      "name": "SunMAX"
+    },
+    "product": {
+      "abbrev": "SunMAX SolarPoint",
+      "name": "SunMAX SolarPoint"
+    },
+    "shortnames": [
+      "SM-SP-40",
+      "SolarPoint"
+    ]
+  },
+  {
+    "icon": {
+      "id": "48b8b3b1-ebc0-4483-83d1-86c58189b006"
+    },
+    "line": {
+      "id": "sunmax",
+      "name": "SunMAX"
+    },
+    "product": {
+      "abbrev": "SunMAX SolarSwitch",
+      "name": "SunMAX SolarSwitch"
+    },
+    "shortnames": [
+      "SB-LITE",
+      "SolarSwitch"
+    ]
+  },
+  {
+    "icon": {
+      "id": "f0091e72-e840-4e09-874a-adf49347318f"
+    },
+    "line": {
+      "id": "unknown",
+      "name": "Unknown"
+    },
+    "product": {
+      "abbrev": "ToughSwitch 16",
+      "name": "ToughSwitch 16"
+    },
+    "shortnames": [
+      "Ubiquiti ToughSwitch 16"
+    ]
+  },
+  {
+    "icon": {
+      "id": "0ce387b3-bedf-419a-aeee-efb33da6ca26"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeSwitch 8XP",
+      "name": "EdgeSwitch 8XP"
+    },
+    "shortnames": [
+      "TSW-8"
+    ]
+  },
+  {
+    "icon": {
+      "id": "89b714f2-5e8a-465c-9278-0e6b6fe10c60"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeSwitch 8XP",
+      "name": "EdgeSwitch 8XP"
+    },
+    "shortnames": [
+      "TSW-8-POE"
+    ]
+  },
+  {
+    "icon": {
+      "id": "fcbae031-4183-4f4a-a075-b041cd23d636"
+    },
+    "line": {
+      "id": "edgemax",
+      "name": "EdgeMAX"
+    },
+    "product": {
+      "abbrev": "EdgeSwitch 8XP",
+      "name": "EdgeSwitch 8XP"
+    },
+    "shortnames": [
+      "TSW-PoE PRO"
+    ]
+  },
+  {
+    "icon": {
+      "id": "a2571213-2e41-4587-93b5-8584c95d995f"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "airMAX Ubiquiti Installer",
+      "name": "airMAX Ubiquiti Installer"
+    },
+    "shortnames": [
+      "AirMAX Ubiquiti Installer"
+    ]
+  },
+  {
+    "icon": {
+      "id": "fe65d707-1bdb-46a3-b79b-bd600150226e"
+    },
+    "line": {
+      "id": "unifi-lte",
+      "name": "UniFi LTE"
+    },
+    "product": {
+      "abbrev": "LTE",
+      "name": "LTE Backup"
+    },
+    "shortnames": [
+      "U-LTE-US",
+      "ULTE"
+    ]
+  },
+  {
+    "icon": {
+      "id": "efbe5cab-8980-404f-a3a9-cc3dcb21b968"
+    },
+    "line": {
+      "id": "unifi-lte",
+      "name": "UniFi LTE"
+    },
+    "product": {
+      "abbrev": "LTE Pro",
+      "name": "LTE Backup Professional"
+    },
+    "shortnames": [
+      "U-LTE-Pro-EU",
+      "ULTEPEU"
+    ]
+  },
+  {
+    "icon": {
+      "id": "efbe5cab-8980-404f-a3a9-cc3dcb21b968"
+    },
+    "line": {
+      "id": "unifi-lte",
+      "name": "UniFi LTE"
+    },
+    "product": {
+      "abbrev": "LTE Pro",
+      "name": "LTE Backup Professional"
+    },
+    "shortnames": [
+      "ULTEPUS"
+    ]
+  },
+  {
+    "icon": {
+      "id": "06a25b40-ef1f-463a-82d9-13236866ea3d"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "U6+",
+      "name": "Access Point U6+"
+    },
+    "shortnames": [
+      "UAPL6"
+    ]
+  },
+  {
+    "icon": {
+      "id": "c429ec89-99a0-4892-ae8a-afcd5c805367"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "U6 Enterprise",
+      "name": "Access Point U6 Enterprise"
+    },
+    "shortnames": [
+      "U6-Enterprise",
+      "U6ENT"
+    ]
+  },
+  {
+    "icon": {
+      "id": "3924bd7e-b16a-4e41-baf8-d8b728fb9b4c"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "U6 Enterprise IW",
+      "name": "Access Point U6 Enterprise In-Wall"
+    },
+    "shortnames": [
+      "U6-Enterprise-IW",
+      "U6ENTIW"
+    ]
+  },
+  {
+    "icon": {
+      "id": "af2f4815-842f-4b91-9d8e-01ea7ff96a9d"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "U6 Extender",
+      "name": "Access Point U6 Extender"
+    },
+    "shortnames": [
+      "U6EXT",
+      "UAE6"
+    ]
+  },
+  {
+    "icon": {
+      "id": "70fa881e-6e4a-40ca-8edb-bd3420a1b082"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "U6 IW",
+      "name": "Access Point U6 In-Wall"
+    },
+    "shortnames": [
+      "U6IW",
+      "UAIW6"
+    ]
+  },
+  {
+    "icon": {
+      "id": "06a25b40-ef1f-463a-82d9-13236866ea3d"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "U6 LR",
+      "name": "Access Point U6 Long-Range"
+    },
+    "shortnames": [
+      "UALR6",
+      "UALR6V2",
+      "UALR6v2",
+      "UALR6V3",
+      "UALR6v3"
+    ]
+  },
+  {
+    "icon": {
+      "id": "182fa28c-f63e-4381-9fe5-3ed98db687b5"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "U6 Lite",
+      "name": "Access Point U6 Lite"
+    },
+    "shortnames": [
+      "UAL6"
+    ]
+  },
+  {
+    "icon": {
+      "id": "aa48f2c1-06f0-426f-aa91-eca96a3d23d9"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "U6 Mesh",
+      "name": "Access Point U6 Mesh"
+    },
+    "shortnames": [
+      "U6M",
+      "UAM6"
+    ]
+  },
+  {
+    "icon": {
+      "id": "182fa28c-f63e-4381-9fe5-3ed98db687b5"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "U6 LR+",
+      "name": "Access Point U6 Long-Range+"
+    },
+    "shortnames": [
+      "UALRPL6"
+    ]
+  },
+  {
+    "icon": {
+      "id": "06a25b40-ef1f-463a-82d9-13236866ea3d"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "U6 Pro",
+      "name": "Access Point U6 Professional"
+    },
+    "shortnames": [
+      "UAP6",
+      "UAP6MP"
+    ]
+  },
+  {
+    "icon": {
+      "id": "64fd4793-003f-41d0-a667-5b99539ce43e"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "U6 SW 24",
+      "name": "U6 Switch 24"
+    },
+    "shortnames": [
+      "UniFi 6 Switch 24"
+    ]
+  },
+  {
+    "icon": {
+      "id": "83e2e098-562f-47e3-99fe-73d04a09fc5e"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "U7 Pro",
+      "name": "U7 Pro"
+    },
+    "shortnames": [
+      "U7PRO"
+    ]
+  },
+  {
+    "icon": {
+      "id": "28e3a624-27a5-474c-a941-5777d57b9f80"
+    },
+    "line": {
+      "id": "unifi-access",
+      "name": "UniFi Access"
+    },
+    "product": {
+      "abbrev": "UA Card",
+      "name": "Access Card"
+    },
+    "shortnames": [
+      "UA-Card"
+    ]
+  },
+  {
+    "icon": {
+      "id": "13b15dbe-e36f-42ca-ae63-2c991f5bdfe1"
+    },
+    "line": {
+      "id": "unifi-access",
+      "name": "UniFi Access"
+    },
+    "product": {
+      "abbrev": "UA Hub Elevator",
+      "name": "Access Elevator Hub"
+    },
+    "shortnames": [
+      "UA-Elevator"
+    ]
+  },
+  {
+    "icon": {
+      "id": "9fc1a64c-1d64-4672-99e1-d43cfbefbc96"
+    },
+    "line": {
+      "id": "unifi-access",
+      "name": "UniFi Access"
+    },
+    "product": {
+      "abbrev": "UA G2",
+      "name": "Access G2 Reader"
+    },
+    "shortnames": [
+      "G2-MINI",
+      "UA-G2-Mini"
+    ]
+  },
+  {
+    "icon": {
+      "id": "8069401d-fad8-42c3-b170-601a04fd5a73"
+    },
+    "line": {
+      "id": "unifi-access",
+      "name": "UniFi Access"
+    },
+    "product": {
+      "abbrev": "UA G2 Black",
+      "name": "Access G2 Reader"
+    },
+    "shortnames": [
+      "UA-G2-Black"
+    ]
+  },
+  {
+    "icon": {
+      "id": "31162628-113a-428b-8786-dfeb82d46c8c"
+    },
+    "line": {
+      "id": "unifi-access",
+      "name": "UniFi Access"
+    },
+    "product": {
+      "abbrev": "UA G2 Pro",
+      "name": "Access G2 Professional"
+    },
+    "shortnames": [
+      "UA-G2-PRO"
+    ]
+  },
+  {
+    "icon": {
+      "id": "9d4e48bd-2085-42a7-b7b8-bb2cfb3f2679"
+    },
+    "line": {
+      "id": "unifi-access",
+      "name": "UniFi Access"
+    },
+    "product": {
+      "abbrev": "UA G2 Pro Black",
+      "name": "Access G2 Professional"
+    },
+    "shortnames": [
+      "UA-G2-Pro-Black"
+    ]
+  },
+  {
+    "icon": {
+      "id": "265a6153-1e88-466e-877f-46e2095921a8"
+    },
+    "line": {
+      "id": "unifi-access",
+      "name": "UniFi Access"
+    },
+    "product": {
+      "abbrev": "UA Hub",
+      "name": "Access Hub"
+    },
+    "shortnames": [
+      "UA-HUB",
+      "UAH",
+      "UDA-HUB"
+    ]
+  },
+  {
+    "icon": {
+      "id": "7bc7eb1a-abcb-4bf1-ba9d-d6de00e30139"
+    },
+    "line": {
+      "id": "unifi-access",
+      "name": "UniFi Access"
+    },
+    "product": {
+      "abbrev": "UA Pocket",
+      "name": "Pocket Keyfob"
+    },
+    "shortnames": [
+      "UA-Pocket"
+    ]
+  },
+  {
+    "icon": {
+      "id": "469d7d21-835a-4a07-b2f7-00d3a08f0bb3"
+    },
+    "line": {
+      "id": "unifi-access",
+      "name": "UniFi Access"
+    },
+    "product": {
+      "abbrev": "UA Pro",
+      "name": "Access Reader Professional"
+    },
+    "shortnames": [
+      "UA-PRO",
+      "UDA",
+      "UDA-PRO"
+    ]
+  },
+  {
+    "icon": {
+      "id": "f2501e35-0e97-4472-8721-c33e2817df5b"
+    },
+    "line": {
+      "id": "unifi-access",
+      "name": "UniFi Access"
+    },
+    "product": {
+      "abbrev": "UA Reader Lite",
+      "name": "Access Reader Lite"
+    },
+    "shortnames": [
+      "UA-LITE",
+      "UDA-LITE"
+    ]
+  },
+  {
+    "icon": {
+      "id": "15323988-b998-4663-ac56-f519a931e529"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UAP",
+      "name": "Access Point"
+    },
+    "shortnames": [
+      "BZ2",
+      "U2S48"
+    ]
+  },
+  {
+    "icon": {
+      "id": "a48d1e0d-8471-41b0-bc31-2901e1c63ec8"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UAP",
+      "name": "Access Point"
+    },
+    "shortnames": [
+      "U2SV2",
+      "U2Sv2"
+    ]
+  },
+  {
+    "icon": {
+      "id": "9063f7a8-5680-4025-b53c-459f5cd0e0e4"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UAP AC",
+      "name": "Access Point AC"
+    },
+    "shortnames": [
+      "U7E",
+      "U7EV2",
+      "U7Ev2",
+      "U7ev2"
+    ]
+  },
+  {
+    "icon": {
+      "id": "83669f8a-bc79-458f-8d78-e665bb0c99f0"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "AC EDU",
+      "name": "Access Point AC EDU"
+    },
+    "shortnames": [
+      "U7EDU"
+    ]
+  },
+  {
+    "icon": {
+      "id": "63240ec2-0796-48e9-83e0-aad97006473d"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "AC HD",
+      "name": "Access Point AC HD"
+    },
+    "shortnames": [
+      "U7HD",
+      "UniFi AC HD"
+    ]
+  },
+  {
+    "icon": {
+      "id": "af3b43aa-6c45-4f7f-b521-34799f2bc6a7"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "AC IW",
+      "name": "Access Point AC In-Wall"
+    },
+    "shortnames": [
+      "U7IW",
+      "UniFi AC In Wall"
+    ]
+  },
+  {
+    "icon": {
+      "id": "43160877-5f33-4c03-a7b3-955fc6c1b313"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "AC IW Pro",
+      "name": "Access Point AC In-Wall Professional"
+    },
+    "shortnames": [
+      "U7IWP",
+      "UniFi AC In Wall AP Pro"
+    ]
+  },
+  {
+    "icon": {
+      "id": "a59ffc16-3878-4d1f-892b-f2a90bf22505"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "AC Lite",
+      "name": "Access Point AC Lite"
+    },
+    "shortnames": [
+      "U7LT"
+    ]
+  },
+  {
+    "icon": {
+      "id": "28bfbf2e-4d13-4b3a-86b9-114023a0b6dc"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "AC LR",
+      "name": "Access Point AC Long-Range"
+    },
+    "shortnames": [
+      "U7LR"
+    ]
+  },
+  {
+    "icon": {
+      "id": "899c4dc3-e1a1-4149-a9d0-13cc26dd4481"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "AC Mesh",
+      "name": "Access Point AC Mesh"
+    },
+    "shortnames": [
+      "U7MSH"
+    ]
+  },
+  {
+    "icon": {
+      "id": "e23f9b90-f80d-4455-b75c-ee50057b40cb"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "AC Mesh Pro",
+      "name": "Access Point AC Mesh Professional"
+    },
+    "shortnames": [
+      "U7MP"
+    ]
+  },
+  {
+    "icon": {
+      "id": "d1061906-47e1-40a7-836e-53d3e1809e33"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UAP AC Outdoor",
+      "name": "Access Point AC Outdoor"
+    },
+    "shortnames": [
+      "U7O"
+    ]
+  },
+  {
+    "icon": {
+      "id": "4538e4a6-b426-4549-aa4d-9c3771b4b169"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "AC Pro",
+      "name": "Access Point AC Professional"
+    },
+    "shortnames": [
+      "U7PG2",
+      "UniFi AC PRO"
+    ]
+  },
+  {
+    "icon": {
+      "id": "8050a10c-7b22-4cfa-bbed-d8a4e2e9ea16"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "AC SHD",
+      "name": "Access Point AC SHD"
+    },
+    "shortnames": [
+      "U7SHD",
+      "U7SHDv2"
+    ]
+  },
+  {
+    "icon": {
+      "id": "29cfc9cc-712f-4094-af5e-ac1e40d3324b"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "BeaconHD",
+      "name": "Access Point BeaconHD"
+    },
+    "shortnames": [
+      "UAP-BeaconHD",
+      "UDMB"
+    ]
+  },
+  {
+    "icon": {
+      "id": "89f10568-d2c0-4b29-bfe5-3bc4f6a0ef1d"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "FlexHD",
+      "name": "Access Point FlexHD"
+    },
+    "shortnames": [
+      "UFLHD"
+    ]
+  },
+  {
+    "icon": {
+      "id": "0979fac5-7f3b-41b5-910a-9b165a4588a4"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UAP IW",
+      "name": "Access Point In-Wall"
+    },
+    "shortnames": [
+      "U2IW",
+      "UniFi AP In Wall"
+    ]
+  },
+  {
+    "icon": {
+      "id": "c8c09423-4e65-4a84-9e4b-5c62cf6f957c"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "IW HD",
+      "name": "Access Point In-Wall HD"
+    },
+    "shortnames": [
+      "UAP-IW-HD",
+      "UHDIW"
+    ]
+  },
+  {
+    "icon": {
+      "id": "0d680fa3-fd4f-4a96-9282-6e5831572521"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UAP LR",
+      "name": "Access Point Long-Range"
+    },
+    "shortnames": [
+      "BZ2LR",
+      "U2L48"
+    ]
+  },
+  {
+    "icon": {
+      "id": "6144adc0-ce06-4011-94f5-dda67f67b599"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UAP LR",
+      "name": "Access Point Long-Range"
+    },
+    "shortnames": [
+      "U2LV2",
+      "U2Lv2"
+    ]
+  },
+  {
+    "icon": {
+      "id": "66787b16-d25f-4750-b633-bb52a69573b1"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UAP Outdoor",
+      "name": "Access Point Outdoor"
+    },
+    "shortnames": [
+      "U2O",
+      "UniFi AP Outdoor",
+      "UniFi Mesh Outdoor"
+    ]
+  },
+  {
+    "icon": {
+      "id": "b1cfd781-c43a-41a2-b21a-7b6bf47bf552"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UAP Outdoor+",
+      "name": "Access Point Outdoor+"
+    },
+    "shortnames": [
+      "U2HSR"
+    ]
+  },
+  {
+    "icon": {
+      "id": "fb5abc29-e5fd-4c5e-8485-c3c77f4fa0bc"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UAP Outdoor5",
+      "name": "Access Point Outdoor5"
+    },
+    "shortnames": [
+      "U5O"
+    ]
+  },
+  {
+    "icon": {
+      "id": "09f1f14e-99f5-42c6-aebc-880f466f9b81"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UAP Pro",
+      "name": "Access Point Professional"
+    },
+    "shortnames": [
+      "U7P"
+    ]
+  },
+  {
+    "icon": {
+      "id": "4ddbc8d4-827f-49f7-bd78-9323adcb346c"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UAP XG",
+      "name": "Access Point XG"
+    },
+    "shortnames": [
+      "UCXG"
+    ]
+  },
+  {
+    "icon": {
+      "id": "68006a79-cb84-4cb7-b29c-449dd11d2698"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "nanoHD",
+      "name": "Access Point nanoHD"
+    },
+    "shortnames": [
+      "U7NHD"
+    ]
+  },
+  {
+    "icon": {
+      "id": "2e27c884-4b0e-41c8-baaf-fc23750da686"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UAS XG",
+      "name": "Application Server XG"
+    },
+    "shortnames": [
+      "UAS",
+      "UASXG"
+    ]
+  },
+  {
+    "icon": {
+      "id": "8d5d77fa-161c-480a-aee8-c0ecbb52e4b2"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UBB",
+      "name": "Building Bridge"
+    },
+    "shortnames": [
+      "UBB"
+    ]
+  },
+  {
+    "icon": {
+      "id": "99dc4934-1f36-42aa-9cdf-94636c064e01"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UBB XG",
+      "name": "Building Bridge XG"
+    },
+    "shortnames": [
+      "UBB-XG",
+      "UBBXG"
+    ]
+  },
+  {
+    "icon": {
+      "id": "9d86c072-b064-43e0-ae90-e3c50f155f64"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UC CK",
+      "name": "Cloud Key"
+    },
+    "shortnames": [
+      "UniFi Cloud-Key"
+    ]
+  },
+  {
+    "icon": {
+      "id": "94a02e5f-2f5c-4431-be60-08664e62578b"
+    },
+    "line": {
+      "id": "unifi-connect",
+      "name": "UniFi Connect"
+    },
+    "product": {
+      "abbrev": "UC Cast",
+      "name": "Display Cast"
+    },
+    "shortnames": [
+      "UC-Cast"
+    ]
+  },
+  {
+    "icon": {
+      "id": "18f11353-65a4-4452-802f-3ac204f1d429"
+    },
+    "line": {
+      "id": "unifi-connect",
+      "name": "UniFi Connect"
+    },
+    "product": {
+      "abbrev": "UC Display 13",
+      "name": "Connect Display 13"
+    },
+    "shortnames": [
+      "UC-Display-SE-13"
+    ]
+  },
+  {
+    "icon": {
+      "id": "dabd50d8-38e7-4931-bec0-bb7496f7b62c"
+    },
+    "line": {
+      "id": "unifi-connect",
+      "name": "UniFi Connect"
+    },
+    "product": {
+      "abbrev": "UC Display",
+      "name": "Connect Display"
+    },
+    "shortnames": [
+      "UC-Display-SE-21"
+    ]
+  },
+  {
+    "icon": {
+      "id": "0d67ef1b-e10b-40ae-a0eb-18a37a3214da"
+    },
+    "line": {
+      "id": "unifi-connect",
+      "name": "UniFi Connect"
+    },
+    "product": {
+      "abbrev": "UC Display Max",
+      "name": "Connect Display Max"
+    },
+    "shortnames": [
+      "UC-Display-SE-27"
+    ]
+  },
+  {
+    "icon": {
+      "id": "675ab4ad-493e-4134-884a-05cc2bb3e5e6"
+    },
+    "line": {
+      "id": "unifi-connect",
+      "name": "UniFi Connect"
+    },
+    "product": {
+      "abbrev": "UC Display 7",
+      "name": "Connect Display 7"
+    },
+    "shortnames": [
+      "UC-Display-SE-7"
+    ]
+  },
+  {
+    "icon": {
+      "id": "4f361e75-f3c5-4c9c-9c57-fd99d5a16065"
+    },
+    "line": {
+      "id": "unifi-connect",
+      "name": "UniFi Connect"
+    },
+    "product": {
+      "abbrev": "UC Display 13",
+      "name": "Connect Display 13"
+    },
+    "shortnames": [
+      "UC-Display-13",
+      "UC-Display13"
+    ]
+  },
+  {
+    "icon": {
+      "id": "46822437-f694-4130-b3a8-9f6b7e2368e3"
+    },
+    "line": {
+      "id": "unifi-connect",
+      "name": "UniFi Connect"
+    },
+    "product": {
+      "abbrev": "UC Display 21",
+      "name": "Connect Display 21"
+    },
+    "shortnames": [
+      "UC-Display-21",
+      "UC-Display21"
+    ]
+  },
+  {
+    "icon": {
+      "id": "8432d904-fc9f-4318-af47-5c32571e5810"
+    },
+    "line": {
+      "id": "unifi-connect",
+      "name": "UniFi Connect"
+    },
+    "product": {
+      "abbrev": "UC Display 27",
+      "name": "Connect Display 27"
+    },
+    "shortnames": [
+      "UC-Display-27",
+      "UC-Display27"
+    ]
+  },
+  {
+    "icon": {
+      "id": "2cb4eac6-4225-428d-aaa8-398c44837417"
+    },
+    "line": {
+      "id": "unifi-connect",
+      "name": "UniFi Connect"
+    },
+    "product": {
+      "abbrev": "UC Display 7",
+      "name": "Connect Display 7"
+    },
+    "shortnames": [
+      "UC-Display-7",
+      "UC-Display7"
+    ]
+  },
+  {
+    "icon": {
+      "id": "885c3130-987a-4b6c-86eb-d019fbe490d5"
+    },
+    "line": {
+      "id": "unifi-connect",
+      "name": "UniFi Connect"
+    },
+    "product": {
+      "abbrev": "EV Station",
+      "name": "EV Station"
+    },
+    "shortnames": [
+      "UC-EV-Station"
+    ]
+  },
+  {
+    "icon": {
+      "id": "68a0e0be-f0bd-4220-9d9a-3e32f1fe6cac"
+    },
+    "line": {
+      "id": "unifi-connect",
+      "name": "UniFi Connect"
+    },
+    "product": {
+      "abbrev": "EV Station Pro",
+      "name": "EV Station Professional"
+    },
+    "shortnames": [
+      "UC-EV-Station-Pro"
+    ]
+  },
+  {
+    "icon": {
+      "id": "611d344d-1502-4f9e-adaa-9be30a58b1dd"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UCI",
+      "name": "Cable Internet"
+    },
+    "shortnames": [
+      "UCI"
+    ]
+  },
+  {
+    "icon": {
+      "id": "c228374c-4408-4216-a8ba-80ee71ec7003"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UCK",
+      "name": "Cloud Key"
+    },
+    "shortnames": [
+      "UCK",
+      "UCK-V2",
+      "UCK-v2",
+      "UCK-V3",
+      "UCK-v3"
+    ]
+  },
+  {
+    "icon": {
+      "id": "169590e9-641e-4284-aef7-4abe7ee219be"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UCK G2",
+      "name": "Cloud Key Gen2"
+    },
+    "shortnames": [
+      "UCKG2"
+    ]
+  },
+  {
+    "icon": {
+      "id": "27eedcd2-c28b-4acd-865e-4711edc53b4b"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UCK G2",
+      "name": "Cloud Key Gen2"
+    },
+    "shortnames": [
+      "UCK-G2-BK",
+      "UCK-G2-Black"
+    ]
+  },
+  {
+    "icon": {
+      "id": "3ecc69bf-a04b-401a-83bb-181a644c4246"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UCK G2 Plus",
+      "name": "Cloud Key Gen2 Plus"
+    },
+    "shortnames": [
+      "UCK-G2-PLUS",
+      "UCKP"
+    ]
+  },
+  {
+    "icon": {
+      "id": "4476a062-ea83-433a-8bec-21e994b3d3b7"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UCK Enterprise",
+      "name": "Cloud Key Enterprise"
+    },
+    "shortnames": [
+      "UCKENT"
+    ]
+  },
+  {
+    "icon": {
+      "id": "ffcef522-b25a-4f3b-b3c4-89b0066bbeaf"
+    },
+    "line": {
+      "id": "unifi-connect",
+      "name": "UniFi Connect"
+    },
+    "product": {
+      "abbrev": "UDIM AC",
+      "name": "Dimmer Switch AC"
+    },
+    "shortnames": [
+      "ULD3AC"
+    ]
+  },
+  {
+    "icon": {
+      "id": "ffcef522-b25a-4f3b-b3c4-89b0066bbeaf"
+    },
+    "line": {
+      "id": "unifi-led",
+      "name": "UniFi LED"
+    },
+    "product": {
+      "abbrev": "UDIM AC",
+      "name": "Dimmer Switch AC"
+    },
+    "shortnames": [
+      "ULDAC",
+      "ULDAC2",
+      "UniFi Light Dimmer"
+    ]
+  },
+  {
+    "icon": {
+      "id": "d45f3230-d7af-4a5a-8bec-20fe6930c36b"
+    },
+    "line": {
+      "id": "unifi-connect",
+      "name": "UniFi Connect"
+    },
+    "product": {
+      "abbrev": "UDIM AT",
+      "name": "Dimmer Switch AT"
+    },
+    "shortnames": [
+      "ULD3PE"
+    ]
+  },
+  {
+    "icon": {
+      "id": "d45f3230-d7af-4a5a-8bec-20fe6930c36b"
+    },
+    "line": {
+      "id": "unifi-led",
+      "name": "UniFi LED"
+    },
+    "product": {
+      "abbrev": "UDIM AT",
+      "name": "Dimmer Switch AT"
+    },
+    "shortnames": [
+      "ULDPE",
+      "ULDPE2"
+    ]
+  },
+  {
+    "icon": {
+      "id": "4851e95c-e577-4141-89c5-1c8839261943"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UDM",
+      "name": "Dream Machine"
+    },
+    "shortnames": [
+      "UDM"
+    ]
+  },
+  {
+    "icon": {
+      "id": "a685746f-cd8f-4453-90c7-68a3ba9c1953"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UDM Pro",
+      "name": "Dream Machine Professional"
+    },
+    "shortnames": [
+      "UDM-PRO",
+      "UDM-Pro",
+      "UDMPRO"
+    ]
+  },
+  {
+    "icon": {
+      "id": "429ba332-ff7a-46e1-9354-b6b800919f83"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UDM SE",
+      "name": "Dream Machine Special Edition"
+    },
+    "shortnames": [
+      "UDM-PRO-SE",
+      "UDMPROSE",
+      "UDM-SE",
+      "UDMSE"
+    ]
+  },
+  {
+    "icon": {
+      "id": "03f1f91e-47f0-464b-92ae-64af34e00b92"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UDR",
+      "name": "Dream Router"
+    },
+    "shortnames": [
+      "UDR"
+    ]
+  },
+  {
+    "icon": {
+      "id": "f66802f6-8115-49c8-bd12-7c7402805add"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UDW",
+      "name": "Dream Wall"
+    },
+    "shortnames": [
+      "UDW"
+    ]
+  },
+  {
+    "icon": {
+      "id": "fa8024cd-7daa-49b1-bf86-7eec6c8215e0"
+    },
+    "line": {
+      "id": "ufiber",
+      "name": "UFiber"
+    },
+    "product": {
+      "abbrev": "UF AE",
+      "name": "UFiber Active Ethernet"
+    },
+    "shortnames": [
+      "UF-AE"
+    ]
+  },
+  {
+    "icon": {
+      "id": "d32d26fc-110f-4cdc-845a-5ec655cf7a47"
+    },
+    "line": {
+      "id": "ufiber",
+      "name": "UFiber"
+    },
+    "product": {
+      "abbrev": "UF Instant",
+      "name": "UFiber Instant"
+    },
+    "shortnames": [
+      "UF-Instant"
+    ]
+  },
+  {
+    "icon": {
+      "id": "67341c21-71a5-45de-a393-f54a528acfce"
+    },
+    "line": {
+      "id": "ufiber",
+      "name": "UFiber"
+    },
+    "product": {
+      "abbrev": "UF Loco",
+      "name": "UFiber Loco"
+    },
+    "shortnames": [
+      "UF-LOCO"
+    ]
+  },
+  {
+    "icon": {
+      "id": "4a67f679-51f5-4327-9fa6-5f108976001c"
+    },
+    "line": {
+      "id": "ufiber",
+      "name": "UFiber"
+    },
+    "product": {
+      "abbrev": "UF Nano",
+      "name": "UFiber NanoG"
+    },
+    "shortnames": [
+      "UF-Nano"
+    ]
+  },
+  {
+    "icon": {
+      "id": "437bdd05-99b8-47f0-be4d-148fdaafe984"
+    },
+    "line": {
+      "id": "ufiber",
+      "name": "UFiber"
+    },
+    "product": {
+      "abbrev": "UF OLT",
+      "name": "UFiber OLT"
+    },
+    "shortnames": [
+      "UF-OLT"
+    ]
+  },
+  {
+    "icon": {
+      "id": "4117f9a4-2933-4574-aca3-b393322acc37"
+    },
+    "line": {
+      "id": "ufiber",
+      "name": "UFiber"
+    },
+    "product": {
+      "abbrev": "UF OLT 4",
+      "name": "UFiber OLT 4"
+    },
+    "shortnames": [
+      "UF-OLT4"
+    ]
+  },
+  {
+    "icon": {
+      "id": "121d124b-0b6a-410c-ac41-c8eefdfc78a9"
+    },
+    "line": {
+      "id": "ufiber",
+      "name": "UFiber"
+    },
+    "product": {
+      "abbrev": "UF WiFi",
+      "name": "UFiber WiFi"
+    },
+    "shortnames": [
+      "UF-WIFI",
+      "UF-WiFi"
+    ]
+  },
+  {
+    "icon": {
+      "id": "98702c27-c680-4d23-bd75-155c7f07b013"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "UP Bridge",
+      "name": "Protect UAP Bridge"
+    },
+    "shortnames": [
+      "UFP-UAP-B"
+    ]
+  },
+  {
+    "icon": {
+      "id": "f7b2ac50-c514-4cdd-ba37-02296cc061d2"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "UP Viewport",
+      "name": "Protect Viewport"
+    },
+    "shortnames": [
+      "UFP Viewport",
+      "UP Viewport"
+    ]
+  },
+  {
+    "icon": {
+      "id": "fa9cf57b-6569-4f5a-bbb4-14af3533e305"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USG Pro",
+      "name": "USG Professional"
+    },
+    "shortnames": [
+      "UGW8"
+    ]
+  },
+  {
+    "icon": {
+      "id": "3af1df03-557b-4243-9aaf-91abbb97aac6"
+    },
+    "line": {
+      "id": "uisp",
+      "name": "UISP"
+    },
+    "product": {
+      "abbrev": "UISP Console",
+      "name": "UISP Console"
+    },
+    "shortnames": [
+      "UISP-Console"
+    ]
+  },
+  {
+    "icon": {
+      "id": "21352e02-bd24-416c-8c90-41c168007547"
+    },
+    "line": {
+      "id": "ufiber",
+      "name": "UFiber"
+    },
+    "product": {
+      "abbrev": "UISP FIBER OLT XGS",
+      "name": "UISP Fiber OLT XGS"
+    },
+    "shortnames": [
+      "UISP-FIBER-OLT-XGS"
+    ]
+  },
+  {
+    "icon": {
+      "id": "bae76a4e-5a4c-41df-996f-6681077e12f9"
+    },
+    "line": {
+      "id": "ufiber",
+      "name": "UFiber"
+    },
+    "product": {
+      "abbrev": "UISP FIBER XG",
+      "name": "UISP Fiber XG"
+    },
+    "shortnames": [
+      "UISP-FIBER-XG"
+    ]
+  },
+  {
+    "icon": {
+      "id": "773ecf76-23b7-4c29-92ba-ffe74466f9d6"
+    },
+    "line": {
+      "id": "ufiber",
+      "name": "UFiber"
+    },
+    "product": {
+      "abbrev": "UISP FIBER XGS",
+      "name": "UISP Fiber XGS"
+    },
+    "shortnames": [
+      "UISP-FIBER-XGS"
+    ]
+  },
+  {
+    "icon": {
+      "id": "708c1918-a149-4c8b-9d4a-4897ac7bcf10"
+    },
+    "line": {
+      "id": "uisp",
+      "name": "UISP"
+    },
+    "product": {
+      "abbrev": "UISP LTE",
+      "name": "UISP LTE"
+    },
+    "shortnames": [
+      "UISP-LTE"
+    ]
+  },
+  {
+    "icon": {
+      "id": "6d45ce62-b73d-453f-bd14-7ab9020ca205"
+    },
+    "line": {
+      "id": "uisp",
+      "name": "UISP"
+    },
+    "product": {
+      "abbrev": "UISP P",
+      "name": "UISP Power"
+    },
+    "shortnames": [
+      "UISP-P"
+    ]
+  },
+  {
+    "icon": {
+      "id": "570be64c-01dc-4624-b2b2-b6bd2dd1e1fb"
+    },
+    "line": {
+      "id": "uisp",
+      "name": "UISP"
+    },
+    "product": {
+      "abbrev": "UISP P Pro",
+      "name": "UISP Power Professional"
+    },
+    "shortnames": [
+      "UISP-P-Pro"
+    ]
+  },
+  {
+    "icon": {
+      "id": "3896753a-e81a-48ed-bdbb-9df160de9354"
+    },
+    "line": {
+      "id": "uisp",
+      "name": "UISP"
+    },
+    "product": {
+      "abbrev": "UISP R",
+      "name": "UISP Router"
+    },
+    "shortnames": [
+      "UISP-R"
+    ]
+  },
+  {
+    "icon": {
+      "id": "13ec994b-47d1-4578-bdc4-5aa98e541965"
+    },
+    "line": {
+      "id": "uisp",
+      "name": "UISP"
+    },
+    "product": {
+      "abbrev": "UISP R Lite",
+      "name": "UISP Router Lite"
+    },
+    "shortnames": [
+      "UISP-R-Lite"
+    ]
+  },
+  {
+    "icon": {
+      "id": "fbda060f-2193-46ba-b976-d56a92f21673"
+    },
+    "line": {
+      "id": "uisp",
+      "name": "UISP"
+    },
+    "product": {
+      "abbrev": "UISP R Pro",
+      "name": "UISP Router Professional"
+    },
+    "shortnames": [
+      "UISP-R-Pro"
+    ]
+  },
+  {
+    "icon": {
+      "id": "ed633492-0985-4d42-9643-47a28c754aea"
+    },
+    "line": {
+      "id": "uisp",
+      "name": "UISP"
+    },
+    "product": {
+      "abbrev": "UISP S",
+      "name": "UISP Switch"
+    },
+    "shortnames": [
+      "UISP-S"
+    ]
+  },
+  {
+    "icon": {
+      "id": "6aa4eb7f-a3e8-4b55-bf37-918d0176559f"
+    },
+    "line": {
+      "id": "uisp",
+      "name": "UISP"
+    },
+    "product": {
+      "abbrev": "UISP S Pro",
+      "name": "UISP Switch Professional"
+    },
+    "shortnames": [
+      "UISP-S-Pro"
+    ]
+  },
+  {
+    "icon": {
+      "id": "0bb60d50-1a5f-4f26-9b0f-27bbcf9ad63c"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UK Ultra",
+      "name": "Swiss Army Knife Ultra"
+    },
+    "shortnames": [
+      "U7UKU",
+      "UK-Ultra"
+    ]
+  },
+  {
+    "icon": {
+      "id": "8461e2ad-b50b-4638-9008-0c30d1256468"
+    },
+    "line": {
+      "id": "unifi-connect",
+      "name": "UniFi Connect"
+    },
+    "product": {
+      "abbrev": "ULED AC",
+      "name": "LED Panel AC"
+    },
+    "shortnames": [
+      "ULP3AC"
+    ]
+  },
+  {
+    "icon": {
+      "id": "8461e2ad-b50b-4638-9008-0c30d1256468"
+    },
+    "line": {
+      "id": "unifi-led",
+      "name": "UniFi LED"
+    },
+    "product": {
+      "abbrev": "ULED AC",
+      "name": "LED Panel AC"
+    },
+    "shortnames": [
+      "ULP2AC",
+      "ULP2AC2",
+      "ULP2AC3"
+    ]
+  },
+  {
+    "icon": {
+      "id": "0bd85f15-112b-4963-b03e-d5954eb58109"
+    },
+    "line": {
+      "id": "unifi-connect",
+      "name": "UniFi Connect"
+    },
+    "product": {
+      "abbrev": "ULED AT",
+      "name": "LED Panel AT"
+    },
+    "shortnames": [
+      "ULP3PE"
+    ]
+  },
+  {
+    "icon": {
+      "id": "0bd85f15-112b-4963-b03e-d5954eb58109"
+    },
+    "line": {
+      "id": "unifi-led",
+      "name": "UniFi LED"
+    },
+    "product": {
+      "abbrev": "ULED AT",
+      "name": "LED Panel AT"
+    },
+    "shortnames": [
+      "ULP2PE",
+      "ULP2PE2"
+    ]
+  },
+  {
+    "icon": {
+      "id": "b80097dc-1647-4353-99ee-966db0130e80"
+    },
+    "line": {
+      "id": "unifi-led",
+      "name": "UniFi LED"
+    },
+    "product": {
+      "abbrev": "ULS",
+      "name": "Motion Sensor"
+    },
+    "shortnames": [
+      "ULED-S",
+      "ULS"
+    ]
+  },
+  {
+    "icon": {
+      "id": "832614c8-6e36-4867-a2de-246d7115c687"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "Mesh DB Antenna",
+      "name": "Access Point Mesh Dual-Band Antenna"
+    },
+    "shortnames": [
+      "UniFi Antenna",
+      "UniFi Mesh Antenna"
+    ]
+  },
+  {
+    "icon": {
+      "id": "1606c40f-e9b7-46d9-aeaf-e9afe52416e5"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UMR",
+      "name": "Mobile Router"
+    },
+    "shortnames": [
+      "UMR",
+      "openwrt"
+    ]
+  },
+  {
+    "icon": {
+      "id": "4a76316a-011a-485e-bcd8-de9fd5a54b0b"
+    },
+    "line": {
+      "id": "unifi-drive",
+      "name": "UniFi Drive"
+    },
+    "product": {
+      "abbrev": "UNAS Pro",
+      "name": "Network Attached Storage Professional"
+    },
+    "shortnames": [
+      "UNASPRO"
+    ]
+  },
+  {
+    "icon": {
+      "id": "e090b17e-a8b5-49e9-9f31-65a47fb8866f"
+    },
+    "line": {
+      "id": "unknown",
+      "name": "Unknown"
+    },
+    "product": {
+      "abbrev": "Unknown Console",
+      "name": "Unknown Console"
+    },
+    "shortnames": [
+      "UNKNOWN-CONSOLE"
+    ]
+  },
+  {
+    "icon": {
+      "id": "f28c47ea-e6bf-47d6-b14a-c3c56c20463e"
+    },
+    "line": {
+      "id": "unknown",
+      "name": "Unknown"
+    },
+    "product": {
+      "abbrev": "UNMS Switch Lite",
+      "name": "UNMS Switch Lite"
+    },
+    "shortnames": [
+      "UNMS-S-Lite"
+    ]
+  },
+  {
+    "icon": {
+      "id": "8cc7b4fa-3850-416d-9890-27420cf09911"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "UNVR",
+      "name": "Network Video Recorder"
+    },
+    "shortnames": [
+      "UNVR",
+      "UNVR-4",
+      "UNVR4",
+      "UniFi Video NVR",
+      "UniFi Video NVR 2TB"
+    ]
+  },
+  {
+    "icon": {
+      "id": "3c1a4721-cf28-43d9-9cd6-b612622b7788"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "UNVR Pro",
+      "name": "Network Video Recorder Professional"
+    },
+    "shortnames": [
+      "UNVR-PRO",
+      "UNVR-Pro",
+      "UNVRPRO"
+    ]
+  },
+  {
+    "icon": {
+      "id": "4932bfd8-ec26-4d49-bbf8-0ed815464394"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "UP Chime",
+      "name": "Protect WiFi Chime"
+    },
+    "shortnames": [
+      "UP Chime",
+      "UP-Chime"
+    ]
+  },
+  {
+    "icon": {
+      "id": "981fdbe8-c83a-4490-bc6d-c67fb292ffac"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "UP Chime PoE",
+      "name": "Chime PoE"
+    },
+    "shortnames": [
+      "UP Chime PoE",
+      "UP-Chime-PoE"
+    ]
+  },
+  {
+    "icon": {
+      "id": "76e72c53-6f9f-435a-bdbd-8b3d4898babd"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "UP Door Lock",
+      "name": "Protect Door Lock"
+    },
+    "shortnames": [
+      "UFP-LOCK-R",
+      "UFP-Lock",
+      "UP-DoorLock",
+      "UniFi Protect Lock"
+    ]
+  },
+  {
+    "icon": {
+      "id": "55127946-fa55-432b-8241-fdb764ecad64"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "UP Floodlight",
+      "name": "Protect Floodlight"
+    },
+    "shortnames": [
+      "UFP-SFL",
+      "UP FloodLight"
+    ]
+  },
+  {
+    "icon": {
+      "id": "eb86e8c0-f32a-4c06-825d-87c6c8cf68fb"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "UP Sense",
+      "name": "Protect Sensor"
+    },
+    "shortnames": [
+      "UFP-SENSE",
+      "UP-SENSE"
+    ]
+  },
+  {
+    "icon": {
+      "id": "c7ab0f7f-3408-4dc0-b528-d2585eaf3ba4"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "US 16",
+      "name": "Switch 16"
+    },
+    "shortnames": [
+      "UniFi Switch 16"
+    ]
+  },
+  {
+    "icon": {
+      "id": "5692a190-8cd8-48ac-9997-68c34eee8626"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "US 16 PoE 150W",
+      "name": "Switch 16 PoE 150W"
+    },
+    "shortnames": [
+      "S216150",
+      "US16P150"
+    ]
+  },
+  {
+    "icon": {
+      "id": "e24ac7d3-ee09-4c3a-a910-b7e824b0f726"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "US XG 16",
+      "name": "Switch XG 16"
+    },
+    "shortnames": [
+      "USXG"
+    ]
+  },
+  {
+    "icon": {
+      "id": "dbfd547d-189c-4994-ac4f-93a7c5e4a350"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "US 24",
+      "name": "Switch 24"
+    },
+    "shortnames": [
+      "UniFi Switch 24"
+    ]
+  },
+  {
+    "icon": {
+      "id": "2cbe5288-cb21-49b6-a7c0-25c0be456b78"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "US 24 PoE 250W",
+      "name": "Switch 24 PoE 250W"
+    },
+    "shortnames": [
+      "S224250",
+      "US24P250",
+      "UniFi Switch AT 24 250W"
+    ]
+  },
+  {
+    "icon": {
+      "id": "2c82b548-2497-4ef2-94f9-85cd96889a37"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "US 24 PoE 500W",
+      "name": "Switch 24 PoE 500W"
+    },
+    "shortnames": [
+      "S224500",
+      "US24P500"
+    ]
+  },
+  {
+    "icon": {
+      "id": "607245ea-5b62-4e85-87c5-c5b4f453a265"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "US 24",
+      "name": "Switch 24"
+    },
+    "shortnames": [
+      "US24"
+    ]
+  },
+  {
+    "icon": {
+      "id": "1a3a766b-69db-4276-a499-7a3d44794e23"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Enterprise XG 24",
+      "name": "Switch Enterprise XG 24"
+    },
+    "shortnames": [
+      "US-24-XG",
+      "USXG24",
+      "UniFi Enterprise Switch XG 24"
+    ]
+  },
+  {
+    "icon": {
+      "id": "503a0835-6976-4dcb-9503-1093a032c4ce"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "US 48",
+      "name": "Switch 48"
+    },
+    "shortnames": [
+      "UniFi Switch 48"
+    ]
+  },
+  {
+    "icon": {
+      "id": "aa2d54af-643f-450c-a704-73cb666d3513"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "US 48 PoE 500W",
+      "name": "Switch 48 PoE 500W"
+    },
+    "shortnames": [
+      "S248500",
+      "US48P500",
+      "UniFi Switch 48 AT 500W"
+    ]
+  },
+  {
+    "icon": {
+      "id": "97712082-0897-4dcf-bf89-18374034d6c6"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "US 48 PoE 750W",
+      "name": "Switch 48 PoE 750W"
+    },
+    "shortnames": [
+      "S248750",
+      "US48P750",
+      "UniFi Switch 48 AT 750W"
+    ]
+  },
+  {
+    "icon": {
+      "id": "4998086b-78f8-4614-a783-e5946b33b58d"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "US 48",
+      "name": "Switch 48"
+    },
+    "shortnames": [
+      "US48"
+    ]
+  },
+  {
+    "icon": {
+      "id": "76c7dbea-e685-47a4-aaa1-6a774e668cb9"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "US 8",
+      "name": "Switch 8"
+    },
+    "shortnames": [
+      "US-8",
+      "US8",
+      "USC8"
+    ]
+  },
+  {
+    "icon": {
+      "id": "8c1931af-758d-4bdc-9c90-cd7914a59333"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "US 8 PoE 150W",
+      "name": "Switch 8 PoE 150W"
+    },
+    "shortnames": [
+      "S28150",
+      "US8P150",
+      "USC8P150"
+    ]
+  },
+  {
+    "icon": {
+      "id": "a24ba258-e642-4082-b267-2cc8b49f29e3"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "US 8 60W",
+      "name": "Switch 8 60W"
+    },
+    "shortnames": [
+      "US8P60",
+      "USC8P60"
+    ]
+  },
+  {
+    "icon": {
+      "id": "7cc330a5-fc73-4af2-9b85-63fb1aaca62f"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "US L2 24 PoE",
+      "name": "Switch L2 24 PoE"
+    },
+    "shortnames": [
+      "US-L2-24-PoE",
+      "US24PL2"
+    ]
+  },
+  {
+    "icon": {
+      "id": "9a68edd9-6044-4837-b2de-f0152f1318d3"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "US L2 48 PoE",
+      "name": "Switch L2 48 PoE"
+    },
+    "shortnames": [
+      "US-L2-48-PoE",
+      "US48PL2"
+    ]
+  },
+  {
+    "icon": {
+      "id": "307961a5-cf3e-4845-8dec-a44ad9fba4de"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "US XG 6 PoE",
+      "name": "Switch XG 6 PoE"
+    },
+    "shortnames": [
+      "US-XG-6PoE",
+      "US6XG150"
+    ]
+  },
+  {
+    "icon": {
+      "id": "2c01c37d-e1ce-416e-bf8f-36f43dba11ce"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USG",
+      "name": "Security Gateway"
+    },
+    "shortnames": [
+      "UGWHD4"
+    ]
+  },
+  {
+    "icon": {
+      "id": "2c01c37d-e1ce-416e-bf8f-36f43dba11ce"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USG 3P",
+      "name": "Security Gateway 3P"
+    },
+    "shortnames": [
+      "UGW3"
+    ]
+  },
+  {
+    "icon": {
+      "id": "90deb2d1-7409-45b0-b640-8802ea75dcac"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USG Pro",
+      "name": "Security Gateway Professional"
+    },
+    "shortnames": [
+      "UGW4",
+      "USG PRO 4"
+    ]
+  },
+  {
+    "icon": {
+      "id": "3d869d6b-c11e-4653-802a-a4204637eb13"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USG XG 8",
+      "name": "Security Gateway XG 8"
+    },
+    "shortnames": [
+      "UGWXG"
+    ]
+  },
+  {
+    "icon": {
+      "id": "ea06a05c-0434-4dc1-b423-cff51ff5a017"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Lite 16 PoE",
+      "name": "Switch Lite 16 PoE"
+    },
+    "shortnames": [
+      "USL16LPB"
+    ]
+  },
+  {
+    "icon": {
+      "id": "c70814d7-8070-4237-8a9a-353f2f32484e"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW 16 PoE",
+      "name": "Switch 16 PoE"
+    },
+    "shortnames": [
+      "USL16PB"
+    ]
+  },
+  {
+    "icon": {
+      "id": "de10c0fe-f20e-43b7-9cb2-6c7e988aa0e2"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW 24",
+      "name": "Switch 24"
+    },
+    "shortnames": [
+      "USL24B"
+    ]
+  },
+  {
+    "icon": {
+      "id": "45ab1100-1a8a-4b7d-990d-444bbe7deac5"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW 24 PoE",
+      "name": "Switch 24 PoE"
+    },
+    "shortnames": [
+      "USL24PB"
+    ]
+  },
+  {
+    "icon": {
+      "id": "cbad0f50-58c8-45a6-b58c-72fdb4d18ac4"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW 48",
+      "name": "Switch 48"
+    },
+    "shortnames": [
+      "USL48B"
+    ]
+  },
+  {
+    "icon": {
+      "id": "896e056e-41cd-4484-88d5-9b34621d4c32"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW 48 PoE",
+      "name": "Switch 48 PoE"
+    },
+    "shortnames": [
+      "USL48PB"
+    ]
+  },
+  {
+    "icon": {
+      "id": "89ee387a-8871-4d62-9bcd-1f557ee1c97f"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Lite 8 PoE",
+      "name": "Switch Lite 8 PoE"
+    },
+    "shortnames": [
+      "USL8LPB"
+    ]
+  },
+  {
+    "icon": {
+      "id": "07cecefa-4be6-4a88-9a3c-8b2d910cd653"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Pro 24 PoE",
+      "name": "Switch Pro 24 PoE"
+    },
+    "shortnames": [
+      "USLP24P"
+    ]
+  },
+  {
+    "icon": {
+      "id": "848c6a6d-573e-48d4-8c10-e011da91a2db"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Pro 48 PoE",
+      "name": "Switch Pro 48 PoE"
+    },
+    "shortnames": [
+      "USLP48P"
+    ]
+  },
+  {
+    "icon": {
+      "id": "288a0546-25b7-4090-a27c-f53bfd0b3b3b"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Pro 8 PoE",
+      "name": "Switch Pro 8 PoE"
+    },
+    "shortnames": [
+      "USLP8P"
+    ]
+  },
+  {
+    "icon": {
+      "id": "7a060fbb-8a8b-471c-9f57-da477ff3e04e"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Flex Mini",
+      "name": "Switch Flex Mini"
+    },
+    "shortnames": [
+      "USMINI2"
+    ]
+  },
+  {
+    "icon": {
+      "id": "003b1c55-30f1-4e69-8e80-8a1ea9e61f0b"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USP PDU HD",
+      "name": "Power Distribution HD"
+    },
+    "shortnames": [
+      "USPPDUHD"
+    ]
+  },
+  {
+    "icon": {
+      "id": "17b0dc97-ef92-4ffa-a2e0-cbc927470783"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USP PDU Pro",
+      "name": "Power Distribution Professional"
+    },
+    "shortnames": [
+      "USP-PDU-Pro",
+      "USPPDUP"
+    ]
+  },
+  {
+    "icon": {
+      "id": "4d043035-2ad5-442a-a4e3-474db720dd6d"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USP Plug",
+      "name": "SmartPower Plug"
+    },
+    "shortnames": [
+      "UP1"
+    ]
+  },
+  {
+    "icon": {
+      "id": "590a85a9-932a-43eb-b0ae-7be874005a7c"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USP RPS",
+      "name": "Power Backup"
+    },
+    "shortnames": [
+      "USP-RPS",
+      "USPRPS"
+    ]
+  },
+  {
+    "icon": {
+      "id": "bfee7310-98ff-4c50-bae9-e409006fbc05"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USP RSP Pro",
+      "name": "Power Backup Professional"
+    },
+    "shortnames": [
+      "USP-RPS-Pro",
+      "USPRPSP"
+    ]
+  },
+  {
+    "icon": {
+      "id": "d420b791-9ed3-4f97-b5d2-d8d9530be6fe"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USP Strip",
+      "name": "SmartPower Strip"
+    },
+    "shortnames": [
+      "UP6"
+    ]
+  },
+  {
+    "icon": {
+      "id": "c70814d7-8070-4237-8a9a-353f2f32484e"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW 16 PoE",
+      "name": "Switch 16 PoE"
+    },
+    "shortnames": [
+      "USL16P",
+      "USW-16-PoE"
+    ]
+  },
+  {
+    "icon": {
+      "id": "de10c0fe-f20e-43b7-9cb2-6c7e988aa0e2"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW 24",
+      "name": "Switch 24"
+    },
+    "shortnames": [
+      "USL24"
+    ]
+  },
+  {
+    "icon": {
+      "id": "45ab1100-1a8a-4b7d-990d-444bbe7deac5"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW 24 PoE",
+      "name": "Switch 24 PoE"
+    },
+    "shortnames": [
+      "USL24P",
+      "USW-24-PoE",
+      "UniFi Switch PoE 24"
+    ]
+  },
+  {
+    "icon": {
+      "id": "cbad0f50-58c8-45a6-b58c-72fdb4d18ac4"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW 48",
+      "name": "Switch 48"
+    },
+    "shortnames": [
+      "USL48"
+    ]
+  },
+  {
+    "icon": {
+      "id": "896e056e-41cd-4484-88d5-9b34621d4c32"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW 48 PoE",
+      "name": "Switch 48 PoE"
+    },
+    "shortnames": [
+      "USL48P",
+      "USW-48-PoE",
+      "UniFi Switch PoE 48"
+    ]
+  },
+  {
+    "icon": {
+      "id": "89b20796-b1ca-4d89-85b3-78df32242d52"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Aggregation",
+      "name": "Switch Aggregation"
+    },
+    "shortnames": [
+      "USL8A"
+    ]
+  },
+  {
+    "icon": {
+      "id": "e9237854-a073-4ce7-a386-c8bb83dab97b"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Enterprise 24 PoE",
+      "name": "Switch Enterprise 24 PoE"
+    },
+    "shortnames": [
+      "US624P"
+    ]
+  },
+  {
+    "icon": {
+      "id": "b3208e53-4726-48da-aa45-cc437d961616"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Enterprise 48 PoE",
+      "name": "Switch Enterprise 48 PoE"
+    },
+    "shortnames": [
+      "US648P",
+      "UniFi Enterprise Switch 48 PoE"
+    ]
+  },
+  {
+    "icon": {
+      "id": "08201357-3e85-4e7f-b0d9-400f2d871441"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Enterprise 8 PoE",
+      "name": "Switch Enterprise 8 PoE"
+    },
+    "shortnames": [
+      "US68P"
+    ]
+  },
+  {
+    "icon": {
+      "id": "50c43208-6f5a-4a93-95fe-e48151e28bfc"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Flex",
+      "name": "Switch Flex"
+    },
+    "shortnames": [
+      "USF5P"
+    ]
+  },
+  {
+    "icon": {
+      "id": "7a060fbb-8a8b-471c-9f57-da477ff3e04e"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Flex Mini",
+      "name": "Switch Flex Mini"
+    },
+    "shortnames": [
+      "USMINI",
+      "USW-Mini"
+    ]
+  },
+  {
+    "icon": {
+      "id": "494c797e-85b2-4be5-9d6c-15f05c5e034d"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Flex XG",
+      "name": "Switch Flex XG"
+    },
+    "shortnames": [
+      "USFXG"
+    ]
+  },
+  {
+    "icon": {
+      "id": "ce4b6415-4082-40f8-9539-74880f84db51"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Industrial",
+      "name": "Switch Industrial"
+    },
+    "shortnames": [
+      "USC8P450"
+    ]
+  },
+  {
+    "icon": {
+      "id": "6e492722-c7a2-4945-a411-5db5e77b8519"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Leaf",
+      "name": "Switch Leaf"
+    },
+    "shortnames": [
+      "UDC48X6",
+      "USW-Leaf"
+    ]
+  },
+  {
+    "icon": {
+      "id": "ea06a05c-0434-4dc1-b423-cff51ff5a017"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Lite 16 PoE",
+      "name": "Switch Lite 16 PoE"
+    },
+    "shortnames": [
+      "USL16LP"
+    ]
+  },
+  {
+    "icon": {
+      "id": "89ee387a-8871-4d62-9bcd-1f557ee1c97f"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Lite 8 PoE",
+      "name": "Switch Lite 8 PoE"
+    },
+    "shortnames": [
+      "USL8LP"
+    ]
+  },
+  {
+    "icon": {
+      "id": "79e60ea3-2e16-4e2a-8da7-28e1d8e4689e"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Mission Critical",
+      "name": "Switch Mission Critical"
+    },
+    "shortnames": [
+      "USL8MP"
+    ]
+  },
+  {
+    "icon": {
+      "id": "519f89a7-e6c6-4dd1-8d7e-fa79085d0899"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Pro 24",
+      "name": "Switch Professional 24"
+    },
+    "shortnames": [
+      "US24PRO2"
+    ]
+  },
+  {
+    "icon": {
+      "id": "07cecefa-4be6-4a88-9a3c-8b2d910cd653"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Pro 24 PoE",
+      "name": "Switch Professional 24 PoE"
+    },
+    "shortnames": [
+      "US24PRO"
+    ]
+  },
+  {
+    "icon": {
+      "id": "6e2e6a89-41d2-4b76-8d2d-d0b6910ccc06"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Pro 48",
+      "name": "Switch Professional 48"
+    },
+    "shortnames": [
+      "US48PRO2"
+    ]
+  },
+  {
+    "icon": {
+      "id": "848c6a6d-573e-48d4-8c10-e011da91a2db"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Pro 48 PoE",
+      "name": "Switch Professional 48 PoE"
+    },
+    "shortnames": [
+      "US48PRO",
+      "USW-Pro-48-PoE"
+    ]
+  },
+  {
+    "icon": {
+      "id": "8795a92b-e57e-4bb3-9e7f-06d90b85c31b"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Pro Aggregation",
+      "name": "Switch Professional Aggregation"
+    },
+    "shortnames": [
+      "USAGGPRO",
+      "USW-Pro-Aggregation"
+    ]
+  },
+  {
+    "icon": {
+      "id": "5e78ed23-b415-49d6-836a-d9dc93cdfe7c"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Pro Max 24",
+      "name": "Switch Pro Max 24"
+    },
+    "shortnames": [
+      "USPM24"
+    ]
+  },
+  {
+    "icon": {
+      "id": "e7914154-3da6-4307-af17-6e52c77bd667"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Pro Max 24 PoE",
+      "name": "Switch Pro Max 24 PoE"
+    },
+    "shortnames": [
+      "USPM24P"
+    ]
+  },
+  {
+    "icon": {
+      "id": "0de42198-c319-4e75-a5af-38b0c6c67cda"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Pro Max 48",
+      "name": "Switch Pro Max 48"
+    },
+    "shortnames": [
+      "USPM48"
+    ]
+  },
+  {
+    "icon": {
+      "id": "de9966db-056b-4cf1-93f7-341723d5bd6a"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Pro Max 48 PoE",
+      "name": "Switch Pro Max 48 PoE"
+    },
+    "shortnames": [
+      "USPM48P"
+    ]
+  },
+  {
+    "icon": {
+      "id": "9b30cce4-86f7-4dba-accc-9b5f14686c28"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Ultra",
+      "name": "Switch Ultra"
+    },
+    "shortnames": [
+      "USM8P"
+    ]
+  },
+  {
+    "icon": {
+      "id": "d6ff73bd-0230-4205-ab47-a8a43eec4b65"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Ultra 210W",
+      "name": "Switch Ultra 210W"
+    },
+    "shortnames": [
+      "USM8P210"
+    ]
+  },
+  {
+    "icon": {
+      "id": "cc5ffb80-ffc7-4d2a-a387-61e8323aaea8"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "USW Ultra 60W",
+      "name": "Switch Ultra 60W"
+    },
+    "shortnames": [
+      "USM8P60"
+    ]
+  },
+  {
+    "icon": {
+      "id": "79f05736-4313-45fa-8bde-575c3fdf5850"
+    },
+    "line": {
+      "id": "unifi-talk",
+      "name": "UniFi Talk"
+    },
+    "product": {
+      "abbrev": "UT ATA",
+      "name": "Talk Telephone Adapter"
+    },
+    "shortnames": [
+      "UT-ATA"
+    ]
+  },
+  {
+    "icon": {
+      "id": "9dc98aa3-aa7d-4ad2-9e7c-e76bb2fbe263"
+    },
+    "line": {
+      "id": "unifi-talk",
+      "name": "UniFi Talk"
+    },
+    "product": {
+      "abbrev": "UT Conference",
+      "name": "Talk Conference Speaker"
+    },
+    "shortnames": [
+      "UT-CONFERENCE"
+    ]
+  },
+  {
+    "icon": {
+      "id": "349a39cf-90f5-46df-9f79-b10451811ce9"
+    },
+    "line": {
+      "id": "unifi-talk",
+      "name": "UniFi Talk"
+    },
+    "product": {
+      "abbrev": "UTP Flex",
+      "name": "Phone Flex"
+    },
+    "shortnames": [
+      "UTP-Flex",
+      "UVP-FLEX"
+    ]
+  },
+  {
+    "icon": {
+      "id": "1fefc1c3-ee80-4df7-a82b-8bbf6c0ba1da"
+    },
+    "line": {
+      "id": "unifi-talk",
+      "name": "UniFi Talk"
+    },
+    "product": {
+      "abbrev": "UTP G3 Touch Pro",
+      "name": "Phone G3 Touch Pro"
+    },
+    "shortnames": [
+      "UTP-G3-PRO"
+    ]
+  },
+  {
+    "icon": {
+      "id": "00dbf463-a7d4-4052-9bda-c437186a8312"
+    },
+    "line": {
+      "id": "unifi-talk",
+      "name": "UniFi Talk"
+    },
+    "product": {
+      "abbrev": "UTP G3 Touch Wall",
+      "name": "Phone G3 Touch Wall"
+    },
+    "shortnames": [
+      "UTP-G3-WALL"
+    ]
+  },
+  {
+    "icon": {
+      "id": "401dccb4-175b-4933-9e4d-c53668885a96"
+    },
+    "line": {
+      "id": "unifi-talk",
+      "name": "UniFi Talk"
+    },
+    "product": {
+      "abbrev": "UTP Touch",
+      "name": "Phone Touch"
+    },
+    "shortnames": [
+      "UTP-Touch",
+      "UVP-TOUCH",
+      "UVP-Touch"
+    ]
+  },
+  {
+    "icon": {
+      "id": "c582d6a6-6918-44da-a897-a5a8c9f5a201"
+    },
+    "line": {
+      "id": "unifi-talk",
+      "name": "UniFi Talk"
+    },
+    "product": {
+      "abbrev": "UTP Touch W",
+      "name": "Phone Touch White"
+    },
+    "shortnames": [
+      "UTP-Touch-W",
+      "UVP-TOUCH-W",
+      "UVP-Touch-W"
+    ]
+  },
+  {
+    "icon": {
+      "id": "a45dd2dd-7781-4d82-bee9-9e71ebcb9c08"
+    },
+    "line": {
+      "id": "unifi-talk",
+      "name": "UniFi Talk"
+    },
+    "product": {
+      "abbrev": "UTP Touch Max",
+      "name": "Phone Touch Max"
+    },
+    "shortnames": [
+      "UTP-Touch-Max",
+      "UVP-TOUCH-MAX",
+      "UVP-TouchMax"
+    ]
+  },
+  {
+    "icon": {
+      "id": "47a8f078-4c85-4ffd-b78b-6c39bbb349b2"
+    },
+    "line": {
+      "id": "unifi-talk",
+      "name": "UniFi Talk"
+    },
+    "product": {
+      "abbrev": "UTP Touch Max W",
+      "name": "Phone Touch Max White"
+    },
+    "shortnames": [
+      "UTP-TouchMax-W",
+      "UVP-TouchMax-W"
+    ]
+  },
+  {
+    "icon": {
+      "id": "19294b80-0922-4a83-b5c5-1022ca22764a"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "AI 360",
+      "name": "Camera AI 360"
+    },
+    "shortnames": [
+      "UVC AI 360",
+      "UVC G4 AI360"
+    ]
+  },
+  {
+    "icon": {
+      "id": "f09d42d0-dbd4-4f15-a014-5a770daf4f96"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "AI Bullet",
+      "name": "Camera AI Bullet"
+    },
+    "shortnames": [
+      "UVC AI Bullet",
+      "UVC-AI-Bullet"
+    ]
+  },
+  {
+    "icon": {
+      "id": "a023dcd5-610a-4b78-a9ad-ec3a4a3dd9ae"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "AI DSLR",
+      "name": "Camera AI DSLR"
+    },
+    "shortnames": [
+      "UVC AI DSLR",
+      "UVC DSLR BULLET",
+      "UVC-DSLR-Bullet"
+    ]
+  },
+  {
+    "icon": {
+      "id": "7815b053-0e66-4bf5-98ec-5de15a6d4521"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "AI Pro",
+      "name": "Camera AI Professional"
+    },
+    "shortnames": [
+      "UVC AI PRO",
+      "UVC AI Pro",
+      "UVC-AI-Pro"
+    ]
+  },
+  {
+    "icon": {
+      "id": "24730f33-2c48-4ca8-9e2d-db8f31176abb"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "AI Pro",
+      "name": "Camera AI Professional"
+    },
+    "shortnames": [
+      "UVC-AI-Pro-White"
+    ]
+  },
+  {
+    "icon": {
+      "id": "7ed56a98-c92c-43b6-bb0e-99c39f5cae7c"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "AI Theta",
+      "name": "Camera AI Theta"
+    },
+    "shortnames": [
+      "UVC AI THETA",
+      "UVC AI Theta"
+    ]
+  },
+  {
+    "icon": {
+      "id": "aed32e7e-5504-4c1f-9a44-0eef26b32d90"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G2 Dome",
+      "name": "Camera G2 Dome"
+    },
+    "shortnames": [
+      "UVC Dome"
+    ]
+  },
+  {
+    "icon": {
+      "id": "87755bb9-00d4-4790-ad1b-15072b04e9a3"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "Camera G2",
+      "name": "Camera G2"
+    },
+    "shortnames": [
+      "UVC G2 Camera"
+    ]
+  },
+  {
+    "icon": {
+      "id": "eb3db5d7-b6d4-4da6-85f7-ee579dedea0c"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G3 AF",
+      "name": "Camera G3 AF"
+    },
+    "shortnames": [
+      "UniFi Video Camera G3 AF"
+    ]
+  },
+  {
+    "icon": {
+      "id": "fd65593a-2cbe-456c-ab39-f9f61f067287"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G3 Bullet",
+      "name": "Camera G3 Bullet"
+    },
+    "shortnames": [
+      "UVC",
+      "UVC G3",
+      "UniFi Protect G3",
+      "UniFi Protect G3 Bullet"
+    ]
+  },
+  {
+    "icon": {
+      "id": "fee1fa20-77ae-4af5-ae24-b3c9afbd0000"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G3 Dome",
+      "name": "Camera G3 Dome"
+    },
+    "shortnames": [
+      "UVC G3 Dome"
+    ]
+  },
+  {
+    "icon": {
+      "id": "6bfdcbc0-4ed5-47af-a840-4d7003017aee"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G3 Flex",
+      "name": "Camera G3 Flex"
+    },
+    "shortnames": [
+      "UVC G3 Flex"
+    ]
+  },
+  {
+    "icon": {
+      "id": "50c18cf8-6de0-4961-8a0e-95d65a6d31fe"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G3 Instant",
+      "name": "Camera G3 Instant"
+    },
+    "shortnames": [
+      "UVC G3 Instant",
+      "UVC-G3-INS"
+    ]
+  },
+  {
+    "icon": {
+      "id": "aea0b2dd-53a7-4a01-9057-d4278f7430bc"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G3 Micro",
+      "name": "Camera G3 Micro"
+    },
+    "shortnames": [
+      "UVC G3 Micro"
+    ]
+  },
+  {
+    "icon": {
+      "id": "3847c358-d33c-4875-9422-01a8af47fbe8"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G3 Mini",
+      "name": "Camera G3 Mini"
+    },
+    "shortnames": [
+      "UVC G3 Mini"
+    ]
+  },
+  {
+    "icon": {
+      "id": "f1d33285-d84b-4262-b3cc-daaee17d386a"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G3 Pro",
+      "name": "Camera G3 Professional"
+    },
+    "shortnames": [
+      "UVC G3 Pro"
+    ]
+  },
+  {
+    "icon": {
+      "id": "f7d8d4e4-243c-45c0-996d-9d6244cde198"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G4 Bullet",
+      "name": "Camera G4 Bullet"
+    },
+    "shortnames": [
+      "UVC G4 Bullet",
+      "UVC-G4-BULLET"
+    ]
+  },
+  {
+    "icon": {
+      "id": "cd0e22da-56d4-43a7-b8c1-b40d04e6c231"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G4 Dome",
+      "name": "Camera G4 Dome"
+    },
+    "shortnames": [
+      "UVC G4 Dome",
+      "UVC-G4-DOME"
+    ]
+  },
+  {
+    "icon": {
+      "id": "b854f2e4-5c06-4eb2-9e19-7829db65db8d"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G4 Doorbell",
+      "name": "G4 Doorbell"
+    },
+    "shortnames": [
+      "UVC G4 Doorbell",
+      "UVC-G4-DoorBell"
+    ]
+  },
+  {
+    "icon": {
+      "id": "b0bd9368-2e24-4a35-9e3d-ffe24841348c"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G4 Doorbell Pro",
+      "name": "G4 Doorbell Professional"
+    },
+    "shortnames": [
+      "UVC G4 Doorbell Pro",
+      "UVC-G4-Doorbell-PRO"
+    ]
+  },
+  {
+    "icon": {
+      "id": "240ad016-e0c9-4377-8a0e-d09c563ab89a"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G4 Doorbell Pro",
+      "name": "G4 Doorbell Professional"
+    },
+    "shortnames": [
+      "UVC-G4-Doorbell-Pro-White"
+    ]
+  },
+  {
+    "icon": {
+      "id": "4080886f-4d9e-4071-8552-a893097999e2"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G4 Doorbell Pro PoE",
+      "name": "G4 Doorbell Professional PoE"
+    },
+    "shortnames": [
+      "UVC G4 Doorbell Pro PoE",
+      "UVC-G4-Doorbell-Pro-PoE"
+    ]
+  },
+  {
+    "icon": {
+      "id": "7a0c2a5f-0b68-464b-aa2f-4f54e58bc563"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G4 Doorbell Pro PoE",
+      "name": "G4 Doorbell Professional PoE"
+    },
+    "shortnames": [
+      "UVC-G4-Doorbell-Pro-PoE-White"
+    ]
+  },
+  {
+    "icon": {
+      "id": "8eaf8dfd-b33d-4e19-92fc-332d74832301"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G4 Instant",
+      "name": "Camera G4 Instant"
+    },
+    "shortnames": [
+      "UVC G4 Instant",
+      "UVC-G4-INS"
+    ]
+  },
+  {
+    "icon": {
+      "id": "37780143-f874-4b07-bad7-d350982ee79a"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G4 Pro",
+      "name": "Camera G4 Professional"
+    },
+    "shortnames": [
+      "UVC G4 Pro"
+    ]
+  },
+  {
+    "icon": {
+      "id": "6a69b0cd-116e-4d27-8d1d-64d28cf802da"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G4 PTZ",
+      "name": "Camera G4 PTZ"
+    },
+    "shortnames": [
+      "UVC G4 PTZ",
+      "UVC-G4-PTZ"
+    ]
+  },
+  {
+    "icon": {
+      "id": "07d3ce1a-9b17-456a-aef0-f7e66c9c380f"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G5 Bullet",
+      "name": "Camera G5 Bullet"
+    },
+    "shortnames": [
+      "UVC G5 Bullet",
+      "UVC-G5-Bullet"
+    ]
+  },
+  {
+    "icon": {
+      "id": "4ea46db7-8408-4100-9e70-d76bad57b8d4"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G5 Dome",
+      "name": "Camera G5 Dome"
+    },
+    "shortnames": [
+      "UVC G5 Dome",
+      "UVC-G5-Dome"
+    ]
+  },
+  {
+    "icon": {
+      "id": "8d63b7a9-0a75-44e3-b8f9-352669e6d7c9"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G5 Flex",
+      "name": "Camera G5 Flex"
+    },
+    "shortnames": [
+      "UVC G5 Flex",
+      "UVC-G5-Flex"
+    ]
+  },
+  {
+    "icon": {
+      "id": "3b44569c-2d21-4089-87b3-856847c030e1"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G5 Pro",
+      "name": "Camera G5 Professional"
+    },
+    "shortnames": [
+      "UVC G5 Pro",
+      "UVC-G5-Pro"
+    ]
+  },
+  {
+    "icon": {
+      "id": "aea0b2dd-53a7-4a01-9057-d4278f7430bc"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G1 Micro",
+      "name": "Camera Micro"
+    },
+    "shortnames": [
+      "UVC Micro",
+      "UniFi Video Camera Micro"
+    ]
+  },
+  {
+    "icon": {
+      "id": "3b56db1a-c987-49d4-9c45-409179d7fc03"
+    },
+    "line": {
+      "id": "unifi-protect",
+      "name": "UniFi Protect"
+    },
+    "product": {
+      "abbrev": "G1 Pro",
+      "name": "Camera G1 Professional"
+    },
+    "shortnames": [
+      "UVC Pro"
+    ]
+  },
+  {
+    "icon": {
+      "id": "f2311f6b-b1ac-4023-834c-41b46d546392"
+    },
+    "line": {
+      "id": "unifi-talk",
+      "name": "UniFi Talk"
+    },
+    "product": {
+      "abbrev": "UT Phone",
+      "name": "Talk Phone"
+    },
+    "shortnames": [
+      "UP5",
+      "UP5C",
+      "UP5c"
+    ]
+  },
+  {
+    "icon": {
+      "id": "44725643-b3d4-434f-bf9e-f319e5dd0019"
+    },
+    "line": {
+      "id": "unifi-talk",
+      "name": "UniFi Talk"
+    },
+    "product": {
+      "abbrev": "UTP Executive",
+      "name": "Phone Executive"
+    },
+    "shortnames": [
+      "UP7",
+      "UP7C",
+      "UP7c"
+    ]
+  },
+  {
+    "icon": {
+      "id": "453ee99b-26c3-479d-bf1e-3b7ee548cfcb"
+    },
+    "line": {
+      "id": "unifi-talk",
+      "name": "UniFi Talk"
+    },
+    "product": {
+      "abbrev": "UTP Pro",
+      "name": "Phone Professional"
+    },
+    "shortnames": [
+      "UP5T",
+      "UP5t",
+      "UP5TC",
+      "UP5tc"
+    ]
+  },
+  {
+    "icon": {
+      "id": "f2311f6b-b1ac-4023-834c-41b46d546392"
+    },
+    "line": {
+      "id": "unifi-talk",
+      "name": "UniFi Talk"
+    },
+    "product": {
+      "abbrev": "UT Phone X",
+      "name": "Talk Phone X"
+    },
+    "shortnames": [
+      "UP4"
+    ]
+  },
+  {
+    "icon": {
+      "id": "561083bd-597d-4611-adc8-b674a43708a1"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UWB XG",
+      "name": "WiFi BaseStation XG"
+    },
+    "shortnames": [
+      "UXSDM"
+    ]
+  },
+  {
+    "icon": {
+      "id": "a7f55606-1b20-4393-8ad2-5bd55db38b2f"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UWB XG",
+      "name": "WiFi BaseStation XG"
+    },
+    "shortnames": [
+      "UXBSDM"
+    ]
+  },
+  {
+    "icon": {
+      "id": "b3bbac27-aa9d-47a6-8556-676c4687c315"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "Express",
+      "name": "Express"
+    },
+    "shortnames": [
+      "UEX",
+      "UX"
+    ]
+  },
+  {
+    "icon": {
+      "id": "ce4be4fa-359e-4917-9e62-3245b1c784ad"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UXG Lite",
+      "name": "Gateway Lite"
+    },
+    "shortnames": [
+      "UXG"
+    ]
+  },
+  {
+    "icon": {
+      "id": "80eb09d7-64db-491d-890d-28d555db9b24"
+    },
+    "line": {
+      "id": "unifi-network",
+      "name": "UniFi"
+    },
+    "product": {
+      "abbrev": "UXG Pro",
+      "name": "Gateway Pro"
+    },
+    "shortnames": [
+      "UXG-PRO",
+      "UXGPRO"
+    ]
+  },
+  {
+    "icon": {
+      "id": "0de45e1b-496b-4f71-ae09-969471e310b7"
+    },
+    "line": {
+      "id": "wifiman",
+      "name": "WiFiMan"
+    },
+    "product": {
+      "abbrev": "WM Wizard",
+      "name": "WiFiman Wizard"
+    },
+    "shortnames": [
+      "WM-W"
+    ]
+  },
+  {
+    "icon": {
+      "id": "5c3bb219-3e97-4333-9cef-d585c1f2a588"
+    },
+    "line": {
+      "id": "wave",
+      "name": "Wave"
+    },
+    "product": {
+      "abbrev": "Wave AP Micro",
+      "name": "Wave Micro"
+    },
+    "shortnames": [
+      "Wave-AP-Micro"
+    ]
+  },
+  {
+    "icon": {
+      "id": "aabde47f-3969-455e-bd3b-6458bf774184"
+    },
+    "line": {
+      "id": "wave",
+      "name": "Wave"
+    },
+    "product": {
+      "abbrev": "Wave Pro",
+      "name": "Wave Professional"
+    },
+    "shortnames": [
+      "Wave-Pro"
+    ]
+  },
+  {
+    "icon": {
+      "id": "25d04bd0-3ca9-43a2-8dc0-e27992b573ef"
+    },
+    "line": {
+      "id": "wave",
+      "name": "Wave"
+    },
+    "product": {
+      "abbrev": "Wave AP",
+      "name": "Wave Access Point"
+    },
+    "shortnames": [
+      "AirFiber Wave AP",
+      "Wave-AP",
+      "WaveAP"
+    ]
+  },
+  {
+    "icon": {
+      "id": "aca9cae2-a724-45c3-9a5c-49eeb00a7795"
+    },
+    "line": {
+      "id": "mfi",
+      "name": "mFi"
+    },
+    "product": {
+      "abbrev": "Dimmer Switch",
+      "name": "Dimmer Switch"
+    },
+    "shortnames": [
+      "IWD1U",
+      "IWS1U"
+    ]
+  },
+  {
+    "icon": {
+      "id": "66ea8aa5-decc-4ff5-bb02-10cfca7ec924"
+    },
+    "line": {
+      "id": "mfi",
+      "name": "mFi"
+    },
+    "product": {
+      "abbrev": "Dimmer Switch",
+      "name": "Dimmer Switch"
+    },
+    "shortnames": [
+      "mFI mSwitch Black"
+    ]
+  },
+  {
+    "icon": {
+      "id": "248b9b7e-775f-40aa-9023-9ea2bf99141e"
+    },
+    "line": {
+      "id": "mfi",
+      "name": "mFi"
+    },
+    "product": {
+      "abbrev": "mFI In-Wall Outlet Black",
+      "name": "mFI In-Wall Outlet Black"
+    },
+    "shortnames": [
+      "mFI In-Wall Outlet Black"
+    ]
+  },
+  {
+    "icon": {
+      "id": "c536174d-e0b7-4241-96bd-2c8fb532d668"
+    },
+    "line": {
+      "id": "airmax",
+      "name": "airMAX"
+    },
+    "product": {
+      "abbrev": "PicoStation M2",
+      "name": "PicoStation M2"
+    },
+    "shortnames": [
+      "pS2-HP"
+    ]
+  }
+]

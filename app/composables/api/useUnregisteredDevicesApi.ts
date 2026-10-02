@@ -42,6 +42,9 @@ export function useUnregisteredDevicesApi() {
       device_name: string
       access_point?: string | null
       notes?: string
+      // Optional: left out/blank, the backend uses the model the device itself
+      // reported (sighting.detected_model). Send it to correct a wrong detection.
+      model?: string
     },
     confirmReplace = false,
   ) {
@@ -86,5 +89,36 @@ export function useUnregisteredDevicesApi() {
     return apiFetch<UnregisteredDeviceSighting>(`/api/unregistered-devices/${id}/redetect/`, { method: 'POST' })
   }
 
-  return { listSightings, registerSighting, registerSightingAsAccessPoint, discardSighting, redetectSighting }
+  // POST /api/unregistered-devices/{id}/adopt/ — only for source: 'ap_scan'
+  // ("unknown device") sightings. Pushes an adoption request to a device
+  // we've only ever SEEN (via an access point's discovery scan), never
+  // heard from directly, using that access point's own connection as a
+  // relay. Does NOT resolve the sighting (status stays PENDING/unchanged) -
+  // adopt is a separate, retryable step from registerSighting above; check
+  // the returned adoption_status ('adopted' | 'failed') rather than relying
+  // on this not throwing. A password given here for an AP that doesn't have
+  // one saved yet gets saved automatically, even if the adopt call itself
+  // then fails - so a retry never has to ask for it again.
+  function adoptSighting(
+    id: string,
+    payload: {
+      ap_username?: string
+      ap_password?: string
+      device_username?: string
+      device_password?: string
+      autogenerate_device_password?: boolean
+      https_port?: number
+      target_path?: string
+    },
+  ) {
+    return apiFetch<UnregisteredDeviceSighting>(`/api/unregistered-devices/${id}/adopt/`, {
+      method: 'POST',
+      body: payload,
+    })
+  }
+
+  return {
+    listSightings, registerSighting, registerSightingAsAccessPoint, discardSighting, redetectSighting,
+    adoptSighting,
+  }
 }

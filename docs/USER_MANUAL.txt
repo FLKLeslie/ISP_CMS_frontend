@@ -1,5 +1,5 @@
 ISP MANAGEMENT SYSTEM - USER MANUAL
-Last updated: 2026-09-25
+Last updated: 2026-10-02
 =================================================================
 
 This guide explains how to use the system. There are two kinds of
@@ -36,8 +36,14 @@ page).
 PART 2: FOR ADMINISTRATORS
 =================================================================
 The left-hand menu has: Dashboard, Customers, Subscriptions, Payments,
-Revenue, Devices, Access Points, MikroTik, Suggestions, Announcements,
-Notifications.
+Revenue, Devices, Unregistered Devices, Device Map, Access Points,
+MikroTik Routers, Suggestions, Announcements, Notifications. Each item
+has its own icon so you can find it at a glance: Dashboard (panels),
+Customers (people), Subscriptions (calendar and clock), Payments (card),
+Revenue (rising line), Devices (radio), Unregistered Devices (scanner),
+Device Map (map pin), Access Points (mast), MikroTik Routers (router),
+Suggestions (light bulb), Announcements (megaphone), Notifications
+(bell).
 
 -----------------------------------------------------------------
 2.1 Dashboard
@@ -60,11 +66,26 @@ Tap a tile to jump to the relevant page.
 -----------------------------------------------------------------
 2.2 Customers
 -----------------------------------------------------------------
-List of every customer, searchable, with their status (Active /
-Suspended) and whether they currently have an active plan.
+List of every customer. Search by name, email, phone number, company or
+router MAC address, and filter by status (Active / Suspended) or type
+(Residential / Business). Each row shows who they are and how to reach
+them, where they are (with a landmark if one was recorded), their device
+(its picture and product name), their current plan and when it ends
+(or Blocked / Expired / No plan), whether their router is online, and
+their account status.
 
-Open a customer to see their detail page:
-  - Profile details (name, email, phone, address)
+Open a customer to see their detail page. On a wide screen it fills the
+width, with the account and current service on the left and history,
+payments and suggestions on the right; on a smaller screen it is a single
+column:
+  - Profile details (name, email, phone, alternate phone, address,
+    landmark, and whether they are a residential or business customer -
+    with the company name for businesses). "Edit" lets you change all of
+    these.
+  - Internal notes - a private note for administrators only. The customer
+    never sees it. Edit it from the same Edit form.
+  - Devices - the customer's own radio(s) with their picture, product
+    name and whether they are online; click one to open it.
   - Current subscription - their active plan if they have one, or their
     most recent Blocked plan with a "Resume subscription" option
   - Subscription history - every plan they've ever had
@@ -145,12 +166,49 @@ a table, and there's a CSV download if you want the raw data elsewhere.
 2.6 Devices
 -----------------------------------------------------------------
   Devices (list)     - every registered customer device (PowerBeam
-                        receiver), searchable, with online/offline
-                        status.
+                        receiver), searchable (name, MAC, serial number,
+                        customer) and filterable by model, with
+                        online/offline status. Each row shows the
+                        device's picture and product name, its customer
+                        and phone number, MAC address and serial number,
+                        access point, firmware, and - while online - its
+                        last signal reading.
   Device detail      - live status, signal, uptime and other metrics
                         for one device, refreshed automatically. A
                         "Console" button (top right) opens a live shell
-                        session on the device - see below.
+                        session on the device, and a "Password" button
+                        lets you view, generate, or set its stored admin
+                        password - see below for both. The page is
+                        arranged in cards:
+                          Hardware - what the unit physically is:
+                            product, model, product line, MAC address,
+                            serial number, hostname, hardware and
+                            firmware version. "Edit" lets you correct
+                            the model, MAC address, serial number and
+                            versions. The product name, product line
+                            and picture can't be edited on their own:
+                            they are worked out from the model, so
+                            fixing a wrong model fixes them too.
+                            "Detect from device" asks the device itself
+                            (it must be online) and fills in its model,
+                            hostname, IP address and network settings -
+                            replacing what was stored. This also happens
+                            automatically, once, for a device that is
+                            missing them.
+                          Network - the device's IP address, whether it
+                            is static or DHCP, subnet mask, default
+                            gateway, DNS servers and time zone, as the
+                            device reports them. Display only. If it
+                            says they haven't been read yet, use
+                            "Detect from device".
+                          Records - our own bookkeeping: device name,
+                            record status, installation date, location
+                            note, network device ID and free-text notes.
+                            "Edit" changes them.
+                        The device's picture is shown at the top of the
+                        page and in every list. If the model isn't one
+                        we have a picture for, a generic radio icon is
+                        shown instead.
   Configure          - push configuration to a device (currently
                         limited to what the hardware layer supports -
                         e.g. SSID, reboot scheduling).
@@ -158,20 +216,35 @@ a table, and there's a CSV download if you want the raw data elsewhere.
   Map                - every device plotted on a map, if location data
                         is available for it.
   Unregistered       - devices that have connected to the network but
-                        aren't in the system yet. For each one, the
-                        system tries to work out whether it's an Access
-                        Point or a Station (a customer's receiver) and
-                        what it's called; if it can't tell, it says so
-                        ("Role uncertain") and you can either check
-                        again or decide yourself.
+                        aren't in the system yet, PLUS devices flagged
+                        "Unknown device" - these have never contacted us
+                        directly at all; one of our access points spotted
+                        them sitting on its network during a scan (this
+                        happens automatically every couple of minutes, or
+                        click "Scan now" on an access point to check
+                        immediately - see 2.7). For a normal (non-unknown)
+                        entry, the system tries to work out whether it's
+                        an Access Point or a Station (a customer's
+                        receiver) and what it's called; if it can't tell,
+                        it says so ("Role uncertain") and you can either
+                        check again or decide yourself.
                           - "Register AP" files it as institution
                             infrastructure (a tower-mounted radio).
                           - "Register to a customer" links it to a
                             specific customer as their device.
                         You can rename it before registering either way.
+                        Each entry shows its picture and product name.
+                        When registering a customer device, the Model
+                        box is filled in from what the device reported -
+                        correct it if it looks wrong; it is saved on the
+                        device along with its picture.
                         "Discard" removes it from the list without
                         registering it (it'll reappear if it connects
                         again later).
+                        An "Unknown device" also gets an "Adopt" button -
+                        see below - since it isn't under our management
+                        at all yet, so there's nothing to register until
+                        that succeeds and it starts reporting to us.
   Console            - a live command-line session directly on the
                         device's own shell, opened from the "Console"
                         button on its detail page. Enter the device's
@@ -191,13 +264,57 @@ a table, and there's a CSV download if you want the raw data elsewhere.
                         at least once (i.e. has a known MAC address) - a
                         freshly-registered device with no contact yet
                         won't have the Console button enabled.
+  Password           - view, generate, or set the admin password stored
+                        for a device (or access point - same button,
+                        same behaviour, see 2.7). Unlike Console, this
+                        password IS saved by the system, so you don't
+                        have to remember or re-enter it each time - it's
+                        stored encrypted and only an administrator can
+                        view it. "Generate one for me" has the device
+                        create a strong password itself; "I'll set it
+                        myself" lets you type a specific one. Either way,
+                        the device needs to be online right now for this
+                        to work, since it's a live command to the device,
+                        not just a note in our records.
+  Adopt              - only on an "Unknown device" (see Unregistered
+                        above) - brings a device we've only ever spotted,
+                        never actually managed, under management for the
+                        first time. You'll be asked for the password of
+                        the access point that spotted it (skip this if
+                        one is already saved for that access point - it
+                        reuses that, since a brand new device typically
+                        still has the same default password your access
+                        points do) and a new password to set on the
+                        device itself, either generated for you or typed
+                        in. If it succeeds, the device should start
+                        reporting to us shortly - register it as usual
+                        once it does, and the password you set here will
+                        be applied to it automatically. If it fails, you
+                        can simply try again - the underlying adoption
+                        process is still being finalized, so this isn't
+                        unusual yet.
 
 -----------------------------------------------------------------
 2.7 Access Points
 -----------------------------------------------------------------
 The list of institutional Access Points (tower/rooftop radios that
 serve multiple customers), separate from customer devices. Shows their
-online status and location.
+online status and location, with each one's picture and product name.
+Each row also has:
+  Detect model - asks the access point (it must be online) what model it
+              is and saves it, which also updates its picture. This also
+              happens automatically for an access point whose model is
+              still unknown. Adding or editing an access point also lets
+              you record its firmware version and set its status to
+              Maintenance (the other statuses are kept up to date
+              automatically from what the access point reports).
+  Password  - same as a device's Password button (see 2.6) - view,
+              generate, or set this access point's stored admin password.
+  Scan now  - checks this access point's radio neighborhood right now for
+              devices it can see that aren't in our system yet, rather
+              than waiting for the automatic scan (which runs every
+              couple of minutes on its own). Anything new shows up in
+              Unregistered Devices as an "Unknown device".
 
 -----------------------------------------------------------------
 2.8 MikroTik
@@ -212,6 +329,10 @@ through the MikroTik routers in the field.
       - Once approved, it will keep being trusted automatically every
         time it reconnects (for example after a power cut) - you won't
         be asked to approve it again.
+      - "Edit details" on a router lets you give it a friendly name,
+        record where it sits (its site) and add notes. These are yours:
+        the router's own reports never overwrite them. If a name is set
+        it is shown instead of the name the router calls itself.
       - "Revoke" on an approved router immediately stops trusting it:
         its devices show offline, any block/connect commands waiting on
         it are marked Failed, and it will stay revoked even if it

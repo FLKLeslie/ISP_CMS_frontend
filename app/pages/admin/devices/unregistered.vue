@@ -120,6 +120,9 @@ const accessPointOptions = computed(() => accessPointsData.value?.results ?? [])
 const selectedAccessPointId = ref('')
 
 const deviceName = ref('')
+// Model for the device being registered - pre-filled with what the device itself
+// reported (stored on the new Device, and what its picture is chosen from).
+const deviceModel = ref('')
 const notes = ref('')
 // Which kind of record the open form creates. Chosen by WHICH BUTTON the admin
 // pressed (Register AP / Register to a customer), so it always matches intent.
@@ -180,6 +183,7 @@ function openRegisterForm(sighting: UnregisteredDeviceSighting, mode: 'station' 
   // fully editable, just saves typing when it's right (and is left blank, not
   // guessed, when we don't know).
   deviceName.value = sighting.detected_name || ''
+  deviceModel.value = sighting.detected_model || ''
   apSite.value = ''
   notes.value = ''
   selectedCustomerId.value = ''
@@ -221,6 +225,7 @@ async function handleRegister(id: string, confirmReplace = false) {
         device_name: deviceName.value,
         access_point: selectedAccessPointId.value || null,
         notes: notes.value,
+        model: deviceModel.value.trim(),
       },
       confirmReplace,
     )
@@ -288,6 +293,13 @@ async function handleDiscard(id: string) {
 
 const field = 'w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent'
 const tab = (active: boolean) => (active ? 'bg-primary text-white' : 'text-text-secondary hover:text-text-primary')
+
+// --- Adopt (unknown devices found via an AP scan, source: 'ap_scan') ------
+const adoptTarget = ref<UnregisteredDeviceSighting | null>(null)
+function handleAdopted(updated: UnregisteredDeviceSighting) {
+  const index = data.value?.results.findIndex((r) => r.id === updated.id) ?? -1
+  if (index !== -1 && data.value) data.value.results[index] = updated
+}
 </script>
 
 <template>
@@ -295,8 +307,9 @@ const tab = (active: boolean) => (active ? 'bg-primary text-white' : 'text-text-
     <div>
       <h1 class="text-2xl font-semibold text-text-primary">Unregistered Devices</h1>
       <p class="mt-1 text-sm text-text-secondary">
-        Devices that pinged our network but aren't registered yet. Access points are registered as access points;
-        stations are registered to the customer they belong to.
+        Devices that pinged our network but aren't registered yet, plus unknown devices spotted sitting on an
+        access point's network during a scan. Access points are registered as access points; stations are
+        registered to the customer they belong to.
       </p>
     </div>
 
@@ -332,11 +345,15 @@ const tab = (active: boolean) => (active ? 'bg-primary text-white' : 'text-text-
         <div v-for="s in sightings" :key="s.id" class="rounded-card border border-border bg-surface p-4">
           <!-- Identity -->
           <div class="flex flex-wrap items-start justify-between gap-3">
-            <div class="min-w-0">
-              <p class="truncate text-base font-semibold text-text-primary">{{ s.detected_name || 'Unnamed device' }}</p>
-              <p class="break-all font-mono text-xs text-text-secondary">{{ s.mac_address }}<span v-if="s.detected_model" class="font-sans"> · {{ s.detected_model }}</span></p>
+            <div class="flex min-w-0 items-center gap-3">
+              <DeviceIcon :icon-id="s.detected_icon_id" size="md" :title="s.detected_product_name || s.detected_model" />
+              <div class="min-w-0">
+                <p class="truncate text-base font-semibold text-text-primary">{{ s.detected_name || 'Unnamed device' }}</p>
+                <p class="break-all font-mono text-xs text-text-secondary">{{ s.mac_address }}<span v-if="s.detected_model" class="font-sans"> · {{ s.detected_product_name || s.detected_model }}</span></p>
+              </div>
             </div>
             <div class="flex flex-wrap items-center gap-2">
+              <StatusBadge v-if="s.source === 'ap_scan'" label="Unknown device" tone="warning" />
               <StatusBadge :label="roleView[roleOf(s)].label" :tone="roleView[roleOf(s)].tone" />
               <StatusBadge :label="s.status === 'PENDING' ? 'Pending review' : s.status === 'REGISTERED' ? 'Registered' : 'Discarded'" :tone="statusTone(s.status)" />
             </div>
@@ -347,6 +364,17 @@ const tab = (active: boolean) => (active ? 'bg-primary text-white' : 'text-text-
             · {{ s.sighting_count }} {{ s.sighting_count === 1 ? 'ping' : 'pings' }}
           </p>
           <p class="text-xs text-text-secondary">{{ sampleSummary(s.last_sample) }}</p>
+          <p v-if="s.source === 'ap_scan'" class="text-xs text-text-secondary">
+            Spotted on <span class="font-medium text-text-primary">{{ s.discovered_via_access_point_name || 'an access point' }}</span>'s
+            network<template v-if="s.discovered_ip_address"> at {{ s.discovered_ip_address }}</template> - never contacted us directly.
+            <template v-if="s.adoption_status === 'adopting' || s.adoption_status === 'failed'">
+              Last adoption attempt {{ formatRelativeTime(s.adoption_attempted_at) }}:
+              <span :class="s.adoption_status === 'failed' ? 'text-error' : ''">{{ s.adoption_status === 'failed' ? 'failed' : 'in progress' }}</span>.
+            </template>
+            <template v-else-if="s.adoption_status === 'adopted'">
+              <span class="text-success">Adoption request already sent</span> - register it once it starts reporting.
+            </template>
+          </p>
 
           <!-- Uncertain: say so plainly, and offer another go -->
           <div v-if="s.status === 'PENDING' && (roleOf(s) === 'uncertain' || !s.detected_name)" class="mt-3 rounded-card border border-warning/40 bg-warning/5 px-3 py-2">
@@ -388,6 +416,10 @@ const tab = (active: boolean) => (active ? 'bg-primary text-white' : 'text-text-
             <button type="button" :disabled="discarding === s.id" class="btn-secondary" @click="handleDiscard(s.id)">
               {{ discarding === s.id ? 'Discarding…' : 'Discard' }}
             </button>
+            <button
+              v-if="s.source === 'ap_scan'" type="button" class="btn-secondary"
+              @click="adoptTarget = s"
+            >{{ s.adoption_status === 'not_adopted' ? 'Adopt' : 'Retry adopt' }}</button>
             <!-- The detected role is a suggestion, never a restriction -->
             <button
               v-if="roleOf(s) !== 'uncertain'" type="button" class="text-left text-xs font-medium text-text-secondary hover:text-text-primary hover:underline sm:ml-auto"
@@ -463,6 +495,13 @@ const tab = (active: boolean) => (active ? 'bg-primary text-white' : 'text-text-
                   <p v-if="s.detected_name" class="mt-1 text-xs text-text-secondary">Filled in from the device — change it if you like.</p>
                 </div>
                 <div>
+                  <label class="mb-1 block text-sm font-medium text-text-primary">Model</label>
+                  <input v-model="deviceModel" placeholder="e.g. PBE-5AC-Gen2" :class="field">
+                  <p class="mt-1 text-xs text-text-secondary">
+                    {{ s.detected_model ? 'Detected from the device — correct it if it looks wrong.' : 'Not detected yet — fill in if you know it, or use Detect from device on the device page later.' }}
+                  </p>
+                </div>
+                <div>
                   <label class="mb-1 block text-sm font-medium text-text-primary">Access point (optional)</label>
                   <select v-model="selectedAccessPointId" :class="field">
                     <option value="">None yet</option>
@@ -504,6 +543,11 @@ const tab = (active: boolean) => (active ? 'bg-primary text-white' : 'text-text-
       danger
       @confirm="handleConfirmReplace"
       @cancel="replaceConflict = null"
+    />
+
+    <AdoptDeviceModal
+      :open="!!adoptTarget" :sighting="adoptTarget"
+      @close="adoptTarget = null" @adopted="handleAdopted"
     />
   </div>
 </template>

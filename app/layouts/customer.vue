@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { Bell, Home, MessageSquare, User, Wifi } from 'lucide-vue-next'
+import { Bell, CalendarClock, LayoutDashboard, Lightbulb, User } from 'lucide-vue-next'
 import type { NavItem } from '~/types/nav'
 const navItems: NavItem[] = [
-  { label: 'Dashboard', to: '/customer', icon: Home },
-  { label: 'Subscription', to: '/customer/subscription', icon: Wifi },
+  { label: 'Dashboard', to: '/customer', icon: LayoutDashboard },
+  { label: 'Subscription', to: '/customer/subscription', icon: CalendarClock },
   { label: 'Notifications', to: '/customer/notifications', icon: Bell },
-  { label: 'Suggestions', to: '/customer/suggestions', icon: MessageSquare },
+  { label: 'Suggestions', to: '/customer/suggestions', icon: Lightbulb },
   { label: 'Account', to: '/customer/account', icon: User },
 ]
 const authStore = useAuthStore()

@@ -1,12 +1,56 @@
 <script setup lang="ts">
 import { RadioTower } from 'lucide-vue-next'
-import type { AccessPoint, DeviceListItem } from '~/types/api/devices'
+import type { AccessPoint, AccessPointStatus, DeviceListItem } from '~/types/api/devices'
 
 definePageMeta({ layout: 'admin' })
 
 const { listAccessPoints, createAccessPoint, updateAccessPoint, deleteAccessPoint,
-  listAccessPointDevices, attachDeviceToAccessPoint, detachDeviceFromAccessPoint } = useAccessPointsApi()
+  listAccessPointDevices, attachDeviceToAccessPoint, detachDeviceFromAccessPoint, scanAccessPoint,
+  detectAccessPointIdentity } = useAccessPointsApi()
 const { listDevices } = useDevicesApi()
+
+// --- Credentials (stored admin login - see DeviceCredentialsModal) --------
+const credentialsTarget = ref<AccessPoint | null>(null)
+
+// --- Manual "scan now" (see devices.services.scan_stale_access_points_for_
+// unknown_devices on the backend - this normally runs automatically every
+// couple of minutes; this button is just "don't wait for the next cycle") -
+const scanningId = ref<string | null>(null)
+const scanMessage = reactive<Record<string, string>>({})
+async function handleScan(ap: AccessPoint) {
+  scanningId.value = ap.id
+  delete scanMessage[ap.id]
+  try {
+    const result = await scanAccessPoint(ap.id)
+    scanMessage[ap.id] = result.unknown_found
+      ? `Found ${result.unknown_found} unknown device${result.unknown_found === 1 ? '' : 's'} - check Unregistered Devices.`
+      : `Scanned ${result.neighbors_seen} nearby device${result.neighbors_seen === 1 ? '' : 's'} - nothing new.`
+  } catch (err) {
+    scanMessage[ap.id] = apiErrorMessage(err, "Couldn't scan this access point - it may be offline.")
+  } finally {
+    scanningId.value = null
+  }
+}
+
+// --- Detect model from the AP itself ----------------------------------------
+// Asks the AP what it is (the same wireless-mode call used for the AP/station
+// decision) and stores the model, which also picks its picture. Replaces what's stored.
+const detectingId = ref<string | null>(null)
+async function handleDetectIdentity(ap: Record<string, any>) {
+  detectingId.value = ap.id
+  delete scanMessage[ap.id]
+  try {
+    const result = await detectAccessPointIdentity(ap.id)
+    scanMessage[ap.id] = result.changed.length
+      ? `Updated from the device: ${result.changed.join(', ')}.`
+      : 'The access point reports the same details already stored.'
+    await refresh()
+  } catch (err) {
+    scanMessage[ap.id] = apiErrorMessage(err, "Couldn't reach this access point - it may be offline.")
+  } finally {
+    detectingId.value = null
+  }
+}
 
 // --- Devices connected to an access point ---------------------------------
 // Manual for now: an administrator says which devices sit behind which AP.
@@ -100,6 +144,11 @@ const showForm = ref(false)
 const editingId = ref<string | null>(null)
 const name = ref('')
 const model = ref('')
+// Stored-only details. Status: only MAINTENANCE is a lasting admin decision -
+// the other values are re-set automatically by the AP's heartbeats. (The picture
+// is not edited here: it is looked up from the model and stored by the backend.)
+const firmwareVersion = ref('')
+const status = ref<AccessPointStatus>('UNKNOWN')
 const site = ref('')
 const ipAddress = ref('')
 const macAddress = ref('')
@@ -114,6 +163,7 @@ const formError = ref('')
 
 function resetForm() {
   name.value = ''; model.value = ''; site.value = ''; ipAddress.value = ''
+  firmwareVersion.value = ''; status.value = 'UNKNOWN'
   macAddress.value = ''; description.value = ''
   latitude.value = ''; longitude.value = ''; locationLabel.value = ''
   formError.value = ''
@@ -129,6 +179,8 @@ function openEditForm(ap: typeof accessPoints.value[number]) {
   editingId.value = ap.id
   name.value = ap.name
   model.value = ap.model
+  firmwareVersion.value = ap.firmware_version
+  status.value = ap.status
   site.value = ap.site
   ipAddress.value = ap.ip_address ?? ''
   macAddress.value = ap.mac_address ?? ''
@@ -146,6 +198,8 @@ async function handleSubmit() {
   const payload = {
     name: name.value,
     model: model.value,
+    firmware_version: firmwareVersion.value,
+    status: status.value,
     site: site.value,
     ip_address: ipAddress.value || null,
     mac_address: macAddress.value || null,
@@ -211,6 +265,18 @@ async function handleDelete() {
         <div>
           <label class="mb-1 block text-sm font-medium text-text-primary">Model</label>
           <input v-model="model" class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent" />
+        </div>
+        <div>
+          <label class="mb-1 block text-sm font-medium text-text-primary">Firmware version</label>
+          <input v-model="firmwareVersion" class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent" />
+        </div>
+        <div>
+          <label class="mb-1 block text-sm font-medium text-text-primary">Status</label>
+          <select v-model="status" class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
+            <option value="UNKNOWN">Unknown</option><option value="ONLINE">Online</option>
+            <option value="OFFLINE">Offline</option><option value="MAINTENANCE">Maintenance</option>
+          </select>
+          <p class="mt-1 text-xs text-text-secondary">Choose Maintenance to pause automatic status updates; the other values are kept up to date automatically.</p>
         </div>
         <div>
           <label class="mb-1 block text-sm font-medium text-text-primary">Site</label>
@@ -284,8 +350,16 @@ async function handleDelete() {
         row-key="id"
       >
         <template #cell-name="{ row }">
-          <div class="font-medium">{{ row.name }}</div>
-          <div class="text-xs text-text-secondary">{{ row.model || '—' }}</div>
+          <div class="flex items-center gap-3">
+            <DeviceIcon :icon-id="row.icon_id" :title="row.product_name || row.model" />
+            <div>
+              <div class="font-medium">{{ row.name }}</div>
+              <div class="text-xs text-text-secondary">
+                {{ row.product_name || row.model || 'Model not detected yet' }}
+                <span v-if="row.product_name && row.model" class="font-mono">· {{ row.model }}</span>
+              </div>
+            </div>
+          </div>
         </template>
         <template #cell-site="{ row }">{{ row.site || '—' }}</template>
         <template #cell-devices="{ row }">{{ row.device_count ?? 0 }}</template>
@@ -296,10 +370,24 @@ async function handleDelete() {
           {{ row.last_seen ? formatRelativeTime(row.last_seen) : 'Never' }}
         </template>
         <template #cell-actions="{ row }">
-          <div class="flex justify-end gap-3">
-            <button type="button" class="text-sm font-medium text-secondary hover:underline" @click="openDeviceManager(row)">Devices</button>
-            <button type="button" class="text-sm font-medium text-accent hover:underline" @click="openEditForm(row)">Edit</button>
-            <button type="button" class="text-sm font-medium text-error hover:underline" @click="confirmDeleteId = row.id">Delete</button>
+          <div class="flex flex-col items-end gap-1">
+            <div class="flex justify-end gap-3">
+              <button type="button" class="text-sm font-medium text-secondary hover:underline" @click="openDeviceManager(row)">Devices</button>
+              <button type="button" class="text-sm font-medium text-secondary hover:underline" @click="credentialsTarget = row">Password</button>
+              <button
+                type="button" :disabled="scanningId === row.id || !row.mac_address" class="text-sm font-medium text-secondary hover:underline disabled:opacity-50"
+                :title="!row.mac_address ? 'No known MAC address yet' : ''"
+                @click="handleScan(row)"
+              >{{ scanningId === row.id ? 'Scanning…' : 'Scan now' }}</button>
+              <button
+                type="button" :disabled="detectingId === row.id || !row.mac_address" class="text-sm font-medium text-secondary hover:underline disabled:opacity-50"
+                :title="!row.mac_address ? 'No known MAC address yet' : 'Ask the access point what model it is'"
+                @click="handleDetectIdentity(row)"
+              >{{ detectingId === row.id ? 'Asking…' : 'Detect model' }}</button>
+              <button type="button" class="text-sm font-medium text-accent hover:underline" @click="openEditForm(row)">Edit</button>
+              <button type="button" class="text-sm font-medium text-error hover:underline" @click="confirmDeleteId = row.id">Delete</button>
+            </div>
+            <p v-if="scanMessage[row.id]" role="status" class="text-xs text-text-secondary">{{ scanMessage[row.id] }}</p>
           </div>
         </template>
       </DataTable>
@@ -314,6 +402,12 @@ async function handleDelete() {
       danger
       @confirm="handleDelete"
       @cancel="confirmDeleteId = null"
+    />
+
+    <DeviceCredentialsModal
+      :open="!!credentialsTarget" resource="access-points" :id="credentialsTarget?.id ?? null"
+      :label="credentialsTarget?.name ?? ''"
+      @close="credentialsTarget = null"
     />
   </div>
 

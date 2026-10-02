@@ -9,7 +9,7 @@ definePageMeta({ layout: 'admin' })
 const route = useRoute()
 const {
   listRouters, listLeases, getLeaseSummary, listCommands,
-  approveRouter, rejectRouter, linkRouterToAccessPoint,
+  approveRouter, rejectRouter, linkRouterToAccessPoint, updateRouterDetails,
   forgetLease, deleteCommand, clearCommands, sendCommandByMac,
 } = useMikroTikApi()
 const { listAccessPointsWithLocation, listAccessPoints } = useAccessPointsApi()
@@ -105,6 +105,33 @@ async function handleLinkAccessPoint(router: MikroTikRouter, accessPointId: stri
   } finally {
     linkingRouterId.value = null
   }
+}
+
+// --- Router details an administrator maintains ---------------------------------
+// A friendly name, where it sits, and notes. Kept apart from what the
+// router reports about itself (identity/model/firmware), which stays read-only and
+// is never overwritten by these.
+const editingRouterId = ref<string | null>(null)
+const routerForm = reactive({ label: '', site: '', notes: '' })
+const savingRouterDetails = ref(false)
+const routerDetailsError = ref('')
+function startEditRouter(r: MikroTikRouter) {
+  editingRouterId.value = r.id
+  Object.assign(routerForm, { label: r.label, site: r.site, notes: r.notes })
+  routerDetailsError.value = ''
+}
+async function saveRouterDetails(r: MikroTikRouter) {
+  savingRouterDetails.value = true; routerDetailsError.value = ''
+  try {
+    const updated = await updateRouterDetails(r.id, {
+      label: routerForm.label.trim(), site: routerForm.site.trim(), notes: routerForm.notes,
+    })
+    const index = routersData.value?.results.findIndex((x) => x.id === r.id) ?? -1
+    if (index !== -1 && routersData.value) routersData.value.results[index] = updated
+    editingRouterId.value = null
+  } catch (err) {
+    routerDetailsError.value = apiErrorMessage(err, "Couldn't save these details. Please try again.")
+  } finally { savingRouterDetails.value = false }
 }
 
 // --- Devices (server-side filtered, searched and paged) ---------------------
@@ -378,13 +405,20 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
       <div v-else v-for="r in routers" :key="r.id" class="rounded-card border border-border bg-surface">
         <div class="border-b border-border p-4">
           <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div class="min-w-0">
-              <p class="font-medium text-text-primary">{{ r.identity || 'Unnamed MikroTik' }}</p>
-              <p class="break-all font-mono text-xs text-text-secondary">{{ r.signature }}</p>
-              <p class="mt-1 text-xs text-text-secondary">
-                {{ r.model || 'Unknown model' }}{{ r.firmware ? ` · v${r.firmware}` : '' }} ·
-                Last seen {{ r.last_seen_at ? formatRelativeTime(r.last_seen_at) : 'never' }}
-              </p>
+            <div class="flex min-w-0 items-start gap-3">
+              <DeviceIcon :icon-id="r.icon_id" fallback="router" size="md" :title="r.product_name || r.model" />
+              <div class="min-w-0">
+                <p class="font-medium text-text-primary">{{ r.label || r.identity || 'Unnamed MikroTik' }}</p>
+                <p v-if="r.label && r.identity" class="text-xs text-text-secondary">Reports itself as {{ r.identity }}</p>
+                <p class="break-all font-mono text-xs text-text-secondary">{{ r.signature }}</p>
+                <p class="mt-1 text-xs text-text-secondary">
+                  {{ r.model || 'Unknown model' }}{{ r.firmware ? ` · v${r.firmware}` : '' }} ·
+                  Last seen {{ r.last_seen_at ? formatRelativeTime(r.last_seen_at) : 'never' }}
+                </p>
+                <p v-if="r.site" class="text-xs text-text-secondary">Site: {{ r.site }}</p>
+                <p v-if="r.notes && editingRouterId !== r.id" class="mt-1 whitespace-pre-line text-xs text-text-secondary">{{ r.notes }}</p>
+                <button v-if="editingRouterId !== r.id" type="button" class="mt-1 text-xs font-medium text-accent hover:underline" @click="startEditRouter(r)">Edit details</button>
+              </div>
             </div>
             <div class="flex flex-col gap-2 sm:items-end">
               <div class="flex flex-wrap items-center gap-2">
@@ -399,6 +433,26 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
               <button v-else type="button" :disabled="actingRouterId === r.id" class="btn-secondary" @click="confirmRouterAction = { router: r, type: 'approve' }">Approve anyway</button>
             </div>
           </div>
+          <form v-if="editingRouterId === r.id" class="mt-3 grid grid-cols-1 gap-3 rounded-card border border-border bg-background p-3 sm:grid-cols-2" @submit.prevent="saveRouterDetails(r)">
+            <div>
+              <label class="mb-1 block text-xs font-medium text-text-secondary">Name</label>
+              <input v-model="routerForm.label" :placeholder="r.identity || 'A friendly name'" class="w-full" :class="selectClass">
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-text-secondary">Site</label>
+              <input v-model="routerForm.site" placeholder="e.g. Main Tower" class="w-full" :class="selectClass">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="mb-1 block text-xs font-medium text-text-secondary">Notes</label>
+              <textarea v-model="routerForm.notes" rows="2" class="w-full" :class="selectClass" />
+            </div>
+            <p v-if="routerDetailsError" role="alert" class="text-sm text-error sm:col-span-2">{{ routerDetailsError }}</p>
+            <div class="flex gap-2 sm:col-span-2">
+              <button type="submit" :disabled="savingRouterDetails" class="btn-primary">{{ savingRouterDetails ? 'Saving…' : 'Save' }}</button>
+              <button type="button" :disabled="savingRouterDetails" class="btn-secondary" @click="editingRouterId = null">Cancel</button>
+            </div>
+          </form>
+
           <div class="mt-3 max-w-xs">
             <label class="mb-1 block text-xs font-medium text-text-secondary">Linked access point</label>
             <select
