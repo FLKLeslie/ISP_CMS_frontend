@@ -105,7 +105,7 @@ const linkStateLabel = computed(() => {
 
 // --- Hardware, network and records ------------------------------------------
 // Three cards, three kinds of fact:
-//   Hardware - what the unit physically IS (model, MAC, serial, versions)
+//   Hardware - what the unit physically IS (product, model, MAC, hostname, firmware)
 //   Network  - how it is addressed (IP, gateway, DNS, time zone); read from the
 //              device, so display-only
 //   Records  - our own bookkeeping about it (name, status, install date, notes)
@@ -118,28 +118,23 @@ const hwEditing = ref(false)
 const hwSaving = ref(false)
 const hwError = ref('')
 const hwNotice = ref('')
-const hwForm = reactive({ model: '', mac_address: '', serial_number: '', hardware_version: '', firmware_version: '' })
+const hwForm = reactive({ model: '', mac_address: '', firmware_version: '' })
 function startHwEdit() {
   if (!device.value) return
   const d = device.value
-  Object.assign(hwForm, {
-    model: d.model, mac_address: d.mac_address ?? '', serial_number: d.serial_number ?? '',
-    hardware_version: d.hardware_version, firmware_version: d.firmware_version,
-  })
+  Object.assign(hwForm, { model: d.model, mac_address: d.mac_address ?? '', firmware_version: d.firmware_version })
   hwError.value = ''; hwNotice.value = ''
   hwEditing.value = true
 }
 async function handleSaveHw() {
   hwError.value = ''; hwNotice.value = ''; hwSaving.value = true
   try {
-    // Blank unique fields go as null so two devices that both have "no serial yet"
-    // never collide. Saving a new model also refreshes the stored picture/product -
-    // the backend looks them up again from the model.
+    // Saving a new model also refreshes the stored picture/product - the backend
+    // looks them up again from the model. (Serial number and hardware version are
+    // deliberately not part of this card.)
     device.value = await updateDevice(deviceId, {
       model: hwForm.model.trim(),
       mac_address: hwForm.mac_address.trim() || null,
-      serial_number: hwForm.serial_number.trim() || null,
-      hardware_version: hwForm.hardware_version.trim(),
       firmware_version: hwForm.firmware_version.trim(),
     })
     hwEditing.value = false
@@ -410,15 +405,13 @@ function handleAutoDetectLocation() {
         <p v-if="hwError" role="alert" class="mb-3 text-sm text-error">{{ hwError }}</p>
         <p v-if="hwNotice" role="status" class="mb-3 text-sm text-success">{{ hwNotice }}</p>
 
-        <!-- Read view: three rows of three - product, identifiers, versions -->
+        <!-- Read view: two rows of three - what it is, then how to identify it -->
         <dl v-if="!hwEditing" class="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
           <div><dt class="text-xs text-text-secondary">Product</dt><dd class="text-sm font-medium text-text-primary">{{ device.product_name || '—' }}</dd></div>
           <div><dt class="text-xs text-text-secondary">Model</dt><dd class="font-mono text-sm font-medium text-text-primary">{{ device.model || '—' }}</dd></div>
           <div><dt class="text-xs text-text-secondary">Product line</dt><dd class="text-sm font-medium text-text-primary">{{ device.product_line || '—' }}</dd></div>
           <div><dt class="text-xs text-text-secondary">MAC address</dt><dd class="font-mono text-sm font-medium text-text-primary">{{ device.mac_address || '—' }}</dd></div>
-          <div><dt class="text-xs text-text-secondary">Serial number</dt><dd class="text-sm font-medium text-text-primary">{{ device.serial_number || '—' }}</dd></div>
           <div><dt class="text-xs text-text-secondary">Hostname</dt><dd class="text-sm font-medium text-text-primary">{{ device.configuration?.device_alias || '—' }}</dd></div>
-          <div><dt class="text-xs text-text-secondary">Hardware version</dt><dd class="text-sm font-medium text-text-primary">{{ device.hardware_version || '—' }}</dd></div>
           <div><dt class="text-xs text-text-secondary">Firmware version</dt><dd class="text-sm font-medium text-text-primary">{{ device.firmware_version || '—' }}</dd></div>
         </dl>
 
@@ -435,19 +428,15 @@ function handleAutoDetectLocation() {
               <input v-model="hwForm.mac_address" placeholder="aa:bb:cc:dd:ee:ff" :class="field" class="font-mono">
             </div>
             <div>
-              <label class="mb-1 block text-xs font-medium text-text-secondary">Serial number</label>
-              <input v-model="hwForm.serial_number" :class="field">
-            </div>
-            <div>
-              <label class="mb-1 block text-xs font-medium text-text-secondary">Hardware version</label>
-              <input v-model="hwForm.hardware_version" :class="field">
-            </div>
-            <div>
               <label class="mb-1 block text-xs font-medium text-text-secondary">Firmware version</label>
-              <input v-model="hwForm.firmware_version" :class="field">
+              <input v-model="hwForm.firmware_version" placeholder="e.g. 8.7.11" :class="field">
             </div>
           </div>
-          <p class="text-xs text-text-secondary">The product name, product line and picture are worked out from the model, so they update when you change it.</p>
+          <p class="text-xs text-text-secondary">
+            The product name, product line and picture are worked out from the model, so they update when you change it.
+            The firmware version is filled in automatically when the device's wireless link reports it, and a value typed
+            here is replaced by the next report.
+          </p>
           <div class="flex gap-2">
             <button type="submit" :disabled="hwSaving" class="btn-primary">{{ hwSaving ? 'Saving…' : 'Save' }}</button>
             <button type="button" :disabled="hwSaving" class="btn-secondary" @click="hwEditing = false">Cancel</button>

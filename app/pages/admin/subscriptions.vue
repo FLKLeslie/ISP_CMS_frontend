@@ -21,6 +21,8 @@ const plans = computed(() => plansData.value?.results ?? [])
 const showPlanForm = ref(false)
 const planName = ref(''); const planDesc = ref(''); const planDuration = ref(30 * 1440) /* minutes */; const planPrice = ref('')
 const planType = ref<'GENERAL' | 'SPECIFIC'>('GENERAL')
+// Speed: both null = default (the MikroTik is told nothing about speed). See PlanSpeedFields.
+const planUplink = ref<number | null>(null); const planDownlink = ref<number | null>(null); const planSpeedValid = ref(true)
 const planCustomerSearch = ref(''); const planCustomerIds = ref<string[]>([])
 const planCustomerLabels = reactive<Record<string, string>>({})
 const savingPlan = ref(false); const planError = ref('')
@@ -42,18 +44,24 @@ async function handleCreatePlan() {
     planError.value = 'Add at least one eligible customer for a specific plan.'
     return
   }
+  if (!planSpeedValid.value) {
+    planError.value = 'Enter both the uplink and the downlink speed, or choose Default speed.'
+    return
+  }
   savingPlan.value = true
   try {
     await createPlan({
       name: planName.value, description: planDesc.value, duration_minutes: planDuration.value,
       price: planPrice.value, is_active: true, plan_type: planType.value,
+      uplink_kbps: planUplink.value, downlink_kbps: planDownlink.value,
       eligible_customer_ids: planType.value === 'SPECIFIC' ? planCustomerIds.value : [],
     })
     planName.value = ''; planDesc.value = ''; planDuration.value = 30 * 1440; planPrice.value = ''
     planType.value = 'GENERAL'; planCustomerIds.value = []; planCustomerSearch.value = ''
+    planUplink.value = null; planDownlink.value = null
     showPlanForm.value = false
     await refreshPlans()
-  } catch { planError.value = "Couldn't create the plan. Check the fields and try again." }
+  } catch (err) { planError.value = apiErrorMessage(err, "Couldn't create the plan. Check the fields and try again.") }
   finally { savingPlan.value = false }
 }
 
@@ -167,6 +175,9 @@ async function handleGrant() {
               {{ c.user.first_name }} {{ c.user.last_name }} · {{ c.user.email }}
             </button>
           </div>
+        </div>
+        <div class="sm:col-span-2">
+          <PlanSpeedFields v-model:uplink="planUplink" v-model:downlink="planDownlink" @update:valid="planSpeedValid = $event" />
         </div>
         <div class="sm:col-span-2">
           <label class="mb-1 block text-sm font-medium text-text-primary">Description</label>

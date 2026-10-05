@@ -11,7 +11,10 @@ const { listCustomers } = useCustomersApi()
 const form = reactive({
   name: '', description: '', duration_minutes: 30 * 1440, price: '', is_active: true,
   plan_type: 'GENERAL' as 'GENERAL' | 'SPECIFIC',
+  // Both null = default speed (nothing is sent to the MikroTik); see PlanSpeedFields.
+  uplink_kbps: null as number | null, downlink_kbps: null as number | null,
 })
+const speedValid = ref(true)
 const eligibleIds = ref<string[]>([])
 const eligibleLabels = reactive<Record<string, string>>({})
 const saving = ref(false); const formError = ref('')
@@ -29,6 +32,7 @@ watch(() => props.plan, (plan) => {
   if (!plan) return
   form.name = plan.name; form.description = plan.description; form.duration_minutes = plan.duration_minutes
   form.price = plan.price; form.is_active = plan.is_active; form.plan_type = plan.plan_type
+  form.uplink_kbps = plan.uplink_kbps; form.downlink_kbps = plan.downlink_kbps
   eligibleIds.value = plan.eligible_customers.map((c) => c.id)
   plan.eligible_customers.forEach((c) => { eligibleLabels[c.id] = `${c.name} · ${c.email}` })
   formError.value = ''; customerSearch.value = ''
@@ -53,15 +57,20 @@ async function handleSave() {
     formError.value = 'Add at least one eligible customer, or switch this plan to General.'
     return
   }
+  if (!speedValid.value) {
+    formError.value = 'Enter both the uplink and the downlink speed, or choose Default speed.'
+    return
+  }
   saving.value = true
   try {
     const updated = await updatePlan(props.plan.id, {
       name: form.name, description: form.description, duration_minutes: form.duration_minutes,
       price: form.price, is_active: form.is_active, plan_type: form.plan_type,
+      uplink_kbps: form.uplink_kbps, downlink_kbps: form.downlink_kbps,
       eligible_customer_ids: form.plan_type === 'SPECIFIC' ? eligibleIds.value : [],
     })
     emit('saved', updated)
-  } catch { formError.value = "Couldn't save these changes. Check the fields and try again." }
+  } catch (err) { formError.value = apiErrorMessage(err, "Couldn't save these changes. Check the fields and try again.") }
   finally { saving.value = false }
 }
 
@@ -119,6 +128,13 @@ onUnmounted(() => {
               <DurationInput v-model="form.duration_minutes" />
             </div>
           </div>
+          <PlanSpeedFields
+            v-model:uplink="form.uplink_kbps" v-model:downlink="form.downlink_kbps" @update:valid="speedValid = $event"
+          />
+          <p class="-mt-2 text-xs text-text-secondary">
+            Changing a plan's speed doesn't touch anyone's router straight away: the new speed is applied each time the plan
+            is activated (a purchase, grant, renewal or resume). To change a customer's speed now, use MikroTik Management.
+          </p>
           <div>
             <label class="mb-1 block text-sm font-medium text-text-primary">Description</label>
             <textarea v-model="form.description" rows="2" class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none transition-colors focus:border-accent" />

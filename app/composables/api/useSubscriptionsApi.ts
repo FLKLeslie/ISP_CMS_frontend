@@ -5,6 +5,8 @@ export interface PlanWritePayload {
   // The plan's length in MINUTES (30 minutes = 30, 2 hours = 120, 30 days = 43200).
   name: string; description: string; duration_minutes: number; price: string
   is_active: boolean; plan_type: PlanType
+  // Both null = default (no speed signalled to the MikroTik); both numbers (whole kbps) = capped.
+  uplink_kbps?: number | null; downlink_kbps?: number | null
   // Required (non-empty) when plan_type is SPECIFIC, must be omitted/empty
   // for GENERAL - enforced on the backend too (see plans/serializers.py).
   eligible_customer_ids?: string[]

@@ -105,6 +105,23 @@ export function useMikroTikApi() {
     )
   }
 
+  // Cap ONE device at these speeds (whole kbps) without touching its access, or
+  // lift its cap so the MikroTik treats it as default again. QUEUED for the
+  // router's next check-in - the router doesn't confirm speed back - and the
+  // administrators are notified either way. 409 if an access command for the
+  // device is still awaiting confirmation (or was only just sent).
+  function setLeaseLimit(id: string, uplinkKbps: number, downlinkKbps: number) {
+    return apiFetch<{ lease: MikroTikLease; command: MikroTikCommand }>(
+      `/api/microtik/leases/${id}/limit/`,
+      { method: 'POST', body: { uplink_kbps: uplinkKbps, downlink_kbps: downlinkKbps } },
+    )
+  }
+  function clearLeaseLimit(id: string) {
+    return apiFetch<{ lease: MikroTikLease; command: MikroTikCommand }>(
+      `/api/microtik/leases/${id}/clear-limit/`, { method: 'POST' },
+    )
+  }
+
   // POST /api/microtik/commands/send/ — send an "add to allowed list"
   // (reconnect) or "block" command for a MAC address directly, whether or
   // not that router has ever reported seeing it yet (the main use case:
@@ -118,6 +135,7 @@ export function useMikroTikApi() {
       method: 'POST',
       body: {
         mac_address: payload.macAddress, command_type: payload.commandType,
+        ...(payload.uplinkKbps != null ? { uplink_kbps: payload.uplinkKbps, downlink_kbps: payload.downlinkKbps } : {}),
         ...(payload.allRouters ? { all_routers: true } : { router: payload.router }),
       },
     })
@@ -155,6 +173,8 @@ export function useMikroTikApi() {
     forgetLease,
     blockLease,
     reconnectLease,
+    setLeaseLimit,
+    clearLeaseLimit,
     listCommands,
     sendCommandByMac,
     deleteCommand,

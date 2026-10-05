@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Check } from 'lucide-vue-next'
+import { Check, Gauge } from 'lucide-vue-next'
 import type { Plan } from '~/types/api/subscriptions'
 const props = defineProps<{ plan: Plan; current?: boolean; adminMode?: boolean }>()
 const emit = defineEmits<{ select: [plan: Plan]; details: [plan: Plan] }>()
@@ -15,9 +15,17 @@ const emit = defineEmits<{ select: [plan: Plan]; details: [plan: Plan] }>()
       {{ formatCurrency(props.plan.price) }}<span class="text-sm font-normal text-text-secondary"> / {{ props.plan.duration_label }}</span>
     </p>
     <p v-if="props.plan.description" class="mb-4 flex-1 text-sm text-text-secondary">{{ props.plan.description }}</p>
-    <div class="mb-4 flex items-center gap-2 text-sm text-text-secondary">
+    <div class="mb-2 flex items-center gap-2 text-sm text-text-secondary">
       <Check class="h-4 w-4 text-success" aria-hidden="true" />Lasts {{ props.plan.duration_label }}
     </div>
+    <!-- Customers only see a speed when the plan sets one; admins always see what the
+         plan does, including "Default" (nothing is sent to the MikroTik). -->
+    <div v-if="props.plan.has_speed_limit || props.adminMode" class="mb-4 flex items-center gap-2 text-sm text-text-secondary">
+      <Gauge class="h-4 w-4" :class="props.plan.has_speed_limit ? 'text-success' : 'text-text-secondary'" aria-hidden="true" />
+      <span v-if="props.plan.has_speed_limit">Speed: {{ describeLimit(props.plan.uplink_kbps, props.plan.downlink_kbps) }}</span>
+      <span v-else>Speed: Default</span>
+    </div>
+    <div v-else class="mb-2" />
     <button v-if="!props.adminMode" type="button" class="btn-primary" @click="emit('select', props.plan)">
       {{ props.current ? 'Duplicate this plan' : 'Select Plan' }}
     </button>

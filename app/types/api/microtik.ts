@@ -69,6 +69,19 @@ export interface MikroTikLease {
   pending_action: MikroTikCommandType | null
   pending_since: string | null
   pending_expired: boolean
+  // The speed limit this device was LAST TOLD to run at. uplink/downlink are both
+  // null on the default: no limit has been signalled for it, so the MikroTik treats
+  // it as any uncapped device. Whole kbps (see utils/speeds.ts); uplink = data
+  // leaving the customer, downlink = data coming to them.
+  // This is what Django SENT, not what the router reports - the router never
+  // reports speed back, so a limit is "queued", never "confirmed".
+  uplink_kbps: number | null
+  downlink_kbps: number | null
+  has_speed_limit: boolean
+  limit_label: string // 'default (no limit)' or 'uplink 5 Mbps / downlink 10 Mbps'
+  limit_source: 'MANUAL' | 'PLAN' | '' // who decided it; '' while there is no limit
+  limit_plan_name: string // the plan, when limit_source is PLAN
+  limit_set_at: string | null // when the limit (or its removal) was last sent
   // Recency-aware: in the router's latest report AND that report is recent.
   // An offline device is still on record and still allocated.
   online: boolean
@@ -96,7 +109,8 @@ export interface AllocatableCustomer {
   status: 'ACTIVE' | 'SUSPENDED'
 }
 
-export type MikroTikCommandType = 'block' | 'reconnect'
+// set_limit / clear_limit change a device's speed only and leave its access alone.
+export type MikroTikCommandType = 'block' | 'reconnect' | 'set_limit' | 'clear_limit'
 export type MikroTikCommandStatus = 'PENDING' | 'SENT' | 'CONFIRMED' | 'FAILED'
 
 export interface MikroTikCommand {
@@ -117,6 +131,15 @@ export interface MikroTikCommand {
   customer_name: string | null
   triggered_by: string | null
   triggered_by_name: string | null
+  // What this command did to the device's speed: 'SET' (to uplink/downlink below),
+  // 'CLEAR' (back to default) or '' (nothing). A reconnect caused by a plan
+  // activation carries one too. `limit_label` is it in words ('' when none) and
+  // `plan_name` is the plan that caused it, if any.
+  limit_change: 'SET' | 'CLEAR' | ''
+  uplink_kbps: number | null
+  downlink_kbps: number | null
+  limit_label: string
+  plan_name: string
   error_message: string
   created_at: string
   updated_at: string
@@ -129,6 +152,9 @@ export interface MikroTikCommand {
 export interface SendMikroTikCommandPayload {
   macAddress: string
   commandType: MikroTikCommandType
+  // Only for 'set_limit': the speed, in whole kbps. Required together.
+  uplinkKbps?: number
+  downlinkKbps?: number
   router?: string
   allRouters?: boolean
 }

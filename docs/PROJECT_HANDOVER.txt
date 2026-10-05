@@ -333,6 +333,38 @@ all three codebases.
   this, an AP-scan or hand-typed MAC (uppercase) never matched Node's
   lowercase heartbeat MAC. Migration devices/0012 fixed existing rows.
 
+  FIRMWARE VERSION. A unit does NOT report its own firmware in the metrics
+  Node polls. The "firmwareVersion" in that response sits under
+  wireless.peers[].common.identification and describes the unit at the
+  OTHER end of the link: a station's peer is its access point, an access
+  point's peers are its stations. So Django credits it to the record whose
+  MAC matches the PEER's MAC - never to the unit that was polled - via the
+  heartbeat's optional "peers" list (devices/services.record_peer_identities).
+  The same entry also fills a blank model (its "product" is the full code,
+  e.g. PBE-5AC-Gen2) and a blank IP. Firmware is overwritten whenever it
+  differs (it is hardware-reported and changes on every upgrade); model and
+  IP are only ever filled when blank. Two queries per heartbeat however many
+  stations an AP has; writes only when something changed.
+  >>> NEEDS A SMALL NODE CHANGE: today Node does not forward the peers, so no
+  firmware arrives until it does. In djangoClient.js, function
+  mapUdapiStatisticsToHeartbeat, add after the `const linkQuality` line:
+      const peers = (snapshot.wireless?.peers || [])
+        .map((p) => p.common || {})
+        .filter((c) => c.identification?.mac)
+        .map((c) => ({
+          mac: c.identification.mac,
+          product: c.identification.product,
+          firmware_version: c.identification.firmwareVersion,
+          hostname: c.hostname,
+          mgmt_ip: c.mgmtIp,
+        }));
+  and add this line inside the `heartbeat = { ... }` object:
+      peers: peers.length ? peers : undefined,
+  Django already accepts it (and ignores it when absent), so the two sides
+  can be deployed in either order. Serial number and hardware version were
+  removed from the Hardware card: nothing reports them, so they were always
+  blank (the columns still exist; nothing reads them).
+
 3.2 MikroTik routers and client leases
   - A customer's Device (the receiver PowerBeam) sits behind a MikroTik
     router, which is what actually grants or denies that specific
@@ -375,6 +407,102 @@ all three codebases.
     Failed). This is unavoidable given how the router protocol works -
     do not "optimistically" mark something Blocked/Allowed before it is
     confirmed.
+
+3.2.1 Speed limits ("capping")
+  WHAT IT IS. Each customer router (a MikroTikLease) can be held to an uplink
+  and a downlink speed. UPLINK = data leaving the customer (uploads), DOWNLINK
+  = data coming to them (downloads) - the customer's point of view, which is
+  how a MikroTik queue is written. Speeds are stored and sent as WHOLE KBPS;
+  the UI takes a number + kbps/Mbps/Gbps (utils/speeds.ts, SpeedInput.vue).
+  DEFAULT means "no limit signalled": both speeds null, and the MikroTik is told
+  nothing about speed for that device.
+
+  STATE. lease.uplink_kbps / downlink_kbps (+ limit_source MANUAL|PLAN,
+  limit_plan_name, limit_set_at). This is what Django LAST SENT, not what the
+  router reports: the router's report carries no queue information and Node has
+  no acknowledgement path, so a limit can only ever be QUEUED, never confirmed.
+  Reports never touch these fields. The UI says "queued" and never "applied".
+
+  THREE WAYS A LIMIT CHANGES
+    1. By hand - MikroTik Management > Commands > 2. Bandwidth Limit. Pick a
+       customer's router from the list (or type a MAC and choose its MikroTik);
+       the device's CURRENT limit (or "Default") is shown; set both speeds, or
+       "Remove limit (use default)". Endpoints: POST /api/microtik/leases/{id}/
+       limit/ {uplink_kbps, downlink_kbps} and .../clear-limit/; or
+       POST /api/microtik/commands/send/ with command_type set_limit|clear_limit
+       (creates the device record if the MAC was never seen).
+    2. By a plan - a plan has uplink_kbps/downlink_kbps (both null = default,
+       both set = capped; one without the other is rejected). Whenever a plan
+       is ACTIVATED (admin grant, customer purchase, renewal payment, admin
+       resume) the customer is connected with a PLAIN reconnect, with the plan's
+       speed RECORDED on that command (limit_change/uplink/downlink/plan_name).
+       Once the router CONFIRMS the connection (its next report lists the MAC as
+       allowed), Django sends the speed as its own speed_limit command
+       (services.apply_deferred_limits, called from ingest_leases). It cannot go
+       out together with the reconnect: Node keeps ONE pending action per
+       device, so the second command would replace the first and the customer
+       would never be connected. Cost: the speed lands one router check-in
+       (~20-40 s) after the connection. Each reconnect is followed up exactly
+       once (limit_followup_at is claimed atomically), and if the reconnect is
+       never confirmed, no speed is sent and the admins are told.
+       A plan with the default speed sends the MikroTik nothing about speed -
+       EXCEPT when the router currently has a limit (from an earlier plan or by
+       hand): then it is lifted after confirmation, because leaving a previous
+       plan's cap on a plan that has none would be wrong. NOTE: activation
+       REPLACES a manual limit. Restoring access without a plan (a plain
+       Connect) leaves speed alone. Editing a plan's speed changes nothing for
+       anyone already on it; it applies at their next activation (admins are
+       told how many customers).
+    3. Nothing else. Blocking never changes speed.
+
+  COMMANDS. MikroTikCommand gained set_limit / clear_limit types plus
+  limit_change (SET|CLEAR|""), uplink_kbps, downlink_kbps, plan_name. These
+  can never be CONFIRMED, so they stay SENT ("Queued" in the history) and are
+  excluded from the stale-command timeout. (A plan's reconnect also carries
+  limit_followup_at: when its speed was sent. See above.) A speed command is refused (409)
+  while an ACCESS command for the same device is awaiting confirmation, and a
+  block/reconnect is refused for MIKROTIK_LIMIT_SETTLE_SECONDS (30) after a
+  speed command - again because of Node's one-pending-action-per-device slot.
+  Two speed commands in a row are fine; the second replaces the first.
+
+  ADMIN NOTIFICATIONS (type NETWORK) - every speed event, in full:
+    - limit set / removed by an admin: who, which customer/MAC, which MikroTik,
+      now vs before (including whether the old one came from a plan), and that
+      it is queued, not confirmed.
+    - limit failed (Node down / rejected): the reason and that it is unchanged.
+    - plan activation: the "Auto-connect" notice names the plan's speed and says
+      it is sent once the router confirms the connection. After confirmation,
+      "Speed applied" / "Speed limit lifted" per customer with the router, MAC,
+      before and after; or "Couldn't apply speed" with the reason (Node down, or
+      another command now pending for the device). A reconnect that fails or is
+      never confirmed says the plan's speed was not applied either; "no router
+      allocated" says the speed could not be applied.
+    - plan created (always states its speed, even "default") and plan speed
+      changed (before -> after, and how many current subscribers keep the old
+      speed until their next activation).
+  Every manual change is also written to the audit log.
+
+  THE NODE CONTRACT (from Node's capping curl; one place on the Django side
+  defines it: microtik/node_client.build_command_payload). POST to
+  /internal/microtik/{signature}/commands/ with the usual bearer token:
+      {"command_id": "speed-limit-<our command's UUID>",
+       "command_type": "speed_limit",
+       "mac_address": "ea:b5:b8:85:8a:90",
+       "max_upload_mbps": 10,
+       "max_download_mbps": 10}
+  Django stores speeds in kbps and converts: 5000 kbps -> 5, 500 kbps -> 0.5.
+  block/reconnect are unchanged ({"mac_address", "command_type"}). Django treats
+  a speed_limit reply as accepted unless it says "accepted": false or carries an
+  "error" (the reply shape is Node's to define); block/reconnect still need
+  "accepted": true.
+  >>> TWO ASSUMPTIONS to confirm against Node, both in build_command_payload:
+      1. REMOVING a limit is sent as the same speed_limit command with both
+         maximums 0. The curl only shows setting one. If Node removes a limit
+         differently, change the clear_limit branch (and WireFormatTests).
+      2. A speed that is not a whole number of Mbps (e.g. 512 kbps) is sent as a
+         decimal (0.512). If Node only accepts whole numbers it will reject
+         those (the command shows Failed and admins are notified); the fix is
+         to limit the UI to whole Mbps.
 
 3.3 Plans, subscriptions and automatic access control
   - A Plan has a price and a length. Length is stored in MINUTES, so a
@@ -455,6 +583,13 @@ nav label to the page file, for a developer.)
 Customer nav (pages/customer/...):
   Dashboard, Subscription (buy/renew/history), Suggestions, Notifications,
   Account (profile + change password).
+
+MikroTik Management > Commands tab: each command is a numbered CommandSection
+(components/domain/CommandSection.vue) - a professional name, a brief summary
+that is always shown, and a "Read more" toggle for the full explanation, then
+its controls. Current order: 1. Device Access Control (allow/block by MAC),
+2. Bandwidth Limit (Speed Cap). To add a command, add another CommandSection
+with the next number; keep the same name/summary/details shape.
 
 Navigation icons (layouts/admin.vue and layouts/customer.vue). Every item
 has its own icon - keep it that way when adding pages (lucide-vue-next):
@@ -538,6 +673,19 @@ has its own icon - keep it that way when adding pages (lucide-vue-next):
   (context["include_summary"]) because the same serializer is nested in
   subscription/payment/device responses, where they'd cost several
   queries per row. Don't turn them on globally.
+- NEVER send two commands for the same device back-to-back. Node keeps one
+  pending action per MAC, so the second silently replaces the first (this is
+  why a plan's speed waits for the reconnect to be confirmed, and why Django
+  refuses an access command right after a speed command, and vice versa).
+- Speed limits are QUEUED, never confirmed (3.2.1). Don't add UI that says a
+  limit is "applied"/"active" on the router, and don't add speed commands to
+  the stale-command timeout - they'd all be marked failed.
+- A plan's speed is both-or-neither (uplink and downlink). A half-set plan is
+  treated as default. Don't "fix" this by allowing one direction without
+  agreeing how Node should express an unlimited direction.
+- Activating a plan REPLACES any manual limit on the customer's routers (and a
+  default plan lifts one). If admins start wanting manual limits to survive
+  renewals, that is a decision to make, not a bug.
 - Run the backend tests with explicit app labels
   (python manage.py test devices customers microtik ...). The repo has
   stray duplicate copies of some apps nested under microtik/ and
@@ -611,6 +759,23 @@ Frontend: no automated test suite exists yet. Testing is manual -
 
 8. RECENT CHANGES (most recent first - keep this updated)
 ---------------------------------------------------------------
+- 2026-10-03  (later) Speed limits aligned to Node's real capping command
+              (speed_limit, max_upload_mbps / max_download_mbps, command_id).
+              Because that is a separate command and Node holds one pending
+              action per device, a plan's speed is now sent AFTER the router
+              confirms the connection instead of riding on the reconnect.
+              The Commands tab was restructured: short intro, numbered
+              commands with a summary and Read more - 1. Device Access Control,
+              2. Bandwidth Limit (Speed Cap).
+- 2026-10-03  Speed limits ("capping"): per-device uplink/downlink set by hand
+              or by plan (3.2.1), with an admin notification for everything
+              that happens. Plans gained uplink_kbps/downlink_kbps (default =
+              nothing sent to the MikroTik). The Commands tab has a Speed limit
+              panel; leases, history and plan cards show speeds. Firmware is
+              now learned from the heartbeat's peers (3.1.4) - needs a small
+              Node change. Hardware card no longer shows serial number or
+              hardware version. (Its Node contract was a proposal at
+              the time; see the entry above for the real one.)
 - 2026-10-02  Device pictures now come from the product catalog and are
               STORED. A device's model is looked up in
               backend devices/data/device_icons_lines_products.json and
@@ -745,6 +910,15 @@ Frontend: no automated test suite exists yet. Testing is manual -
 - Device detail's Network card is display-only: IP/gateway/DNS are what
   the device reports, and editing them there would not change the device.
   Changing a device's network settings is not implemented.
+- Removing a speed limit is sent as speed_limit with both maximums 0 - an
+  assumption (the capping curl only shows setting one). Confirm with Node.
+- Speed limits cannot be confirmed from the router (no acknowledgement path,
+  no queue data in its report). The first real test on hardware should check a
+  device's actual speed.
+- A changed plan speed is not pushed to customers already on the plan; they
+  get it at their next activation, or an admin sets it by hand. A "re-apply to
+  everyone on this plan" action was not built.
+- Firmware only appears once Node forwards the peers list (3.1.4).
 - No automated frontend test suite.
 - If you find something else that's missing or broken, add it here
   rather than only mentioning it in chat/Slack, so it doesn't get lost.

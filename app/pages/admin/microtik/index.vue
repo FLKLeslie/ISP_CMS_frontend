@@ -274,6 +274,19 @@ const commandStatusTone = (status: string) =>
 const commandStatusLabel = (status: string) =>
   status === 'CONFIRMED' ? 'Confirmed' : status === 'SENT' ? 'Waiting for router' : status === 'FAILED' ? 'Failed' : 'Pending'
 
+// A speed-only command (set / remove a limit) can never be confirmed - the router's
+// report says nothing about speed - so it stays "queued" for good rather than
+// sitting at "Waiting for router" as if confirmation were still to come.
+const isSpeedOnly = (c: Pick<MikroTikCommand, 'command_type'>) => c.command_type === 'set_limit' || c.command_type === 'clear_limit'
+const statusLabelFor = (c: MikroTikCommand) => (isSpeedOnly(c) && c.status === 'SENT' ? 'Queued' : commandStatusLabel(c.status))
+const commandTitle = (c: Pick<MikroTikCommand, 'command_type'>) => ({
+  block: 'Block', reconnect: 'Connect', set_limit: 'Set speed limit', clear_limit: 'Remove speed limit',
+} as Record<string, string>)[c.command_type] ?? c.command_type
+// What a command did to speed, in words: 'uplink 5 Mbps / downlink 10 Mbps', or 'default
+// (no limit)'; plus the plan that caused it. Empty for a command that didn't touch speed.
+const commandSpeedNote = (c: MikroTikCommand) =>
+  c.limit_change ? `${c.limit_change === 'SET' ? 'Speed' : 'Speed limit removed'}: ${c.limit_label}${c.plan_name ? ` (${c.plan_name} plan)` : ''}` : ''
+
 // --- Forget an unallocated, offline device ---------------------------------------
 const forgettingLease = ref<MikroTikLease | null>(null)
 const forgetting = ref(false)
@@ -532,13 +545,32 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
     <!-- Commands: send an add/block request by MAC address -->
     <div v-else-if="tab === 'send'" class="space-y-4">
       <p class="text-sm text-text-secondary">
-        Add a device to a MikroTik's allowed list, or block it, by MAC address - whether or not that
-        router has reported seeing it yet. This is mainly for infrastructure like access points that
-        should never sit blocked just because they haven't shown up in a report: enter its MAC and
-        authorise it in advance. Once it does connect, the change is confirmed automatically.
+        Send commands directly to a MikroTik. Each one takes effect on the router's next check-in, usually within about 20 seconds.
       </p>
 
-      <div class="rounded-card border border-border bg-surface p-4 sm:p-5">
+      <!-- Command 1 -->
+      <CommandSection
+        :number="1" title="Device Access Control"
+        summary="Allow a device through a MikroTik, or block it, using its MAC address."
+      >
+        <template #details>
+          <p>
+            <strong class="font-semibold text-text-primary">Allow device</strong> adds the MAC address to the MikroTik's allowed list so the
+            device can use the network. <strong class="font-semibold text-text-primary">Block device</strong> removes it so it can't.
+          </p>
+          <p>
+            It works whether or not the router has ever reported seeing the device. That is useful for equipment such as access
+            points, which should never sit blocked just because they haven't shown up in a report yet: enter the MAC and authorise it
+            in advance.
+          </p>
+          <p>
+            The command is queued and the router applies it on its next check-in. It shows as Waiting for router, then Confirmed once a
+            later report proves the change took effect, or Failed if it couldn't be delivered or the router never applied it. You can
+            follow this in the Command history tab.
+          </p>
+        </template>
+
+        <div>
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label for="send-mac" class="mb-1 block text-sm font-medium text-text-primary">MAC address</label>
@@ -578,13 +610,13 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
         <p v-if="sendFormError" role="alert" class="mt-4 rounded-card border border-error/30 bg-error/5 px-3 py-2 text-sm text-error">{{ sendFormError }}</p>
 
         <div class="mt-4 flex flex-wrap gap-2">
-          <button type="button" :disabled="sending" class="btn-primary" @click="askSend('reconnect')">Add to allowed list</button>
-          <button type="button" :disabled="sending" class="btn-danger" @click="askSend('block')">Block</button>
+          <button type="button" :disabled="sending" class="btn-primary" @click="askSend('reconnect')">Allow device</button>
+          <button type="button" :disabled="sending" class="btn-danger" @click="askSend('block')">Block device</button>
         </div>
-      </div>
+        </div>
 
       <!-- Result of the last send: one row per router attempted -->
-      <div v-if="sendResults" class="rounded-card border border-border bg-surface p-4">
+      <div v-if="sendResults" class="mt-4 rounded-card border border-border bg-background p-4">
         <p class="mb-3 text-sm font-medium text-text-primary">Result</p>
         <ul class="space-y-2">
           <li v-for="(result, i) in sendResults" :key="i" class="flex items-center justify-between gap-3 rounded-card border border-border px-3 py-2 text-sm">
@@ -605,9 +637,37 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
           {{ isConflict(result) ? result.detail : ('error_message' in result ? result.error_message : '') }}
         </p>
       </div>
+      </CommandSection>
+
+      <!-- Command 2 -->
+      <CommandSection
+        :number="2" title="Bandwidth Limit (Speed Cap)"
+        summary="Limit a device's upload and download speed, or return it to the default."
+      >
+        <template #details>
+          <p>
+            <strong class="font-semibold text-text-primary">Uplink</strong> is upload speed (data leaving the customer) and
+            <strong class="font-semibold text-text-primary">downlink</strong> is download speed (data coming to them). Choose a device from the
+            routers that belong to customers, or type its MAC address and pick its MikroTik. Its current limit is shown first.
+          </p>
+          <p>
+            A device with no limit is on the <strong class="font-semibold text-text-primary">default</strong>: the MikroTik is told nothing about its
+            speed. <strong class="font-semibold text-text-primary">Remove limit</strong> puts a device back on the default. Internet access is never
+            changed by this command.
+          </p>
+          <p>
+            Plans can carry a speed too: when a customer's plan is activated, their speed is set automatically once the router confirms their
+            connection. Setting a speed here replaces that until the plan is next activated.
+          </p>
+          <p>
+            Routers don't report speed back, so a change shows as Queued rather than Confirmed. Administrators are notified of every
+            speed change with the full details.
+          </p>
+        </template>
+        <SpeedLimitPanel :routers="routers" @changed="refreshAll()" />
+      </CommandSection>
     </div>
 
-    <!-- Command history -->
     <!-- Command history -->
     <div v-else class="space-y-4">
       <div class="flex justify-end">
@@ -617,7 +677,9 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
         <span class="font-semibold text-text-primary">Waiting for router</span> means the command was queued for the
         MikroTik's next check-in. It becomes <span class="font-semibold text-success">Confirmed</span> when a later report
         shows the change took effect, or <span class="font-semibold text-error">Failed</span> if it couldn't be delivered or
-        the MikroTik never applied it in time.
+        the MikroTik never applied it in time. Speed commands are different: routers don't report speed back, so a
+        speed change stays <span class="font-semibold text-text-primary">Queued</span> - it was handed to the MikroTik, which applies
+        it on its next check-in, but that can't be confirmed from here.
       </p>
       <LoadingState v-if="commandsPending && !commandsData" :rows="5" />
       <ErrorState v-else-if="commandsError" @retry="refreshCommands()" />
@@ -637,11 +699,16 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
             :rows="commands" row-key="id"
           >
             <template #cell-mac="{ row }"><span class="font-mono text-xs">{{ row.mac_address }}</span></template>
-            <template #cell-command_type="{ row }">{{ row.command_type === 'block' ? 'Block' : 'Connect' }}</template>
+            <template #cell-command_type="{ row }">
+              <div>{{ commandTitle(row as MikroTikCommand) }}</div>
+              <div v-if="commandSpeedNote(row as MikroTikCommand)" class="max-w-xs whitespace-normal text-xs text-text-secondary">
+                {{ commandSpeedNote(row as MikroTikCommand) }}
+              </div>
+            </template>
             <template #cell-customer="{ row }">{{ row.customer_name || '—' }}</template>
             <template #cell-router="{ row }">{{ row.router_identity || 'Unnamed MikroTik' }}</template>
             <template #cell-status="{ row }">
-              <StatusBadge :label="commandStatusLabel(row.status)" :tone="commandStatusTone(row.status)" />
+              <StatusBadge :label="statusLabelFor(row as MikroTikCommand)" :tone="commandStatusTone(row.status)" />
               <p v-if="row.error_message" class="mt-1 max-w-xs whitespace-normal text-xs text-error">{{ row.error_message }}</p>
             </template>
             <template #cell-created_at="{ row }">{{ formatRelativeTime(row.created_at) }}</template>
@@ -658,11 +725,12 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
           <li v-for="c in commands" :key="c.id" class="rounded-card border border-border bg-surface p-4">
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
-                <p class="text-sm font-medium text-text-primary">{{ c.command_type === 'block' ? 'Block' : 'Connect' }} · {{ c.customer_name || 'No customer' }}</p>
+                <p class="text-sm font-medium text-text-primary">{{ commandTitle(c) }} · {{ c.customer_name || 'No customer' }}</p>
+                <p v-if="commandSpeedNote(c)" class="text-xs text-text-secondary">{{ commandSpeedNote(c) }}</p>
                 <p class="break-all font-mono text-xs text-text-secondary">{{ c.mac_address }}</p>
                 <p class="text-xs text-text-secondary">via {{ c.router_identity || 'Unnamed MikroTik' }}</p>
               </div>
-              <StatusBadge :label="commandStatusLabel(c.status)" :tone="commandStatusTone(c.status)" class="shrink-0" />
+              <StatusBadge :label="statusLabelFor(c)" :tone="commandStatusTone(c.status)" class="shrink-0" />
             </div>
             <p v-if="c.error_message" class="mt-2 text-xs text-error">{{ c.error_message }}</p>
             <div class="mt-2 flex items-center justify-between gap-3">

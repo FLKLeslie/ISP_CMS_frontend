@@ -29,6 +29,7 @@ const columns = (showCustomer: boolean) => [
   { key: 'router', label: 'MikroTik' },
   { key: 'presence', label: 'Status' },
   { key: 'access', label: 'Access' },
+  { key: 'speed', label: 'Speed limit' },
   { key: 'actions', label: '' },
 ]
 </script>
@@ -59,6 +60,13 @@ const columns = (showCustomer: boolean) => [
         </template>
         <template #cell-access="{ row }">
           <AccessStateBadge :state="row.access_state" :pending-action="row.pending_action" />
+        </template>
+        <template #cell-speed="{ row }">
+          <template v-if="row.has_speed_limit">
+            <div class="text-sm">{{ describeLimit(row.uplink_kbps, row.downlink_kbps) }}</div>
+            <div v-if="row.limit_source === 'PLAN'" class="text-xs text-text-secondary">{{ row.limit_plan_name }} plan</div>
+          </template>
+          <span v-else class="text-text-secondary">Default</span>
         </template>
         <template #cell-actions="{ row }">
           <LeaseActions
@@ -106,6 +114,13 @@ const columns = (showCustomer: boolean) => [
           <div class="col-span-2">
             <dt class="text-xs text-text-secondary">MikroTik</dt>
             <dd class="text-text-primary">{{ lease.router_identity || 'Unnamed MikroTik' }}</dd>
+          </div>
+          <div class="col-span-2">
+            <dt class="text-xs text-text-secondary">Speed limit</dt>
+            <dd class="text-text-primary">
+              {{ lease.has_speed_limit ? describeLimit(lease.uplink_kbps, lease.downlink_kbps) : 'Default' }}
+              <span v-if="lease.has_speed_limit && lease.limit_source === 'PLAN'" class="text-xs text-text-secondary">· {{ lease.limit_plan_name }} plan</span>
+            </dd>
           </div>
         </dl>
 

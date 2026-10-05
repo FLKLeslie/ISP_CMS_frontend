@@ -1,5 +1,5 @@
 ISP MANAGEMENT SYSTEM - USER MANUAL
-Last updated: 2026-10-02
+Last updated: 2026-10-03
 =================================================================
 
 This guide explains how to use the system. There are two kinds of
@@ -120,6 +120,22 @@ Three tabs:
     entered as a number plus a unit - Minutes, Hours or Days - so you
     can offer a 30-minute plan, a 2-hour plan, or a 30-day plan, side by
     side. Existing plans can be edited the same way.
+    A plan also has a Speed:
+      - Default speed - the MikroTik is told nothing about speed. If the
+        customer's router currently has a speed limit (from an earlier
+        plan, or one you set by hand), activating this plan removes it.
+      - Set uplink and downlink limits - whenever the plan is activated
+        for a customer (they buy it, you grant it, it is renewed, or you
+        resume it), their router is capped at those speeds as soon as it
+        confirms their connection. Uplink is
+        upload (data leaving the customer), downlink is download. Type a
+        number and choose kbps, Mbps or Gbps. You must give both.
+    Each plan card shows its speed. Changing a plan's speed does not
+    change anyone already on it straight away - the new speed is applied
+    the next time the plan is activated for them. The administrators are
+    notified of every plan created and every speed change, including how
+    many customers are still on the old speed. To change one customer's
+    speed right now, use Bandwidth Limit under MikroTik > Commands.
 
   Grant - give a plan to a customer directly, e.g. for a cash payment
     taken in person. Search for the customer (only customers who
@@ -182,10 +198,13 @@ a table, and there's a CSV download if you want the raw data elsewhere.
                         arranged in cards:
                           Hardware - what the unit physically is:
                             product, model, product line, MAC address,
-                            serial number, hostname, hardware and
-                            firmware version. "Edit" lets you correct
-                            the model, MAC address, serial number and
-                            versions. The product name, product line
+                            hostname and firmware version. "Edit" lets
+                            you correct the model, MAC address and
+                            firmware version. The firmware version
+                            fills in by itself when the device's
+                            wireless link reports it (a unit reports
+                            its partner's firmware, so it appears once
+                            that partner is registered too). The product name, product line
                             and picture can't be edited on their own:
                             they are worked out from the model, so
                             fixing a wrong model fixes them too.
@@ -362,30 +381,65 @@ through the MikroTik routers in the field.
       it reconnects later it will simply reappear as unallocated.
 
   Commands tab
-    Send an "Add to allowed list" or "Block" request straight to a MAC
-    address - this works even for a device that particular MikroTik has
-    never reported seeing yet. It exists mainly for devices like
-    PowerBeam access points that should never be without internet: as
-    soon as you know its MAC, you can pre-authorise it before it even
-    joins the network, so it's never accidentally blocked the moment it
-    connects.
-      1. Enter the MAC address, or click one of the registered access
-         points listed under "Quick pick" to fill it in automatically.
-      2. Choose which MikroTik to send it to, or "All MikroTiks" to send
-         it to every approved router at once.
-      3. Click "Add to allowed list" or "Block".
-    You'll see the result for each router the request was sent to. If a
-    router already has an earlier command still waiting for
-    confirmation on that same device, it's shown as "Already pending"
-    rather than being sent again - wait for that one to resolve (check
-    Command history) before sending another.
-    This is the first command available here; more are expected to be
-    added over time.
+    This is where you send commands directly to a MikroTik. Each command
+    is numbered and has a name, a short summary, and a "Read more" link
+    that opens the full explanation if the summary isn't enough. Commands
+    take effect on the router's next check-in, usually within about 20
+    seconds.
+
+    1. Device Access Control
+       Allow a device through a MikroTik, or block it, using its MAC
+       address. This works even for a device that particular MikroTik has
+       never reported seeing yet. It exists mainly for devices like
+       PowerBeam access points that should never be without internet: as
+       soon as you know its MAC, you can pre-authorise it before it even
+       joins the network, so it's never accidentally blocked the moment
+       it connects.
+         a. Enter the MAC address, or click one of the registered access
+            points listed under "Quick pick" to fill it in automatically.
+         b. Choose which MikroTik to send it to, or "All MikroTiks" to
+            send it to every approved router at once.
+         c. Click "Allow device" or "Block device".
+       You'll see the result for each router the request was sent to. If
+       a router already has an earlier command still waiting for
+       confirmation on that same device, it's shown as "Already pending"
+       rather than being sent again - wait for that one to resolve (check
+       Command history) before sending another.
+
+    2. Bandwidth Limit (Speed Cap)
+       Limits a device's uplink (upload) and downlink (download) speed, or
+       returns it to the default, without touching its internet access.
+       A device with no limit is on the Default: the MikroTik is told
+       nothing about its speed.
+         a. Choose the device: either pick it from the list of routers
+            that belong to customers (search by customer name, MAC
+            address, hostname or IP), or switch to "Type a MAC
+            address", enter it and choose which MikroTik it sits behind.
+         b. Its current speed is shown straight away - "Default" if no
+            limit was ever set, otherwise the uplink and downlink,
+            whether an administrator or a plan set it, and when.
+         c. Enter an uplink and a downlink and click "Set speed limit"
+            (or "Change speed limit"), then confirm. To go back to the
+            default, click "Remove limit (use default)".
+       MikroTiks don't report speed back, so a change can't be confirmed
+       from here - it shows as Queued, not Confirmed. If a block or
+       connect for that device is still waiting for the router, you'll be
+       asked to wait for it first. The administrators are notified of
+       every speed change - who made it, which customer and device, the
+       old and new speed, and whether it failed. A device's current speed
+       also shows in the Devices lists.
+       A plan's speed is applied automatically: when a plan is activated,
+       the customer is connected first, and their speed is set as soon as
+       the router confirms the connection (so it can land a short while
+       after they come online). Activating a plan replaces any speed you
+       set by hand.
 
   Command history tab
-    A log of every block/connect command ever sent, its status
-    (Waiting for router / Confirmed / Failed), and which router it went
-    through (shown by name). You can delete individual entries or clear
+    A log of every block/connect/speed command ever sent, its status
+    (Waiting for router / Confirmed / Failed, or Queued for speed
+    changes), and which router it went through (shown by name). Speed
+    changes show the speed that was requested, and the plan that caused
+    it when a plan activation did. You can delete individual entries or clear
     the whole history; a command still waiting on a router can't be
     deleted until it resolves.
 

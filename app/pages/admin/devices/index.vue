@@ -94,7 +94,7 @@ watch([search, statusFilter, onlineFilter, modelFilter], () => { page.value = 1 
         :columns="[
           { key: 'device_name', label: 'Device' },
           { key: 'customer', label: 'Customer' },
-          { key: 'identifiers', label: 'MAC / Serial' },
+          { key: 'identifiers', label: 'MAC Address' },
           { key: 'access_point', label: 'Access Point' },
           { key: 'firmware', label: 'Firmware' },
           { key: 'status', label: 'Status' },
@@ -124,10 +124,7 @@ watch([search, statusFilter, onlineFilter, modelFilter], () => { page.value = 1 
           </div>
           <span v-else class="text-text-secondary">Unassigned</span>
         </template>
-        <template #cell-identifiers="{ row }">
-          <div class="font-mono text-xs">{{ row.mac_address || '—' }}</div>
-          <div class="text-xs text-text-secondary">{{ row.serial_number ? `S/N ${row.serial_number}` : 'No serial recorded' }}</div>
-        </template>
+        <template #cell-identifiers="{ row }"><span class="font-mono text-xs">{{ row.mac_address || '—' }}</span></template>
         <template #cell-access_point="{ row }">
           <div>{{ row.access_point_name || '—' }}</div>
           <div v-if="row.access_point_site" class="text-xs text-text-secondary">{{ row.access_point_site }}</div>

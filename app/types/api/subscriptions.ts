@@ -11,6 +11,15 @@ export interface Plan {
   // ("1 hour 30 minutes"); `duration_days` is whole days only (0 under a day).
   duration_minutes: number; duration_label: string; duration_days: number
   price: string; is_active: boolean; plan_type: PlanType
+  // The speed this plan gives, in whole kbps. BOTH null = the default: activating
+  // the plan tells the MikroTik nothing about speed (and lifts a limit the router
+  // already has). BOTH set = every router of a customer on this plan is capped at
+  // these values when the plan is activated. Uplink = data leaving the customer
+  // (upload), downlink = data coming to them (download). See utils/speeds.ts.
+  uplink_kbps: number | null; downlink_kbps: number | null
+  has_speed_limit: boolean
+  // The speed in words: 'default (no limit)' or 'uplink 5 Mbps / downlink 10 Mbps'.
+  speed_label: string
   // Only meaningful when plan_type is SPECIFIC - who the plan is limited
   // to. Read as full nested objects; write with eligible_customer_ids
   // (see PlanWritePayload) which takes a plain list of customer IDs.
