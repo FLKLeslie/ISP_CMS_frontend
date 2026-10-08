@@ -1,5 +1,5 @@
 ISP MANAGEMENT SYSTEM - USER MANUAL
-Last updated: 2026-10-03
+Last updated: 2026-10-07
 =================================================================
 
 This guide explains how to use the system. There are two kinds of
@@ -437,7 +437,12 @@ through the MikroTik routers in the field.
   Command history tab
     A log of every block/connect/speed command ever sent, its status
     (Waiting for router / Confirmed / Failed, or Queued for speed
-    changes), and which router it went through (shown by name). Speed
+    changes), and which router it went through (shown by name). A
+    block or connect that the router hasn't confirmed is sent again
+    automatically, about every 30 seconds and up to 4 times in all,
+    before it is given up on - "Tried 3 times" appears when that has
+    happened. This covers the case where the communication service
+    restarted and forgot a command it had been given. Speed
     changes show the speed that was requested, and the plan that caused
     it when a plan activation did. You can delete individual entries or clear
     the whole history; a command still waiting on a router can't be
@@ -536,7 +541,9 @@ PART 4: QUICK ANSWERS TO COMMON QUESTIONS
 "A customer paid but isn't online yet"
   Check MikroTik > Command history for their device. If it shows
   "Waiting for router", give it a little time - the router hasn't
-  polled yet. If it shows "Failed", check the error message and retry
+  polled yet, and the command is re-sent automatically every 30
+  seconds or so for up to two minutes. If it shows "Failed", the
+  message says how many times it was tried and why; check it and retry
   the connect from the customer's page or the MikroTik page. If nothing
   shows up at all, confirm a router is actually allocated to them.
 

@@ -140,6 +140,11 @@ export interface MikroTikCommand {
   downlink_kbps: number | null
   limit_label: string
   plan_name: string
+  // How many times the command has been handed to Node. A block/connect nobody
+  // has confirmed is sent AGAIN (about every 30 seconds, up to 4 times in all)
+  // before it is failed, so 2+ means it was retried. last_attempt_at is the latest.
+  send_attempts: number
+  last_attempt_at: string | null
   error_message: string
   created_at: string
   updated_at: string

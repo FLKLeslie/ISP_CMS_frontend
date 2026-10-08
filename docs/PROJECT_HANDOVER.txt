@@ -504,6 +504,63 @@ all three codebases.
          those (the command shows Failed and admins are notified); the fix is
          to limit the UI to whole Mbps.
 
+3.2.2 Router reports, confirmation, and retries
+  THE REPORT. Every check-in the router POSTs a form-style body that Node relays
+  to Django unchanged (not JSON; microtik/parsing.parse_report):
+      signature=<32 hex>&allowed_macs=<mac,mac,...>&metered_macs=<mac,...>&data=<ip|mac|host,...>
+  `allowed_macs` is the whitelist and the SOURCE OF TRUTH for whether a device
+  has internet; `data` is who is connected. A device is shown ALLOWED if its MAC
+  is in `allowed_macs`, else BLOCKED - so a MAC that is dropped from the list
+  looks blocked and any command that expects it ALLOWED can never confirm.
+
+  THE BUG THIS DOCUMENT NOW GUARDS AGAINST (second time it has happened; the
+  first was 2026-09-18). The parser only treats a fixed set of keys as field
+  boundaries. When the router started sending `metered_macs=` between
+  allowed_macs and data, that key was not in the set, so "&metered_macs=" was
+  glued onto the LAST allowed MAC, which then no longer parsed as a MAC. Result:
+  allowed devices showed as blocked, and a reconnect for the last one in the list
+  failed after the timeout. Defences now in place:
+    1. Every key the router sends is listed in parsing._KEY_RE. WHEN THE ROUTER'S
+       SCRIPT GAINS A FIELD, ADD IT THERE (and to ParsedReport) in the same change.
+    2. MAC lists are split on commas, whitespace AND "&" (split_mac_list), so a
+       field that is not yet listed cannot corrupt the MAC next to it.
+    3. Anything in a MAC list that is not a MAC is collected in
+       ParsedReport.rejected_mac_entries and logged as a WARNING:
+       "MikroTik report from <sig> has N unreadable MAC list entries (ignored)".
+       If you ever see that line, the router's report has changed shape.
+  `metered_macs` is parsed and carried on ParsedReport but NOT acted on. Its
+  meaning is Node's to define; if it means "devices that currently have a speed
+  limit applied" it is the missing feedback for speed commands (3.2.1) and could
+  confirm them. Confirm with the Node author before relying on it.
+
+  CONFIRMATION needs no polling: every report is compared with the command each
+  of the router's devices is waiting on (ingest_leases + reconcile.py). A command
+  is CONFIRMED when the report shows the expected state, stays pending while it is
+  young, and FAILS only when it is older than
+  MIKROTIK_COMMAND_CONFIRM_TIMEOUT_SECONDS (120) and the report still disagrees.
+
+  RETRIES. Node keeps its queue of actions-for-routers IN MEMORY, so a Node
+  restart (or a second instance answering the router's poll) silently loses an
+  action Django already handed over - and the command would just wait out the
+  timeout and fail, although re-sending is harmless (allowing/blocking a MAC
+  twice equals once). So an unconfirmed block/reconnect is SENT AGAIN
+  (services.resend_unconfirmed_commands, run first in the ~15 s maintenance sweep):
+    - after MIKROTIK_RESEND_INTERVAL_SECONDS (30) without confirmation,
+    - up to MIKROTIK_MAX_SEND_ATTEMPTS (4) sends in total,
+    - only inside the confirmation window, and only while it is still the command
+      its device is waiting on (a replacement supersedes it).
+  A resend that Node refuses, or cannot be reached for, counts as an attempt but
+  does NOT fail the command (Node may be mid-restart); the note is kept in
+  error_message and cleared by a later success. The failure message says how hard
+  it tried ("sent 4 times"), and the history shows "Tried N times". Speed commands
+  are never re-sent: nothing could say whether one took.
+  Separately, one request to Node is retried up to MIKROTIK_NODE_INLINE_RETRIES (2)
+  more times, ~0.4 s apart, for a hiccup only (connection error, timeout, 502/503/
+  504) - never for an answer from Node, because "no" will not change.
+  Node's own error codes are shown in words (node_client._NODE_ERRORS): e.g.
+  "microtik-not-registered" (HTTP 404) = Node has no session for the router, so it
+  likely restarted and the router must check in again.
+
 3.3 Plans, subscriptions and automatic access control
   - A Plan has a price and a length. Length is stored in MINUTES, so a
     plan can last 30 minutes, 2 hours, or 30 days - the admin UI takes a
@@ -673,6 +730,11 @@ has its own icon - keep it that way when adding pages (lucide-vue-next):
   (context["include_summary"]) because the same serializer is nested in
   subscription/payment/device responses, where they'd cost several
   queries per row. Don't turn them on globally.
+- The router's report format is a contract with the router's script. When that
+  script gains a field, add the key to parsing._KEY_RE. A key that is missing
+  corrupts the field before it, and the symptom is far from the cause: allowed
+  devices show as blocked and commands "fail". Watch the logs for "unreadable
+  MAC list entries" (3.2.2).
 - NEVER send two commands for the same device back-to-back. Node keeps one
   pending action per MAC, so the second silently replaces the first (this is
   why a plan's speed waits for the reconnect to be confirmed, and why Django
@@ -708,6 +770,10 @@ Backend (Django):
                                         uses on every /api/internal/... call
   MIKROTIK_OFFLINE_THRESHOLD_SECONDS   default 90
   MIKROTIK_COMMAND_CONFIRM_TIMEOUT_SECONDS  default 120
+  MIKROTIK_RESEND_INTERVAL_SECONDS     default 30  - see 3.2.2
+  MIKROTIK_MAX_SEND_ATTEMPTS           default 4   - total sends incl. the first
+  MIKROTIK_NODE_INLINE_RETRIES         default 2   - quick retries on a hiccup
+  MIKROTIK_LIMIT_SETTLE_SECONDS        default 30  - see 3.2.1
   MIKROTIK_AUTO_ENFORCEMENT            True/False, default True - the kill
                                         switch described in 3.3
   MAINTENANCE_INTERVAL_SECONDS         default 15 - see section 5
@@ -759,6 +825,13 @@ Frontend: no automated test suite exists yet. Testing is manual -
 
 8. RECENT CHANGES (most recent first - keep this updated)
 ---------------------------------------------------------------
+- 2026-10-07  Fixed allowed devices showing as blocked and reconnects failing:
+              the router's new `metered_macs=` field was being glued onto the last
+              allowed MAC. The parser now lists the key, parses MAC lists
+              tolerantly and logs anything unreadable. Unconfirmed block/reconnect
+              commands are now re-sent (every 30 s, 4 sends in all) before they
+              fail, and Node's real error reasons are shown instead of a bare
+              HTTP code. History shows "Tried N times". See 3.2.2.
 - 2026-10-03  (later) Speed limits aligned to Node's real capping command
               (speed_limit, max_upload_mbps / max_download_mbps, command_id).
               Because that is a separate command and Node holds one pending
@@ -910,6 +983,10 @@ Frontend: no automated test suite exists yet. Testing is manual -
 - Device detail's Network card is display-only: IP/gateway/DNS are what
   the device reports, and editing them there would not change the device.
   Changing a device's network settings is not implemented.
+- Node's queue of pending router actions is in memory (a restart loses it). The
+  resends in 3.2.2 recover from that, but persisting the queue in Node would
+  remove the cause.
+- `metered_macs` is parsed but unused; its meaning needs confirming (3.2.2).
 - Removing a speed limit is sent as speed_limit with both maximums 0 - an
   assumption (the capping curl only shows setting one). Confirm with Node.
 - Speed limits cannot be confirmed from the router (no acknowledgement path,

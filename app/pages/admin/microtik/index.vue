@@ -279,6 +279,9 @@ const commandStatusLabel = (status: string) =>
 // sitting at "Waiting for router" as if confirmation were still to come.
 const isSpeedOnly = (c: Pick<MikroTikCommand, 'command_type'>) => c.command_type === 'set_limit' || c.command_type === 'clear_limit'
 const statusLabelFor = (c: MikroTikCommand) => (isSpeedOnly(c) && c.status === 'SENT' ? 'Queued' : commandStatusLabel(c.status))
+// "Tried 3 times" - shown once a command has been re-sent, so an administrator can see
+// it is being retried (or was, before it failed) rather than just sitting there.
+const attemptsNote = (c: Pick<MikroTikCommand, 'send_attempts'>) => (c.send_attempts > 1 ? `Tried ${c.send_attempts} times` : '')
 const commandTitle = (c: Pick<MikroTikCommand, 'command_type'>) => ({
   block: 'Block', reconnect: 'Connect', set_limit: 'Set speed limit', clear_limit: 'Remove speed limit',
 } as Record<string, string>)[c.command_type] ?? c.command_type
@@ -564,7 +567,8 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
             in advance.
           </p>
           <p>
-            The command is queued and the router applies it on its next check-in. It shows as Waiting for router, then Confirmed once a
+            The command is queued and the router applies it on its next check-in. If it isn't confirmed it is sent again a few times
+            before being given up on. It shows as Waiting for router, then Confirmed once a
             later report proves the change took effect, or Failed if it couldn't be delivered or the router never applied it. You can
             follow this in the Command history tab.
           </p>
@@ -675,7 +679,8 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
       </div>
       <p class="rounded-card border border-dashed border-border bg-surface p-3 text-sm text-text-secondary">
         <span class="font-semibold text-text-primary">Waiting for router</span> means the command was queued for the
-        MikroTik's next check-in. It becomes <span class="font-semibold text-success">Confirmed</span> when a later report
+        MikroTik's next check-in. If nothing confirms it, it is sent again about every 30 seconds (up to 4 times in all) before it is
+        given up on - "Tried 3 times" shows when that has happened. It becomes <span class="font-semibold text-success">Confirmed</span> when a later report
         shows the change took effect, or <span class="font-semibold text-error">Failed</span> if it couldn't be delivered or
         the MikroTik never applied it in time. Speed commands are different: routers don't report speed back, so a
         speed change stays <span class="font-semibold text-text-primary">Queued</span> - it was handed to the MikroTik, which applies
@@ -709,6 +714,7 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
             <template #cell-router="{ row }">{{ row.router_identity || 'Unnamed MikroTik' }}</template>
             <template #cell-status="{ row }">
               <StatusBadge :label="statusLabelFor(row as MikroTikCommand)" :tone="commandStatusTone(row.status)" />
+              <p v-if="attemptsNote(row as MikroTikCommand)" class="mt-1 text-xs text-text-secondary">{{ attemptsNote(row as MikroTikCommand) }}</p>
               <p v-if="row.error_message" class="mt-1 max-w-xs whitespace-normal text-xs text-error">{{ row.error_message }}</p>
             </template>
             <template #cell-created_at="{ row }">{{ formatRelativeTime(row.created_at) }}</template>
@@ -732,6 +738,7 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
               </div>
               <StatusBadge :label="statusLabelFor(c)" :tone="commandStatusTone(c.status)" class="shrink-0" />
             </div>
+            <p v-if="attemptsNote(c)" class="mt-2 text-xs text-text-secondary">{{ attemptsNote(c) }}</p>
             <p v-if="c.error_message" class="mt-2 text-xs text-error">{{ c.error_message }}</p>
             <div class="mt-2 flex items-center justify-between gap-3">
               <p class="text-xs text-text-secondary">{{ formatRelativeTime(c.created_at) }}</p>
