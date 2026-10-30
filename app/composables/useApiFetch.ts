@@ -36,10 +36,13 @@ export async function apiFetch<T>(path: string, options: FetchOptions<'json'> = 
   } catch (error: any) {
     const status = error?.response?.status ?? error?.statusCode
     if (status === 401 && authStore.refreshToken) {
+      // Noted BEFORE the refresh, which clears the session when it fails: an administrator
+      // whose session ran out goes back to the admin sign-in, not the customers' one.
+      const roleBefore = authStore.user?.role
       refreshPromise ??= performRefresh().finally(() => { refreshPromise = null })
       const refreshed = await refreshPromise
       if (refreshed) return await doFetch()
-      await navigateTo('/login')
+      await navigateTo(loginPathForRole(roleBefore))
     }
     throw error
   }

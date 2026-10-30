@@ -67,11 +67,13 @@ const userName = computed(() => authStore.user ? `${authStore.user.first_name} $
 const unreadNotifications = 0
 async function handleLogout() {
   if (authStore.refreshToken) { try { await logout(authStore.refreshToken) } catch { /* ignore */ } }
-  authStore.clearSession(); await navigateTo('/login')
+  // Back to the door this person came in by (admins to the admin sign-in).
+  const signInPath = loginPathForRole(authStore.user?.role)
+  authStore.clearSession(); await navigateTo(signInPath)
 }
 </script>
 <template>
-  <AppShell :nav-items="navItems" brand-label="ISMS Admin" :user-name="userName" :unread-notifications="unreadNotifications" notifications-to="/admin/notifications" @logout="handleLogout">
+  <AppShell :nav-items="navItems" section-label="Admin" :user-name="userName" :unread-notifications="unreadNotifications" notifications-to="/admin/notifications" @logout="handleLogout">
     <slot />
   </AppShell>
 </template>

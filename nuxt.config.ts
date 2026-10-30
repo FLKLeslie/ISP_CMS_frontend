@@ -1,3 +1,18 @@
+import type { NuxtConfig } from 'nuxt/schema'
+import { BRAND, imageMimeType } from './branding.config'
+
+// One <link> entry, typed from Nuxt's own config so the icon tags below are checked.
+type HeadLink = NonNullable<NonNullable<NonNullable<NuxtConfig['app']>['head']>['link']>[number]
+
+// The icon in the browser tab (and on a phone's home screen), from branding.config.ts.
+// No icon configured = no tags.
+const brandIconLinks: HeadLink[] = BRAND.icon
+  ? [
+      { rel: 'icon', type: imageMimeType(BRAND.icon), href: BRAND.icon },
+      { rel: 'apple-touch-icon', href: BRAND.icon },
+    ]
+  : []
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -9,9 +24,17 @@ export default defineNuxtConfig({
   components: [{ path: '~/components', pathPrefix: false }],
   app: {
     head: {
-      title: 'ISMS',
+      // The application name and tab icon come from branding.config.ts - change them
+      // there, not here. (Per-page titles get " · <name>" appended: see app.vue.)
+      title: BRAND.name,
       htmlAttrs: { lang: 'en' },
+      meta: [
+        { name: 'application-name', content: BRAND.name },
+        { name: 'apple-mobile-web-app-title', content: BRAND.name },
+        ...(BRAND.tagline ? [{ name: 'description', content: `${BRAND.name} - ${BRAND.tagline}` }] : []),
+      ],
       link: [
+        ...brandIconLinks,
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
         { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap' },

@@ -12,7 +12,7 @@ const props = defineProps<{
   to?: string
 }>()
 const toneClasses: Record<string, string> = {
-  primary: 'bg-primary/10 text-primary', success: 'bg-success/10 text-success', warning: 'bg-warning/10 text-warning',
+  primary: 'bg-primary-text/10 text-primary-text', success: 'bg-success/10 text-success', warning: 'bg-warning/10 text-warning',
   error: 'bg-error/10 text-error', accent: 'bg-accent/10 text-accent',
 }
 </script>

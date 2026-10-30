@@ -17,11 +17,13 @@ const { data: unreadData } = await useAsyncData('customer-unread-count', () => l
 watchEffect(() => { if (unreadData.value) unreadNotifications.value = unreadData.value.count })
 async function handleLogout() {
   if (authStore.refreshToken) { try { await logout(authStore.refreshToken) } catch { /* ignore */ } }
-  authStore.clearSession(); await navigateTo('/login')
+  // Back to the door this person came in by (admins to the admin sign-in).
+  const signInPath = loginPathForRole(authStore.user?.role)
+  authStore.clearSession(); await navigateTo(signInPath)
 }
 </script>
 <template>
-  <AppShell :nav-items="navItems" brand-label="ISMS" :user-name="userName" :unread-notifications="unreadNotifications" notifications-to="/customer/notifications" @logout="handleLogout">
+  <AppShell :nav-items="navItems" :user-name="userName" :unread-notifications="unreadNotifications" notifications-to="/customer/notifications" @logout="handleLogout">
     <slot />
   </AppShell>
 </template>

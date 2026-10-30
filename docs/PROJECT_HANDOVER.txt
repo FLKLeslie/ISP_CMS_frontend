@@ -64,16 +64,159 @@ Three moving parts, three separate codebases:
                 at /devices/ (see 3.1.4). Drawn by
                 components/domain/DeviceIcon.vue; URL helpers live in
                 app/utils/deviceIcons.ts.
+  Branding    : branding.config.ts (project root) - the application's name,
+                tagline and logo, in ONE place. Logo file: public/brand/logo.png.
+                See "Branding" just below.
   Run it      : npm install && npm run dev  (expects the backend's URL in
                 the runtime config / .env - check nuxt.config.ts)
+
+SIGN-IN (two doors: customers and administrators)
+  Customers and administrators sign in at DIFFERENT addresses, through DIFFERENT server
+  endpoints, and each door admits only its own kind of account:
+
+      /login          pages/login.vue          -> POST /api/auth/login/         customers only
+      /staff/login    pages/staff/login.vue    -> POST /api/auth/admin/login/   administrators only
+
+  THE SECURITY IS ON THE SERVER, not in the pages (backend accounts/serializers.py,
+  LoginSerializer / AdminLoginSerializer). Hiding a link protects nothing; what
+  guarantees that someone at the customer page can NEVER be signed in as an administrator
+  - even holding an administrator's correct e-mail and password - is that the customer
+  endpoint checks the account's role and refuses an ADMIN:
+    - the refusal is BYTE-IDENTICAL to a wrong password / unknown e-mail / inactive
+      account ("Unable to authenticate with the given credentials."), so the answer can't
+      be used to discover which e-mails exist or who is an administrator. Never add a
+      distinguishing message anywhere (the frontend shows one calm message for every
+      refusal - utils/loginError.ts).
+    - the same holds in reverse: a customer's correct credentials at the admin door.
+    - a "right account, wrong door" attempt is written to the audit log as
+      LOGIN_WRONG_PORTAL (which door, the account's role, the IP). A plain wrong password
+      is not logged. The password never appears in it.
+    - the role compared is the application role (User.role), not is_staff/is_superuser.
+  The frontend adds a second check: LoginForm refuses to keep a session whose role is not
+  the door's, even though the server never returns one.
+
+  THE ADMIN ADDRESS. /staff/login is not linked from anywhere a customer looks, carries
+  <meta robots noindex,nofollow>, and is deliberately NOT in robots.txt (that would publish
+  it). This is hygiene, not the protection - the address is in the public JavaScript, and
+  the endpoint's refusal above is what actually keeps customers out.
+  TO MOVE IT: change ADMIN_LOGIN_PATH in app/utils/authPaths.ts and rename
+  app/pages/staff/login.vue to match (pages/ops/login.vue for '/ops/login'). Nothing else
+  refers to the path. The backend path (/api/auth/admin/login/) is independent.
+
+  WHO IS SENT WHERE (all in app/utils/authPaths.ts, as the plain function
+  resolveAuthRedirect, so every case is testable; app/middleware/auth.global.ts only
+  feeds it the current state):
+    - signed out, any /admin/* page  -> the CUSTOMER sign-in (never reveals the admin one)
+    - signed out, /login or /staff/login -> shown
+    - signed in as a customer at /admin/* or /staff/login -> their own area
+    - signed in as an administrator at /customer/* or /login -> the admin area
+    - an administrator's SESSION ENDS (token refresh fails) or they LOG OUT -> the ADMIN
+      sign-in; everyone else -> the customer one (composables/useApiFetch.ts, layouts)
+  Paths are matched by segment: /administrator is not the /admin area.
+
+  THE PAGES. components/auth/AuthShell.vue (split screen: brand panel + form; a compact
+  header on phones), LoginForm.vue (shared by both pages, `portal` = customer|admin),
+  PasswordField.vue (show/hide key, Caps Lock warning). The form: a visible busy state,
+  one calm error message, the rejected password cleared and the cursor returned to the
+  password field (the fields are disabled while a sign-in is in flight and a disabled
+  field can't take focus, so the busy state ends BEFORE focus moves - this was a real bug),
+  empty fields explained instead of a greyed-out button, `autocomplete="username"` /
+  `current-password` for password managers, the show/hide key keeps focus in the field.
+  Do not link the admin page from the customer page, and don't mention administrators there.
+
+BRANDING (application name, logo, browser-tab icon)
+  The application is called AirFiber, tagline "Unlimited High speed internet". Its name, tagline and logo are defined in
+  ONE file and read from there by everything that shows them:
+
+      branding.config.ts   (project root)
+        name     'AirFiber'   - the application name
+        tagline  '...'        - one line shown under the name on the sign-in page
+        logo     '/brand/logo.png'   - the logo drawn inside the app
+        icon     (same file)  - the icon in the browser tab
+
+  TO RENAME THE APP: change `name` in branding.config.ts. Nothing else. Restart
+  `npm run dev` (or rebuild) - the tab title is written into the page at build time.
+  TO CHANGE THE LOGO: replace the files in public/brand/, keeping their names:
+      logo.png  the logo shown inside the app (sidebar, sign-in page). Any shape.
+                ~320 px wide is plenty - it is never drawn larger than ~80 px.
+      icon.png  the browser-tab icon. Must be SQUARE (~192x192, transparent): the
+                AirFiber logo is not square, so icon.png is the same artwork centred
+                on a transparent square.
+  If you use another name or type (logo.svg, logo.webp), change the `LOGO` / `ICON`
+  lines at the top of branding.config.ts; the <link rel="icon"> type is worked out
+  from the extension. A logo that IS square can serve as both (point ICON at LOGO).
+  Browsers cache tab icons hard - hard refresh. Until logo.png exists the app draws a
+  tile with the first letter of the name, so nothing is ever a broken image.
+  (The originals were 1080x1008 and 766 KB; the shipped files are 320 px / 124 KB and
+  192 px / 37 KB - generated from the logo with the same artwork, only smaller.)
+
+  WHERE IT APPEARS (all driven by the config - nothing hard-codes the name):
+    - browser tab title and icon, <meta application-name/description>  (nuxt.config.ts)
+    - page titles get " · AirFiber" appended                           (app.vue)
+    - sidebar header, logo on a white tile + name (+ "Admin" tag)      (components/shell/Sidebar.vue)
+    - both sign-in pages: logo, name and the tagline in the brand panel (components/auth/AuthShell.vue)
+    - loading screen                                                   (pages/index.vue)
+  In components use `const brand = useBrand()` (brand.name) and <BrandLogo>
+  (components/brand/BrandLogo.vue; props size sm|md|lg|xl, tile, show-name).
+  NEVER type the application's name as text in a template - use brand.name.
+  The one place the name is typed by hand is docs/USER_MANUAL.txt (its title and
+  first paragraph) - update it too if you rename the app.
+  Not branded (deliberately): the backend's internal API title and code comments
+  still say "ISMS"; they are not shown to users.
+
+COLORS (the brand blue and the rest of the palette)
+  Every color in the app is a design token in app/assets/css/tokens.css, exposed to
+  Tailwind in tailwind.config.ts, so one edit re-colors every place that uses it.
+      --color-primary     THE BRAND BLUE as a FILL, #0062CC (rgb 0 98 204) in the light
+                          theme, taken from the AirFiber logo. White text sits on it. It is
+                          the sidebar background, the sign-in brand panel, the selected
+                          state of the toggle buttons (history range, Bandwidth Limit
+                          tabs), the access-point markers on the map, the map legend.
+                          DARK THEME: deepened to rgb 14 50 108 - at full brightness it
+                          glared against the dark page, most of all across the sidebar.
+      --color-primary-text THE BRAND BLUE as TEXT or a LINE on the page (stat-card icons,
+                          the RX/TX chart line): `text-primary-text`. Light theme: the same
+                          blue (it simply follows --color-primary). Dark theme: a LIGHT blue
+                          (rgb 96 165 250, 6.7:1 on the dark surface), because a deep fill
+                          colour is unreadable as text on a dark page. This is why fill and
+                          text are two tokens: they want opposite things in the dark theme.
+      --color-logo-tile   the light tile a logo sits on over a dark fill (white in light,
+                          a softer slate in dark so it doesn't glare).
+      --color-secondary   teal - the PRIMARY ACTION BUTTONS (.btn-primary), the
+                          numbered command badges. NOT the nav color; to make buttons
+                          follow the brand too, change this token.
+      --color-accent      sky blue - focus rings, highlights and links.
+      success / warning / error, background, surface, text-*, border - status colors
+      and the neutral page palette. [data-theme='dark'] overrides most of these.
+      NOTE: Tailwind's `dark:` variant follows the OS setting here, NOT the app's theme
+      switch, so never use `dark:` classes - put dark values in tokens.css instead.
+  TO RE-COLOR THE NAV (AND EVERYTHING THAT SHARES IT): change --color-primary - in the
+  light theme (:root) AND its deeper shade in [data-theme='dark'] - written
+  as three space-separated numbers "R G B" (not hex) so Tailwind can apply opacity
+  (bg-primary/10). Pick a color that white text can sit on: the sidebar's text is
+  white at 90%, so aim for a contrast of at least 4.5:1 with white (the current blue
+  scores 5.8:1 for full white, 5.0:1 at 90%). A noticeably lighter blue needs the
+  sidebar text opacities in components/shell/Sidebar.vue checked again.
+  RULES FOR NEW CODE:
+    - Use the Tailwind classes (bg-primary, text-secondary...), never a hex code.
+    - Where a literal value is unavoidable (Leaflet markers, chart libraries) use
+      tokenHex('primary') (a fill) or tokenHex('primary-text') (a line) from
+      app/utils/themeColor.ts, which reads the token. A hex
+      typed into a page is a copy that silently stops following the palette - the map's
+      access-point markers and one chart line were still the old navy (#0F2747) after
+      the nav changed until they were switched to tokenHex.
+    - The map's other markers (green/red/grey for online/offline/unknown) are still
+      literal hexes, deliberately: they are status colors, not brand colors.
 
 2.2 Backend (separate repository - not in this folder)
   Framework   : Django 5 + Django REST Framework, JWT via SimpleJWT
   Database    : PostgreSQL (DATABASE_URL, or the POSTGRES_* variables)
   Docs        : drf-spectacular auto-generated API docs at /api/docs/
   Apps (each is a top-level Django app with its own models/views/tests):
-    accounts       - custom User model (ADMIN / CUSTOMER roles), login,
-                     JWT refresh, change password
+    accounts       - custom User model (ADMIN / CUSTOMER roles), TWO role-
+                     restricted logins (/api/auth/login/ customers only,
+                     /api/auth/admin/login/ administrators only - see
+                     "SIGN-IN" in section 2.1), JWT refresh, change password
     customers      - Customer profile, linked to a User
     plans          - subscription plans (name, price, duration)
     subscriptions  - a customer's purchased/granted plan, its exact
@@ -495,14 +638,20 @@ all three codebases.
   a speed_limit reply as accepted unless it says "accepted": false or carries an
   "error" (the reply shape is Node's to define); block/reconnect still need
   "accepted": true.
-  >>> TWO ASSUMPTIONS to confirm against Node, both in build_command_payload:
-      1. REMOVING a limit is sent as the same speed_limit command with both
-         maximums 0. The curl only shows setting one. If Node removes a limit
-         differently, change the clear_limit branch (and WireFormatTests).
-      2. A speed that is not a whole number of Mbps (e.g. 512 kbps) is sent as a
-         decimal (0.512). If Node only accepts whole numbers it will reject
-         those (the command shows Failed and admins are notified); the fix is
-         to limit the UI to whole Mbps.
+  REMOVING a limit (back to the default) is a DIFFERENT Node command, not
+  speed_limit with zeros:
+      {"command_id": "clear-speed-limit-<our command's UUID>",
+       "command_type": "clear_speed_limit",
+       "mac_address": "ea:b5:b8:85:8a:90"}
+  It carries no speed values. (It was first built as speed_limit with both
+  maximums 0 - a guess, because only the setting curl was known - and removal
+  did not work until it was corrected to clear_speed_limit. 2026-10-09.)
+  >>> ONE ASSUMPTION left, in build_command_payload: a speed that is not a whole
+      number of Mbps (e.g. 512 kbps) is sent as a decimal (0.512). If Node only
+      accepts whole numbers it will reject those (the command shows Failed and
+      admins are notified); the fix is to limit the UI to whole Mbps. Likewise,
+      clear_speed_limit is sent with only command_id, command_type and
+      mac_address - add a field there if Node wants more.
 
 3.2.2 Router reports, confirmation, and retries
   THE REPORT. Every check-in the router POSTs a form-style body that Node relays
@@ -825,6 +974,31 @@ Frontend: no automated test suite exists yet. Testing is manual -
 
 8. RECENT CHANGES (most recent first - keep this updated)
 ---------------------------------------------------------------
+- 2026-10-29  Sign-in overhaul. (1) Separate administrator sign-in at /staff/login with its
+              own endpoint, enforced on the server so a customer-door login can never
+              produce an administrator session, with refusals indistinguishable from a
+              wrong password and "wrong door" attempts audit-logged. (2) Redesigned
+              sign-in pages: show/hide password key, Caps Lock warning, split-screen
+              brand panel, phone layout, theme switch. (3) The brand blue is deepened in
+              the dark theme (sidebar no longer glares) via a fill/text token split
+              (--color-primary / --color-primary-text). (4) Tagline set to "Unlimited High
+              speed internet". (5) The dark-theme donut chart total (was invisible) fixed.
+              See "SIGN-IN" and "COLORS" in section 2.1.
+- 2026-10-26  Brand blue: --color-primary changed from the old navy (15 39 71) to the
+              AirFiber logo's blue (0 98 204, #0062CC), so the sidebar and everything
+              that shares `primary` now match the logo. Sidebar text raised to 90% white
+              so it stays readable on the lighter blue. Two hard-coded copies of the old
+              navy (map access-point markers, an RX/TX chart line) now read the token via
+              tokenHex(). The uploaded logo is installed at public/brand/logo.png, with a
+              separate square tab icon public/brand/icon.png. See "COLORS" and "BRANDING".
+- 2026-10-09  Fixed removing a speed limit not working: it is now sent as Node's
+              `clear_speed_limit` command (own command_id prefix, no speed
+              values) instead of speed_limit with zeros. See 3.2.1.
+- 2026-10-08  Branding: the application is now called AirFiber. Name, tagline and
+              logo live in branding.config.ts; the logo (public/brand/logo.png)
+              is used in the sidebar, sign-in page and loading screen and as the
+              browser-tab icon; the tab title is the name. Renaming = one edit. See
+              "Branding" in section 2.1.
 - 2026-10-07  Fixed allowed devices showing as blocked and reconnects failing:
               the router's new `metered_macs=` field was being glued onto the last
               allowed MAC. The parser now lists the key, parses MAC lists
@@ -972,6 +1146,11 @@ Frontend: no automated test suite exists yet. Testing is manual -
 - No self-service password reset ("forgot password") flow exists yet -
   only change-password while already logged in. Customer accounts are
   created by an admin, not self-registered.
+- Sign-in has no rate limiting or lockout on the server: repeated wrong passwords are
+  not throttled. Recommended next step (DRF scoped throttle on both login endpoints).
+- There is still no "forgot password" flow for either kind of account.
+- Primary action buttons are still TEAL (--color-secondary), not the brand blue; only
+  --color-primary was changed. Changing secondary too would make buttons blue.
 - The product images themselves must be placed in frontend/devices/
   (named <icon id>.png, as the catalog JSON references them). Until a
   device's image is there, that device shows the generic icon - the
@@ -987,8 +1166,6 @@ Frontend: no automated test suite exists yet. Testing is manual -
   resends in 3.2.2 recover from that, but persisting the queue in Node would
   remove the cause.
 - `metered_macs` is parsed but unused; its meaning needs confirming (3.2.2).
-- Removing a speed limit is sent as speed_limit with both maximums 0 - an
-  assumption (the capping curl only shows setting one). Confirm with Node.
 - Speed limits cannot be confirmed from the router (no acknowledgement path,
   no queue data in its report). The first real test on hardware should check a
   device's actual speed.

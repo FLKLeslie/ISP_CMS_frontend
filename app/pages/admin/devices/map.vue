@@ -37,7 +37,7 @@ function makeDivIcon(colorHex: string, sizePx = 16) {
 const deviceOnlineIcon = makeDivIcon('#16A34A') // success green
 const deviceOfflineIcon = makeDivIcon('#DC2626') // error red
 const deviceUnknownIcon = makeDivIcon('#94A3B8') // neutral gray
-const apIcon = makeDivIcon('#0F2747', 18) // primary navy, slightly larger to distinguish from devices
+const apIcon = makeDivIcon(tokenHex('primary'), 18) // the brand color, slightly larger to distinguish from devices
 
 function deviceIconFor(online: boolean | null) {
   if (online === true) return deviceOnlineIcon

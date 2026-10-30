@@ -1,9 +1,9 @@
-ISP MANAGEMENT SYSTEM - USER MANUAL
-Last updated: 2026-10-07
+AIRFIBER - USER MANUAL
+Last updated: 2026-10-08
 =================================================================
 
-This guide explains how to use the system. There are two kinds of
-accounts:
+This guide explains how to use AirFiber, the ISP management system.
+There are two kinds of accounts:
 
   ADMINISTRATOR  - runs the ISP: manages customers, plans, payments,
                    devices and routers.
@@ -17,8 +17,29 @@ since this was written - check with whoever maintains it.
 =================================================================
 PART 1: LOGGING IN
 =================================================================
-Open the site and enter your Email and Password on the Sign in page,
-then submit.
+There are TWO sign-in pages, one for each kind of account, and each one
+only accepts its own kind of account:
+
+  Customers       sign in at the site's normal address, the page called
+                  "Welcome back" (/login).
+  Administrators  sign in on their own page, "Administrator sign in"
+                  (/staff/login). This address is not linked from the
+                  customer page - bookmark it. Keep it to yourselves.
+
+If you enter correct details on the wrong page, it will simply say it
+couldn't sign you in, exactly as if the password were wrong. That is
+deliberate: it means a customer can never reach the administrator area,
+even if they somehow learned an administrator's email and password.
+
+Enter your Email and Password and press "Sign in". The key at the right
+of the password box shows the password while you type it (and hides it
+again), so you can check you've typed it correctly. If "Caps Lock is on"
+appears under the box, that is the most common reason a correct password
+is rejected. The sun / moon / monitor switch at the top right of the page
+chooses a light or dark appearance.
+
+When you log out, or if your session runs out, you're returned to the
+sign-in page you came in by (administrators to the administrator page).
 
 There is currently no "forgot password" link. If you're an
 administrator and you've lost access, you'll need another administrator

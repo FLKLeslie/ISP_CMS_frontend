@@ -3,7 +3,22 @@
 @tailwind utilities;
 
 :root {
-  --color-primary: 15 39 71;
+  /* THE brand color - the blue of the AirFiber logo (#0062CC). This one token is
+     the sidebar's background AND everything else that uses `primary` (bg-primary /
+     the selected toggle buttons, the sign-in brand panel, the access-point markers on
+     the map...). It is a FILL: white text sits on it. To re-color the app in the light
+     theme, change this line - nothing else. Written as space-separated R G B so
+     Tailwind can apply opacity (bg-primary/10). White text on it scores 5.8:1 (WCAG AA
+     needs 4.5). The dark theme overrides it below with a deeper shade. */
+  --color-primary: 0 98 204;
+  /* The same brand color used as TEXT or a LINE on the page rather than as a fill:
+     stat-card icons, the RX/TX chart line. It is a separate token because the two
+     jobs want different colors in the dark theme (a fill should be deep, text must
+     be light enough to read on a dark page). In the light theme they are one color. */
+  --color-primary-text: var(--color-primary);
+  /* The tile a logo sits on over a dark fill (sidebar, sign-in brand panel), so a
+     logo with dark or transparent areas stays readable. */
+  --color-logo-tile: 255 255 255;
   --color-secondary: 15 118 110;
   --color-accent: 56 189 248;
   --color-success: 22 163 74;
@@ -17,6 +32,15 @@
   --color-border: 226 232 240;
 }
 [data-theme='dark'] {
+  /* The brand blue, DEEPENED for the dark theme. At full brightness it glared against
+     the dark page ("glittered"), most of all across the whole sidebar. This keeps the
+     blue hue at about a fifth of the brightness; white text on it scores 11:1. */
+  --color-primary: 14 50 108;
+  /* ...while the brand color used as text/lines needs to be LIGHT to read on the dark
+     surface (6.8:1 against it). */
+  --color-primary-text: 96 165 250;
+  /* A softer tile so the logo's white doesn't glare on the deep blue. */
+  --color-logo-tile: 226 232 240;
   --color-background: 11 18 32;
   --color-surface: 17 28 46;
   --color-surface-elevated: 23 35 56;

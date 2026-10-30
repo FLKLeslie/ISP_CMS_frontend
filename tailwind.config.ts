@@ -5,6 +5,10 @@ export default <Partial<Config>>{
     extend: {
       colors: {
         primary: 'rgb(var(--color-primary) / <alpha-value>)',
+        // The brand color as TEXT / LINES on the page (icons, chart lines) - see tokens.css.
+        'primary-text': 'rgb(var(--color-primary-text) / <alpha-value>)',
+        // The white tile a logo sits on over the dark sidebar and brand panels.
+        'logo-tile': 'rgb(var(--color-logo-tile) / <alpha-value>)',
         secondary: 'rgb(var(--color-secondary) / <alpha-value>)',
         accent: 'rgb(var(--color-accent) / <alpha-value>)',
         success: 'rgb(var(--color-success) / <alpha-value>)',

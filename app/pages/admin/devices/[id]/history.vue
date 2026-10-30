@@ -130,7 +130,7 @@ const issuesSeries = computed(() => [
       </div>
       <div class="rounded-card border border-border bg-surface p-4">
         <p class="mb-2 text-sm font-medium text-text-primary">RX/TX Rate</p>
-        <LineChart :series="rateSeries" :categories="metricCategories" :colors="['#38BDF8', '#0F2747']" unit=" Mbps" />
+        <LineChart :series="rateSeries" :categories="metricCategories" :colors="['#38BDF8', tokenHex('primary-text')]" unit=" Mbps" />
       </div>
       <div class="rounded-card border border-border bg-surface p-4">
         <p class="mb-2 text-sm font-medium text-text-primary">Errors & Dropped Packets</p>

@@ -6,7 +6,11 @@ const chartOptions = computed(() => ({
   labels: props.labels, colors: props.colors,
   legend: { position: 'bottom' as const, labels: { colors: resolved.value === 'dark' ? '#94A3B8' : '#64748B' } },
   dataLabels: { enabled: false }, stroke: { width: 0 }, tooltip: { theme: resolved.value },
-  plotOptions: { pie: { donut: { labels: { show: true, total: { show: true, color: resolved.value === 'dark' ? '#F1F5F9' : '#0F172A' } } } } },
+  plotOptions: { pie: { donut: { labels: { show: true,
+    // The total's NUMBER is a separate label from the word "Total" and has its own color:
+    // left unset it is a dark gray that vanishes on the dark theme.
+    value: { color: resolved.value === 'dark' ? '#F1F5F9' : '#0F172A' },
+    total: { show: true, color: resolved.value === 'dark' ? '#F1F5F9' : '#0F172A' } } } } },
 }))
 </script>
 <template>

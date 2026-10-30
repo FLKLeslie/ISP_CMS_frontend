@@ -1,7 +1,12 @@
 import type { LoginResponse, User } from '~/types/api/auth'
 export function useAuthApi() {
+  // The CUSTOMER sign-in. Refuses an administrator's credentials like a wrong password.
   function login(email: string, password: string) {
     return apiFetch<LoginResponse>('/api/auth/login/', { method: 'POST', body: { email, password } })
+  }
+  // The ADMINISTRATOR sign-in - a different endpoint, admitting administrators only.
+  function adminLogin(email: string, password: string) {
+    return apiFetch<LoginResponse>('/api/auth/admin/login/', { method: 'POST', body: { email, password } })
   }
   function logout(refresh: string) {
     return apiFetch<{ detail: string }>('/api/auth/logout/', { method: 'POST', body: { refresh } })
@@ -18,5 +23,5 @@ export function useAuthApi() {
       method: 'POST', body: { old_password: oldPassword, new_password: newPassword },
     })
   }
-  return { login, logout, fetchProfile, updateProfile, changePassword }
+  return { login, adminLogin, logout, fetchProfile, updateProfile, changePassword }
 }
