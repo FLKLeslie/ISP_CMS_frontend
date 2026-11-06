@@ -4,6 +4,7 @@ import type { DeviceStatus } from '~/types/api/devices'
 import type { DeviceLiveStatus, NetworkHealth } from '~/utils/deviceFormat'
 
 definePageMeta({ layout: 'admin' })
+const { can } = usePermissions()
 
 const route = useRoute()
 const deviceId = route.params.id as string
@@ -274,6 +275,7 @@ function handleAutoDetectLocation() {
 
 <template>
   <div class="space-y-6">
+    <ReadOnlyNotice v-if="!can('devices.manage')" area="devices" />
     <div class="flex flex-wrap items-center justify-between gap-3">
       <NuxtLink to="/admin/devices" class="inline-flex items-center gap-1 text-sm text-text-secondary hover:text-text-primary">
         <ArrowLeft class="h-4 w-4" /> Back to Devices

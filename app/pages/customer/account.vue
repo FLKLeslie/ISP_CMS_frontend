@@ -23,6 +23,10 @@ async function handleSavePhone() {
 // --- Password change -----------------------------------------------------
 const oldPassword = ref(''); const newPassword = ref(''); const confirmPassword = ref('')
 const changingPassword = ref(false); const passwordError = ref(''); const passwordSuccess = ref(false)
+const showPasswordForm = ref(authStore.mustChangePassword)
+watch(() => authStore.mustChangePassword, (mustChange) => {
+  if (mustChange) showPasswordForm.value = true
+}, { immediate: true })
 async function handleChangePassword() {
   passwordError.value = ''; passwordSuccess.value = false
   if (newPassword.value !== confirmPassword.value) {
@@ -30,11 +34,19 @@ async function handleChangePassword() {
     return
   }
   changingPassword.value = true
+  const wasForced = authStore.mustChangePassword
   try {
     await changePassword(oldPassword.value, newPassword.value)
     oldPassword.value = ''; newPassword.value = ''; confirmPassword.value = ''
     passwordSuccess.value = true
-  } catch { passwordError.value = "Couldn't change your password - check your current password and try again." }
+    // If an administrator had reset this password, the account was held on this page until now.
+    authStore.markPasswordChanged()
+    if (wasForced) await navigateTo('/customer')
+  } catch (err) {
+    passwordError.value = apiErrorMessage(err, '').includes('default one')
+      ? 'Please choose a password other than the default one.'
+      : "Couldn't change your password - check your current password and try again."
+  }
   finally { changingPassword.value = false }
 }
 
@@ -72,6 +84,9 @@ function handleSetLocation() {
 <template>
   <div class="w-full space-y-6">
     <h1 class="text-2xl font-semibold text-text-primary">Account</h1>
+    <p v-if="authStore.mustChangePassword" role="alert" class="rounded-card border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-text-primary">
+      Your password was reset by an administrator. Choose a new password below to continue - nothing else is available until you do.
+    </p>
     <LoadingState v-if="pending" :rows="4" />
     <ErrorState v-else-if="error" @retry="refresh()" />
     <template v-else>
@@ -117,19 +132,23 @@ function handleSetLocation() {
         <p v-if="locationSuccess" role="status" class="text-sm text-success">Location saved to your device.</p>
       </div>
 
-      <form class="space-y-3 rounded-card border border-border bg-surface p-5" @submit.prevent="handleChangePassword">
+      <div v-if="!authStore.mustChangePassword" class="rounded-card border border-border bg-surface">
+        <button type="button" class="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-medium text-text-primary transition hover:bg-text-secondary/5" @click="showPasswordForm = !showPasswordForm">
+          <span>Change password</span>
+          <span class="text-xs text-text-secondary">{{ showPasswordForm ? 'Hide' : 'Show' }}</span>
+        </button>
+      </div>
+
+      <form v-if="authStore.mustChangePassword || showPasswordForm" class="space-y-3 rounded-card border border-border bg-surface p-5" @submit.prevent="handleChangePassword">
         <h2 class="text-sm font-semibold text-text-primary">Change password</h2>
         <div>
-          <label for="old_password" class="mb-1 block text-sm font-medium text-text-primary">Current password</label>
-          <input id="old_password" v-model="oldPassword" type="password" required class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
+          <RevealPasswordInput id="old_password" v-model="oldPassword" label="Current password" autocomplete="current-password" required />
         </div>
         <div>
-          <label for="new_password" class="mb-1 block text-sm font-medium text-text-primary">New password</label>
-          <input id="new_password" v-model="newPassword" type="password" required class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
+          <RevealPasswordInput id="new_password" v-model="newPassword" label="New password" autocomplete="new-password" :min-length="4" required />
         </div>
         <div>
-          <label for="confirm_password" class="mb-1 block text-sm font-medium text-text-primary">Confirm new password</label>
-          <input id="confirm_password" v-model="confirmPassword" type="password" required class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
+          <RevealPasswordInput id="confirm_password" v-model="confirmPassword" label="Confirm new password" autocomplete="new-password" :min-length="4" required />
         </div>
         <p v-if="passwordError" role="alert" class="text-sm text-error">{{ passwordError }}</p>
         <p v-if="passwordSuccess" role="status" class="text-sm text-success">Password changed.</p>

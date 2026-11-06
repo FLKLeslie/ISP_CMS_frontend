@@ -148,11 +148,7 @@ function handleClose() {
           <p v-else class="text-xs text-text-secondary">
             No password saved for this access point yet - enter it below. It'll be saved for next time.
           </p>
-          <input
-            v-model="apPassword" type="password" autocomplete="off"
-            :placeholder="apHasPassword ? 'Leave blank to use the saved password' : 'Access point password'"
-            class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
-          >
+          <RevealPasswordInput id="adopt-ap-password" v-model="apPassword" label="Access point password" autocomplete="off" :placeholder="apHasPassword ? 'Leave blank to use the saved password' : 'Access point password'" />
         </fieldset>
 
         <fieldset class="space-y-2 rounded-card border border-border p-3">
@@ -165,11 +161,7 @@ function handleClose() {
               <input v-model="deviceMode" type="radio" value="set"> I'll set it myself
             </label>
           </div>
-          <input
-            v-if="deviceMode === 'set'" v-model="devicePassword" type="text" autocomplete="off"
-            placeholder="New device password"
-            class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
-          >
+          <RevealPasswordInput v-if="deviceMode === 'set'" id="adopt-device-new-password" v-model="devicePassword" label="New device password" autocomplete="off" placeholder="New device password" />
         </fieldset>
 
         <p v-if="formError" role="alert" class="text-sm text-error">{{ formError }}</p>

@@ -3,6 +3,7 @@ import { RadioTower } from 'lucide-vue-next'
 import type { AccessPoint, AccessPointStatus, DeviceListItem } from '~/types/api/devices'
 
 definePageMeta({ layout: 'admin' })
+const { can } = usePermissions()
 
 const { listAccessPoints, createAccessPoint, updateAccessPoint, deleteAccessPoint,
   listAccessPointDevices, attachDeviceToAccessPoint, detachDeviceFromAccessPoint, scanAccessPoint,
@@ -241,6 +242,7 @@ async function handleDelete() {
 
 <template>
   <div class="space-y-6">
+    <ReadOnlyNotice v-if="!can('access_points.manage')" area="access points" />
     <div class="flex flex-wrap items-center justify-between gap-3">
       <h1 class="text-2xl font-semibold text-text-primary">Access Points</h1>
       <button

@@ -5,6 +5,7 @@ import type {
 } from '~/types/api/microtik'
 
 definePageMeta({ layout: 'admin' })
+const { can } = usePermissions()
 
 const route = useRoute()
 const {
@@ -375,6 +376,7 @@ const selectClass = 'rounded-card border border-border bg-surface px-3 py-2 text
 
 <template>
   <div class="space-y-6">
+    <ReadOnlyNotice v-if="!can('microtik.manage')" area="MikroTik routers" />
     <div class="flex flex-wrap items-center justify-between gap-3">
       <h1 class="text-2xl font-semibold text-text-primary">MikroTik Management</h1>
       <button type="button" class="btn-secondary" @click="refreshAll()">Refresh</button>

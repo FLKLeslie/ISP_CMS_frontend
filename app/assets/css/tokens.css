@@ -77,6 +77,21 @@ body {
 .btn-secondary {
   @apply rounded-card border border-border bg-surface px-4 py-2 text-sm font-medium text-text-primary transition-colors hover:bg-text-secondary/10 disabled:opacity-50;
 }
+.btn-action {
+  @apply inline-flex items-center justify-center whitespace-nowrap rounded-card border px-2.5 py-1.5 text-[11px] font-medium leading-none transition-colors disabled:opacity-50;
+}
+.btn-action-primary {
+  @apply btn-action border-primary/30 bg-primary/5 text-primary hover:bg-primary/10;
+}
+.btn-action-warning {
+  @apply btn-action border-warning/40 bg-warning/10 text-warning hover:bg-warning/15;
+}
+.btn-action-danger {
+  @apply btn-action border-error/40 bg-error/10 text-error hover:bg-error/15;
+}
+.btn-action-success {
+  @apply btn-action border-success/40 bg-success/10 text-success hover:bg-success/15;
+}
 .btn-danger {
   @apply rounded-card border border-error/40 px-4 py-2 text-sm font-medium text-error transition-colors hover:bg-error/10 disabled:opacity-50;
 }

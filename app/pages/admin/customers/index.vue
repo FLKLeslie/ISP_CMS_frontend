@@ -3,6 +3,7 @@ import { Users } from 'lucide-vue-next'
 definePageMeta({ layout: 'admin' })
 const { listCustomers, createCustomer } = useCustomersApi()
 const route = useRoute()
+const { can } = usePermissions()
 const search = ref('')
 // Initialized from the query string so /admin/customers?status=SUSPENDED
 // (e.g. the "Suspended Customers" dashboard card) lands already filtered,
@@ -50,9 +51,10 @@ async function handleCreate() {
 </script>
 <template>
   <div class="space-y-6">
+    <ReadOnlyNotice v-if="!can('customers.manage')" area="customers" />
     <div class="flex items-center justify-between">
       <h1 class="text-2xl font-semibold text-text-primary">Customers</h1>
-      <button type="button" class="btn-primary" @click="showCreateForm = !showCreateForm">
+      <button v-if="can('customers.manage')" type="button" class="btn-primary" @click="showCreateForm = !showCreateForm">
         {{ showCreateForm ? 'Cancel' : 'New Customer' }}
       </button>
     </div>
@@ -60,7 +62,7 @@ async function handleCreate() {
       <input v-model="form.first_name" placeholder="First name" required class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
       <input v-model="form.last_name" placeholder="Last name" required class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
       <input v-model="form.email" type="email" placeholder="Email" required class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
-      <input v-model="form.password" type="password" placeholder="Temporary password" required class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
+      <RevealPasswordInput id="customer-temporary-password" v-model="form.password" label="Temporary password" placeholder="At least 4 characters" :min-length="4" required />
       <input v-model="form.phone_number" placeholder="Phone (optional)" class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
       <input v-model="form.router_ip" placeholder="Router IP (optional - filled in later if unknown)" class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">
       <input v-model="form.address" placeholder="Address (optional)" class="rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent">

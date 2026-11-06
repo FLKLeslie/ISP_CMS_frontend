@@ -10,6 +10,10 @@ export const useAuthStore = defineStore('auth', () => {
   const accessToken = ref<string | null>(null)
   const refreshToken = ref<string | null>(null)
   const isAuthenticated = computed(() => !!accessToken.value && !!user.value)
+  // What the account may do, as last told by the server. (An account stored by an older version
+  // of the app has no list until the next refreshProfile() - hasPermission treats that as none.)
+  const permissions = computed<string[]>(() => user.value?.permissions ?? [])
+  const mustChangePassword = computed(() => !!user.value?.must_change_password)
 
   function setSession(payload: LoginResponse) {
     accessToken.value = payload.access; refreshToken.value = payload.refresh; user.value = payload.user
@@ -19,6 +23,15 @@ export const useAuthStore = defineStore('auth', () => {
     accessToken.value = payload.access
     if (payload.refresh) refreshToken.value = payload.refresh
     persist()
+  }
+  /** Replace the stored user (e.g. after loading the profile again) and remember it. */
+  function setUser(next: User) {
+    user.value = next
+    persist()
+  }
+  /** The forced password change is done: stop holding the account on its account page. */
+  function markPasswordChanged() {
+    if (user.value) setUser({ ...user.value, must_change_password: false })
   }
   function clearSession() {
     user.value = null; accessToken.value = null; refreshToken.value = null
@@ -39,5 +52,8 @@ export const useAuthStore = defineStore('auth', () => {
       accessToken.value = storedAccess; refreshToken.value = storedRefresh; user.value = JSON.parse(storedUser)
     }
   }
-  return { user, accessToken, refreshToken, isAuthenticated, setSession, setTokens, clearSession, hydrate }
+  return {
+    user, accessToken, refreshToken, isAuthenticated, permissions, mustChangePassword,
+    setSession, setTokens, setUser, markPasswordChanged, clearSession, hydrate,
+  }
 })

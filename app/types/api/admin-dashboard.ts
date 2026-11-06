@@ -1,6 +1,14 @@
 import type { Payment } from './subscriptions'
 import type { Suggestion } from './customer-domain'
+/** The dashboard sections an account may see (backend accounts/access.py: DASHBOARD_SECTIONS). */
+export type DashboardSection =
+  | 'customers' | 'subscriptions' | 'revenue' | 'payments' | 'devices' | 'access_points' | 'microtik'
+  | 'unregistered' | 'suggestions'
+
 export interface AdminDashboard {
+  // Which sections below carry real data for THIS account; the rest are zeros / empty lists.
+  // Show only these - a section the account may not see is not "0", it is not theirs.
+  visible_sections: DashboardSection[]
   total_customers: number; active_customers: number; suspended_customers: number
   // Customers with zero currently-ACTIVE subscriptions.
   customers_without_active_plan: number

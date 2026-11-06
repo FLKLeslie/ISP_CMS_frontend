@@ -33,7 +33,7 @@ const historyIndex = ref<number | null>(null)
 
 const scrollbackEl = ref<HTMLElement | null>(null)
 const commandInputEl = ref<HTMLInputElement | null>(null)
-const passwordInputEl = ref<HTMLInputElement | null>(null)
+const passwordInputEl = ref<{ focus: () => void } | null>(null)
 
 function resetToLogin() {
   phase.value = 'login'
@@ -188,11 +188,7 @@ onUnmounted(() => {
             >
           </div>
           <div>
-            <label class="mb-1 block text-xs font-medium text-text-secondary">Password</label>
-            <input
-              ref="passwordInputEl" v-model="password" type="password" autocomplete="off"
-              class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
-            >
+            <RevealPasswordInput ref="passwordInputEl" id="device-console-password" v-model="password" label="Password" autocomplete="off" />
           </div>
           <p v-if="loginError" role="alert" class="text-sm text-error">{{ loginError }}</p>
           <button type="submit" :disabled="connecting" class="btn-primary w-full">

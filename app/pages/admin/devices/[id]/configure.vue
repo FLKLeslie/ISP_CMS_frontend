@@ -2,6 +2,7 @@
 import { ArrowLeft, RefreshCw, ShieldAlert } from 'lucide-vue-next'
 
 definePageMeta({ layout: 'admin' })
+const { can } = usePermissions()
 
 const route = useRoute()
 const deviceId = route.params.id as string
@@ -122,6 +123,7 @@ async function handleConfirmedConfigSend() {
 
 <template>
   <div class="space-y-6">
+    <ReadOnlyNotice v-if="!can('devices.manage')" area="devices" />
     <NuxtLink :to="`/admin/devices/${deviceId}`" class="inline-flex items-center gap-1 text-sm text-text-secondary hover:text-text-primary">
       <ArrowLeft class="h-4 w-4" /> Back to {{ device?.device_name || 'Device' }}
     </NuxtLink>

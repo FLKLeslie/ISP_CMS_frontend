@@ -11,21 +11,22 @@ const { listPayments } = usePaymentsApi()
 const { listSuggestions } = useSuggestionsApi()
 const { listLeases } = useMikroTikApi()
 const { listDevices } = useDevicesApi()
+const { can } = usePermissions()
 const { data: customer, pending, error, refresh } = await useAsyncData(`customer-${id}`, () => fetchCustomer(id))
-const { data: subs, refresh: refreshSubs } = await useAsyncData(`customer-${id}-subs`, () => listSubscriptions({ customer: id, page_size: 100 }))
-const { data: payments } = await useAsyncData(`customer-${id}-payments`, () => listPayments({ customer: id }))
-const { data: suggestions } = await useAsyncData(`customer-${id}-suggestions`, () => listSuggestions({ customer: id }))
+const { data: subs, refresh: refreshSubs } = await useAsyncData(`customer-${id}-subs`, () => can('subscriptions.view') ? listSubscriptions({ customer: id, page_size: 100 }) : Promise.resolve(null))
+const { data: payments } = await useAsyncData(`customer-${id}-payments`, () => can('payments.view') ? listPayments({ customer: id }) : Promise.resolve(null))
+const { data: suggestions } = await useAsyncData(`customer-${id}-suggestions`, () => can('suggestions.view') ? listSuggestions({ customer: id }) : Promise.resolve(null))
 // This customer's devices as reported by whichever MikroTik each one sits
 // behind. Block / Connect / Reallocate here go through the same shared
 // controls as the MikroTik page, so both behave identically: a request
 // leaves the device Pending until the MikroTik's next report confirms it.
 // This customer's own radio(s) - model, picture and link state at a glance.
 const { data: devicesData } = await useAsyncData(
-  `customer-${id}-devices`, () => listDevices({ customer: id, page_size: 50 }),
+  `customer-${id}-devices`, () => can('devices.view') ? listDevices({ customer: id, page_size: 50 }) : Promise.resolve(null),
 )
 const customerDevices = computed(() => devicesData.value?.results ?? [])
 const { data: leasesData, refresh: refreshLeases } = await useAsyncData(
-  `customer-${id}-leases`, () => listLeases({ customer: id }),
+  `customer-${id}-leases`, () => can('microtik.view') ? listLeases({ customer: id }) : Promise.resolve(null),
 )
 const leases = computed(() => leasesData.value?.results ?? [])
 const controls = useLeaseControls(() => refreshLeases())
@@ -165,10 +166,10 @@ async function handleSave() {
         </div>
         <div class="flex flex-col items-end gap-2">
           <StatusBadge :label="customer.status === 'ACTIVE' ? 'Active' : 'Suspended'" :tone="customer.status === 'ACTIVE' ? 'success' : 'error'" />
-          <button type="button" class="btn-secondary" @click="confirmOpen = true">
+          <button v-if="can('customers.manage')" type="button" class="btn-secondary" @click="confirmOpen = true">
             {{ customer.status === 'ACTIVE' ? 'Suspend account' : 'Reactivate account' }}
           </button>
-          <button type="button" class="btn-secondary" @click="startEdit">Edit details</button>
+          <button v-if="can('customers.manage')" type="button" class="btn-secondary" @click="startEdit">Edit details</button>
         </div>
       </div>
 
@@ -207,7 +208,7 @@ async function handleSave() {
       <!-- Left column: the account and its current service. min-w-0 lets tables inside shrink instead of stretching the grid. -->
       <div class="min-w-0 space-y-6">
       <!-- Devices: this customer's own radios, with the picture stored from the detected model -->
-      <div class="rounded-card border border-border bg-surface p-5">
+      <div v-if="can('devices.view')" class="rounded-card border border-border bg-surface p-5">
         <h2 class="mb-3 text-sm font-semibold text-text-primary">Devices</h2>
         <EmptyState v-if="!customerDevices.length" title="No device registered to this customer yet" />
         <ul v-else class="divide-y divide-border">
@@ -231,7 +232,7 @@ async function handleSave() {
         <p class="whitespace-pre-line text-sm text-text-primary">{{ customer.notes }}</p>
       </div>
 
-      <div class="rounded-card border border-border bg-surface p-5">
+      <div v-if="can('microtik.view')" class="rounded-card border border-border bg-surface p-5">
         <h2 class="mb-1 text-sm font-semibold text-text-primary">Internet Connection</h2>
         <p class="mb-3 text-xs text-text-secondary">
           Block or connect this customer's device directly. A change shows as Pending until the MikroTik confirms it.
@@ -254,7 +255,7 @@ async function handleSave() {
       </div>
 
       <!-- Current subscription: the active one, or the blocked one awaiting a decision -->
-      <div class="rounded-card border border-border bg-surface p-5">
+      <div v-if="can('subscriptions.view')" class="rounded-card border border-border bg-surface p-5">
         <h2 class="mb-3 text-sm font-semibold text-text-primary">Current subscription</h2>
         <p v-if="subNotice" role="status" class="mb-3 rounded-card border border-success/30 bg-success/5 px-3 py-2 text-sm text-text-primary">{{ subNotice }}</p>
 
@@ -288,8 +289,8 @@ async function handleSave() {
           <div v-if="currentSub.status === 'ACTIVE'" class="mt-4 border-t border-border pt-4">
             <!-- Blocking only makes sense for a customer with a router allocated: it's the
                  router that gets cut off. Without one, say what to do instead of offering a button that can't work. -->
-            <button v-if="leases.length" type="button" class="btn-danger" @click="confirmBlockOpen = true">Block internet access</button>
-            <p v-else class="text-sm text-text-secondary">
+            <button v-if="leases.length && can('customers.manage')" type="button" class="btn-danger" @click="confirmBlockOpen = true">Block internet access</button>
+            <p v-else-if="!leases.length && can('microtik.view')" class="text-sm text-text-secondary">
               No router is allocated to this customer, so there's nothing to block. Allocate one from
               <NuxtLink to="/admin/microtik?tab=unallocated" class="font-medium text-secondary hover:underline">MikroTik Management</NuxtLink>.
             </p>
@@ -301,7 +302,7 @@ async function handleSave() {
               Their internet is blocked. When you reopen it you can allow the plan as it is, or add the
               {{ blockedFor(currentSub.blocked_seconds) }} it has been blocked so they don't lose the time.
             </p>
-            <button type="button" class="btn-primary mt-3" @click="resumingSub = currentSub">Resume subscription…</button>
+            <button v-if="can('subscriptions.manage')" type="button" class="btn-primary mt-3" @click="resumingSub = currentSub">Resume subscription…</button>
           </div>
         </template>
 
@@ -320,7 +321,7 @@ async function handleSave() {
       <!-- Right column: history and everything that has happened -->
       <div class="min-w-0 space-y-6">
       <!-- History: every other subscription, newest first -->
-      <div class="rounded-card border border-border bg-surface p-5">
+      <div v-if="can('subscriptions.view')" class="rounded-card border border-border bg-surface p-5">
         <h2 class="mb-3 text-sm font-semibold text-text-primary">
           Subscription history<span v-if="historySubs.length" class="ml-1.5 font-normal text-text-secondary">({{ historySubs.length }})</span>
         </h2>
@@ -349,7 +350,7 @@ async function handleSave() {
           </ul>
         </template>
       </div>
-      <div class="rounded-card border border-border bg-surface p-5">
+      <div v-if="can('payments.view')" class="rounded-card border border-border bg-surface p-5">
         <h2 class="mb-3 text-sm font-semibold text-text-primary">Payments</h2>
         <EmptyState v-if="!payments?.results.length" title="No payments" />
         <DataTable v-else :columns="[{key:'amount',label:'Amount'},{key:'method',label:'Method'},{key:'status',label:'Status'},{key:'date',label:'Date'}]" :rows="payments.results" row-key="id">
@@ -359,7 +360,7 @@ async function handleSave() {
           <template #cell-date="{ row }">{{ formatDate(row.payment_date) }}</template>
         </DataTable>
       </div>
-      <div class="rounded-card border border-border bg-surface p-5">
+      <div v-if="can('suggestions.view')" class="rounded-card border border-border bg-surface p-5">
         <h2 class="mb-3 text-sm font-semibold text-text-primary">Suggestions</h2>
         <EmptyState v-if="!suggestions?.results.length" title="No suggestions submitted" />
         <ul v-else class="space-y-2">

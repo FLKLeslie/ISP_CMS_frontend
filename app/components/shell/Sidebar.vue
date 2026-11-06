@@ -4,6 +4,7 @@ import type { NavItem } from '~/types/nav'
 // and logo themselves come from branding.config.ts (see useBrand / BrandLogo).
 const props = defineProps<{ items: NavItem[]; sectionLabel?: string; open: boolean }>()
 const brand = useBrand()
+const route = useRoute()
 const emit = defineEmits<{ close: [] }>()
 </script>
 <template>
@@ -20,7 +21,7 @@ const emit = defineEmits<{ close: [] }>()
     <nav class="flex-1 space-y-0.5 overflow-y-auto px-2.5 py-2" aria-label="Primary">
       <NuxtLink v-for="item in props.items" :key="item.to" :to="item.to"
         class="flex items-center gap-2.5 rounded-card px-3 py-2 text-sm font-medium text-white/90 transition-colors hover:bg-white/10 hover:text-white"
-        active-class="bg-white/15 text-white" @click="emit('close')">
+        active-class="bg-white/15 text-white" :class="item.activePaths?.includes(route.path) ? 'bg-white/15 text-white' : ''" @click="emit('close')">
         <component :is="item.icon" class="h-[17px] w-[17px] shrink-0" aria-hidden="true" />
         <span class="flex-1">{{ item.label }}</span>
         <span

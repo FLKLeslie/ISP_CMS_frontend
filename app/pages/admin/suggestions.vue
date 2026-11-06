@@ -4,6 +4,7 @@ import { MessageSquare } from 'lucide-vue-next'
 definePageMeta({ layout: 'admin' })
 
 const { listSuggestions, respondToSuggestion } = useSuggestionsApi()
+const { can } = usePermissions()
 
 const page = ref(1)
 const statusFilter = ref('')
@@ -68,6 +69,7 @@ async function handleRespond(id: string) {
 
 <template>
   <div class="space-y-6">
+    <AdminCommunicationTabs />
     <h1 class="text-2xl font-semibold text-text-primary">Suggestions</h1>
 
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -120,6 +122,7 @@ async function handleRespond(id: string) {
           </div>
 
           <button
+            v-if="can('suggestions.manage')"
             type="button"
             class="mt-3 text-sm font-medium text-accent hover:underline"
             @click="openResponse(s)"

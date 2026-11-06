@@ -6,6 +6,7 @@ definePageMeta({ layout: 'admin' })
 const { listPayments, recordPayment } = usePaymentsApi()
 const { listCustomers } = useCustomersApi()
 const { listSubscriptions } = useSubscriptionsApi()
+const { can, canOpen } = usePermissions()
 
 // --- List / filter state -------------------------------------------------
 const page = ref(1)
@@ -109,6 +110,7 @@ async function handleRecordPayment() {
     <div class="flex flex-wrap items-center justify-between gap-3">
       <h1 class="text-2xl font-semibold text-text-primary">Payments</h1>
       <button
+        v-if="can('payments.record')"
         type="button"
         class="btn-primary"
         @click="showForm = !showForm"
@@ -258,9 +260,10 @@ async function handleRecordPayment() {
         row-key="id"
       >
         <template #cell-customer="{ row }">
-          <NuxtLink :to="`/admin/customers/${row.customer.id}`" class="hover:underline">
+          <NuxtLink v-if="canOpen('/admin/customers')" :to="`/admin/customers/${row.customer.id}`" class="hover:underline">
             {{ row.customer.user.first_name }} {{ row.customer.user.last_name }}
           </NuxtLink>
+          <span v-else>{{ row.customer.user.first_name }} {{ row.customer.user.last_name }}</span>
         </template>
         <template #cell-plan="{ row }">{{ row.subscription.plan.name }}</template>
         <template #cell-amount="{ row }">{{ formatCurrency(row.amount) }}</template>

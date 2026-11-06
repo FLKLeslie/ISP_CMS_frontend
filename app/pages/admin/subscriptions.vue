@@ -4,6 +4,7 @@ definePageMeta({ layout: 'admin' })
 const { listPlans, createPlan } = usePlansApi()
 const { listSubscriptions, grantSubscription } = useSubscriptionsApi()
 const { listCustomers } = useCustomersApi()
+const { can } = usePermissions()
 const tab = ref<'subscriptions' | 'plans' | 'grant'>('subscriptions')
 const page = ref(1); const statusFilter = ref('')
 const subParams = computed(() => {
@@ -112,7 +113,7 @@ async function handleGrant() {
   <div class="space-y-6">
     <h1 class="text-2xl font-semibold text-text-primary">Subscriptions</h1>
     <div class="inline-flex rounded-card border border-border bg-surface p-0.5" role="tablist">
-      <button v-for="t in [{key:'subscriptions',label:'Subscriptions'},{key:'plans',label:'Plans'},{key:'grant',label:'Grant Subscription'}]" :key="t.key" type="button"
+      <button v-for="t in [{key:'subscriptions',label:'Subscriptions'},{key:'plans',label:'Plans'},{key:'grant',label:'Grant Subscription'}].filter((x) => x.key !== 'grant' || can('subscriptions.manage'))" :key="t.key" type="button"
         class="rounded-[0.4rem] px-4 py-1.5 text-sm font-medium transition-colors"
         :class="tab === t.key ? 'bg-primary text-white' : 'text-text-secondary hover:text-text-primary'"
         @click="tab = t.key as any">{{ t.label }}</button>
@@ -137,7 +138,7 @@ async function handleGrant() {
       </template>
     </div>
     <div v-else-if="tab === 'plans'" class="space-y-4">
-      <button type="button" class="btn-primary" @click="showPlanForm = !showPlanForm">{{ showPlanForm ? 'Cancel' : 'New Plan' }}</button>
+      <button v-if="can('plans.manage')" type="button" class="btn-primary" @click="showPlanForm = !showPlanForm">{{ showPlanForm ? 'Cancel' : 'New Plan' }}</button>
       <form v-if="showPlanForm" class="grid grid-cols-1 gap-3 rounded-card border border-border bg-surface p-5 sm:grid-cols-2" @submit.prevent="handleCreatePlan">
         <div>
           <label class="mb-1 block text-sm font-medium text-text-primary">Name</label>

@@ -3,6 +3,7 @@ import { Router } from 'lucide-vue-next'
 import type { UnregisteredDeviceSighting } from '~/types/api/devices'
 
 definePageMeta({ layout: 'admin' })
+const { can } = usePermissions()
 
 const { listSightings, registerSighting, registerSightingAsAccessPoint, discardSighting, redetectSighting } = useUnregisteredDevicesApi()
 const { listCustomers, createCustomer } = useCustomersApi()
@@ -304,6 +305,7 @@ function handleAdopted(updated: UnregisteredDeviceSighting) {
 
 <template>
   <div class="space-y-6">
+    <ReadOnlyNotice v-if="!can('unregistered_devices.manage')" area="unregistered devices" />
     <div>
       <h1 class="text-2xl font-semibold text-text-primary">Unregistered Devices</h1>
       <p class="mt-1 text-sm text-text-secondary">
@@ -470,7 +472,7 @@ function handleAdopted(updated: UnregisteredDeviceSighting) {
                   <input v-model="newCustomerForm.first_name" placeholder="First name" required :class="field">
                   <input v-model="newCustomerForm.last_name" placeholder="Last name" required :class="field">
                   <input v-model="newCustomerForm.email" type="email" placeholder="Email" required :class="field">
-                  <input v-model="newCustomerForm.password" placeholder="Temporary password" required :class="field">
+                  <RevealPasswordInput id="unregistered-customer-password" v-model="newCustomerForm.password" label="Temporary password" placeholder="At least 4 characters" :min-length="4" required />
                   <input v-model="newCustomerForm.phone_number" placeholder="Phone (optional)" :class="field" class="sm:col-span-2">
                   <p v-if="newCustomerError" role="alert" class="text-xs text-error sm:col-span-2">{{ newCustomerError }}</p>
                   <button type="submit" :disabled="creatingCustomer" class="btn-primary sm:col-span-2">{{ creatingCustomer ? 'Creating…' : 'Create and select customer' }}</button>

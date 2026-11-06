@@ -10,7 +10,7 @@ const options: { value: ThemeChoice; label: string; icon: typeof Sun }[] = [
 <template>
   <div class="inline-flex items-center gap-0.5 rounded-card border border-border bg-surface p-0.5" role="radiogroup" aria-label="Theme">
     <button v-for="option in options" :key="option.value" type="button" role="radio" :aria-checked="choice === option.value"
-      class="flex items-center gap-1.5 rounded-[0.4rem] px-2.5 py-1.5 text-sm font-medium transition-colors"
+      class="flex items-center gap-1.5 rounded-[0.4rem] px-1.5 py-1.5 text-sm font-medium transition-colors sm:px-2.5"
       :class="choice === option.value ? 'bg-primary text-white' : 'text-text-secondary hover:text-text-primary'"
       @click="setTheme(option.value)">
       <component :is="option.icon" class="h-4 w-4" aria-hidden="true" />

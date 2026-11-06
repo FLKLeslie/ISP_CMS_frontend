@@ -1,3 +1,33 @@
+# 2026-11-05 - Admin navigation, account detail visibility, and password UX
+
+* Admin sidebar now groups Suggestions, Announcements, and Notifications under Communications, with permission-aware tabs between their existing pages.
+* Super-administrator-only Customer Accounts, Staff Accounts, and Audit Log links are presented in a top-bar Admin Menu rather than occupying sidebar space.
+* Customer account management shows the customer's non-secret account/profile, contact, location, and router information in an expandable account-details view. Password status remains masked; password-hash viewing was removed from the frontend.
+* Password entry fields throughout the frontend use a reusable reveal/hide control. Passwords are hidden by default and automatically hide when the field is cleared.
+* Password policy: customers may use passwords of at least 4 characters; staff must use at least 8 characters. No character-class composition is required.
+* Responsive tabs and dropdown menus use overflow handling and consistent shell styling.
+
+# 2026-11-04 - Super administrator, per-account permissions, audit trail, logging
+
+* Roles: SUPERADMIN, TECHNICIAN and FINANCE added next to ADMIN and CUSTOMER.
+  Migration `accounts/0002` (also promotes existing Django-superuser admins to SUPERADMIN),
+  `manage.py promote_superadmin <email>`; `createsuperuser` now makes a super administrator.
+* Every staff account holds a list of permissions (catalog in `accounts/access.py`), pre-filled from its
+  role's template and editable by the super administrator. Every endpoint now checks a permission
+  instead of the role. Accounts that were never customised follow their role's template, so existing
+  administrators keep exactly the access they had.
+* Super administrator screens/endpoints: Staff Accounts (with permission picker), Customer Accounts,
+  Audit Log, plus My Account for all staff. Passwords can't be read back; the super administrator can
+  view the hash or reset to `DEFAULT_RESET_PASSWORD` (default `0000`), which forces a password change.
+* Audit trail: `common.AuditLog` records who/what/before-after/IP/browser/request id for every staff
+  change (migration `common/0002`); request ids and structured logs (`LOG_LEVEL`, `LOG_FILE`).
+* New env vars: `DEFAULT_RESET_PASSWORD`, `AUDIT_TRUSTED_PROXY_COUNT`, `LOG_LEVEL`, `LOG_FILE`,
+  `LOG_FILE_MAX_BYTES`, `LOG_FILE_BACKUPS`.
+* No change to the Node service or the internal API contract.
+* Not run against a live Django/Nuxt build when written - see PROJECT_HANDOVER.txt KNOWN ISSUES.
+* (Older notes below describe earlier changes and may be out of date; PROJECT_HANDOVER.txt is the
+  maintained record.)
+
 # MikroTik access control update
 
 Copy `backend/` and `frontend/` over the matching project roots (paths are project-relative).

@@ -2,6 +2,7 @@
 import { Wifi } from 'lucide-vue-next'
 
 definePageMeta({ layout: 'admin' })
+const { can } = usePermissions()
 
 const { listDevices } = useDevicesApi()
 const router = useRouter()
@@ -49,6 +50,7 @@ watch([search, statusFilter, onlineFilter, modelFilter], () => { page.value = 1 
 
 <template>
   <div class="space-y-6">
+    <ReadOnlyNotice v-if="!can('devices.manage')" area="devices" />
     <div class="flex flex-wrap items-center justify-between gap-3">
       <h1 class="text-2xl font-semibold text-text-primary">Devices</h1>
       <NuxtLink

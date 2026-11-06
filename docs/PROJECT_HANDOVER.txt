@@ -1,5 +1,12 @@
+AIRFIBER HANDOVER UPDATE — 2026-11-05
+
+* Admin sidebar combines Suggestions, Announcements, and Notifications into Communications. Each existing page includes permission-aware tabs for switching sections.
+* Super administrator-only navigation is in the topbar Admin Menu (Customer Accounts, Staff Accounts, Audit Log), not the sidebar. It is hidden during forced password-change sessions.
+* Customer account list now exposes administrative profile/contact/address/router details and internal notes to the super administrator; it never includes password or hash. Password-hash inspection routes were removed. Password resets remain audited and require the existing multi-step confirmation.
+* Password requirements: customer minimum 4 characters; staff minimum 8 characters. No composition rules are required. Password-entry fields include reveal/hide controls.
+
 ISP MANAGEMENT SYSTEM - PROJECT HANDOVER
-Last updated: 2026-09-27
+Last updated: 2026-11-04
 =================================================================
 
 PURPOSE OF THIS FILE
@@ -70,12 +77,13 @@ Three moving parts, three separate codebases:
   Run it      : npm install && npm run dev  (expects the backend's URL in
                 the runtime config / .env - check nuxt.config.ts)
 
-SIGN-IN (two doors: customers and administrators)
-  Customers and administrators sign in at DIFFERENT addresses, through DIFFERENT server
+SIGN-IN (two doors: customers and staff)
+  Customers and staff (super administrators, administrators, technicians, financial
+  managers) sign in at DIFFERENT addresses, through DIFFERENT server
   endpoints, and each door admits only its own kind of account:
 
       /login          pages/login.vue          -> POST /api/auth/login/         customers only
-      /staff/login    pages/staff/login.vue    -> POST /api/auth/admin/login/   administrators only
+      /staff/login    pages/staff/login.vue    -> POST /api/auth/admin/login/   staff only (all four staff roles)
 
   THE SECURITY IS ON THE SERVER, not in the pages (backend accounts/serializers.py,
   LoginSerializer / AdminLoginSerializer). Hiding a link protects nothing; what
@@ -109,7 +117,12 @@ SIGN-IN (two doors: customers and administrators)
     - signed out, any /admin/* page  -> the CUSTOMER sign-in (never reveals the admin one)
     - signed out, /login or /staff/login -> shown
     - signed in as a customer at /admin/* or /staff/login -> their own area
-    - signed in as an administrator at /customer/* or /login -> the admin area
+    - signed in as a staff member at /customer/* or /login -> the staff area
+    - signed in as staff at a page their PERMISSIONS don't include -> the first page they
+      can open (their dashboard if they have it; an account with no dashboard permission
+      lands on the first area it does have; one with none lands on My Account)
+    - an account that MUST CHANGE ITS PASSWORD (after a reset, 2.4) -> held on its account
+      page (/admin/account or /customer/account) until it has chosen a new one
     - an administrator's SESSION ENDS (token refresh fails) or they LOG OUT -> the ADMIN
       sign-in; everyone else -> the customer one (composables/useApiFetch.ts, layouts)
   Paths are matched by segment: /administrator is not the /admin area.
@@ -213,10 +226,13 @@ COLORS (the brand blue and the rest of the palette)
   Database    : PostgreSQL (DATABASE_URL, or the POSTGRES_* variables)
   Docs        : drf-spectacular auto-generated API docs at /api/docs/
   Apps (each is a top-level Django app with its own models/views/tests):
-    accounts       - custom User model (ADMIN / CUSTOMER roles), TWO role-
-                     restricted logins (/api/auth/login/ customers only,
-                     /api/auth/admin/login/ administrators only - see
-                     "SIGN-IN" in section 2.1), JWT refresh, change password
+    accounts       - custom User model (FIVE roles: SUPERADMIN / ADMIN /
+                     TECHNICIAN / FINANCE / CUSTOMER, plus a per-account list
+                     of PERMISSIONS - see 2.4), TWO role-restricted logins
+                     (/api/auth/login/ customers only, /api/auth/admin/login/
+                     staff only - see "SIGN-IN" in section 2.1), JWT refresh,
+                     change password, and the super-administrator endpoints
+                     (staff accounts, password resets, audit-log reader)
     customers      - Customer profile, linked to a User
     plans          - subscription plans (name, price, duration)
     subscriptions  - a customer's purchased/granted plan, its exact
@@ -236,9 +252,11 @@ COLORS (the brand blue and the rest of the palette)
     announcements  - admin broadcasts to all customers
     dashboard      - the two summary endpoints (admin dashboard, customer
                      dashboard)
-    common         - shared base models (UUID pk, soft delete, audit log),
-                     the internal-service authentication used by Node,
-                     pagination, and common/maintenance.py (see section 5)
+    common         - shared base models (UUID pk, soft delete), the AUDIT
+                     TRAIL and request logging (see 2.5), the shared
+                     permission classes, the internal-service authentication
+                     used by Node, pagination, and common/maintenance.py
+                     (see section 5)
 
   Two kinds of API, both under /api/:
     /api/<app>/...           normal endpoints, JWT-authenticated, used by
@@ -266,6 +284,199 @@ COLORS (the brand blue and the rest of the palette)
   wire format Node expects, needs to change, that is a conversation with
   whoever owns that service - not something to patch around silently in
   Django.
+
+
+2.4 ROLES, PERMISSIONS AND ACCOUNT MANAGEMENT
+  (Where older sections of this file say "admin" or "administrators only", read: the staff
+  who hold the permission for that area - the table below. The role names are only labels.)
+
+  THE MODEL. There are five roles, but a role is a LABEL AND A STARTING POINT. What an
+  account may actually do is its list of PERMISSIONS:
+    SUPERADMIN   everything, always, plus the two things only they can do (below). Not
+                 governed by a list - nothing in the app can take a super administrator's
+                 access away. The only role that may open the Django admin site
+                 (is_staff/is_superuser are kept in step by User.save()).
+    ADMIN        starting template: everything operational except the audit log. (The
+                 stored value stayed "ADMIN" - the original role.)
+    TECHNICIAN   template: devices (incl. console and device passwords), access points,
+                 unregistered devices, MikroTik routers, a read-only look at customers.
+    FINANCE      template: payments (view + record), revenue, read-only customers and
+                 subscriptions.
+    CUSTOMER     own data only; has no staff permissions.
+  When a super administrator creates a staff account the permission checklist is pre-filled
+  from the chosen role's template; they tick extra permissions or untick ones the person
+  shouldn't have, and what they save is EXACTLY what the account gets.
+
+  WHERE IT LIVES (one definition each - change it there, not at call sites):
+    backend/accounts/roles.py     the role names (pure Python)
+    backend/accounts/access.py    the permission CATALOG, the role TEMPLATES, dependency
+                                  handling (normalize), what an account effectively holds,
+                                  which notifications and dashboard sections it sees (pure
+                                  Python - unit-tested without Django)
+    backend/common/permissions.py permission_required(key), staff_read_write(view, manage)
+    frontend/app/utils/authPaths.ts      which PAGE needs which permission (ADMIN_PAGE_RULES),
+                                         landing pages, the route guard
+    frontend/app/utils/permissionPicker.ts   the picker's tick/untick rules
+    frontend/scripts/check-access.mjs    tests for both (npm run check:access); it holds a
+                                         COPY of the catalog - keep it in step with access.py
+
+  THE PERMISSIONS (key - what it allows). A "manage" permission always includes its "view":
+    dashboard.view                 open the dashboard (it shows only sections the account can see)
+    customers.view / .manage       read customers / create, edit, deactivate, block internet, notes
+    subscriptions.view / .manage   read / grant, renew, block, resume (connects/disconnects internet)
+    plans.manage                   create, edit, delete plans (done from the Subscriptions page)
+    payments.view / payments.record
+    revenue.view
+    devices.view / .manage         read / add, edit, configure, commands
+    devices.credentials            view/set a device or access point's stored password (3.1.2)
+    devices.console                the raw device shell (3.1.1)
+    access_points.view / .manage
+    unregistered_devices.view / .manage   the "unknown devices" queue and adoption (3.1.3)
+    microtik.view / .manage        routers, leases, commands, speed limits
+    suggestions.view / .manage     read / respond
+    announcements.manage
+    notifications.view / .send     read staff notifications / create notifications for customers
+                                   (.send also shows EVERY staff notification)
+    audit.view                     read the audit log
+  Some permissions pull others in (payments.record needs payments.view, customers.view and
+  subscriptions.view, because its screen picks a customer and a subscription; devices.manage,
+  microtik.manage and the like need customers.view for the same reason). Ticking one ticks
+  what it needs; unticking one unticks what needs it; the server applies the same closure
+  when saving, so no account can end up half-working.
+  NOT GRANTABLE (super administrator only): staff.manage (staff accounts and their
+  permissions) and passwords.reset. They are not in the catalog; the server never accepts
+  them in a list.
+
+  HOW IT IS STORED. User.staff_permissions (JSON). NULL = "never customised, follow the
+  role's template" - what every account that existed before this feature has, so they kept
+  exactly the access they had (and accounts made in tests with create_user(role=...) work).
+  A list = exactly those (+ dependencies). [] = no access. Keys the catalog no longer knows are
+  ignored; a damaged value falls back to the template. Read it ONLY through user.can(key) /
+  user.permission_keys.
+
+  HOW IT IS ENFORCED (backend). Each app's permission class asks user.can(...):
+    customers      view / manage            plans          manage (anyone signed in may read)
+    subscriptions  view / manage            payments       view / record
+    revenue        revenue.view             devices        view / manage (+ credentials, console)
+    access points  view / manage            unregistered   view / manage
+    microtik       view / manage            suggestions    view / manage
+    announcements  manage (all may read)    notifications  view / send (+ visibility, below)
+    dashboard      dashboard.view, then each section needs its own view permission
+  RULE FOR NEW CODE: "not an administrator" no longer means "a customer". Never write
+  `if admin: ... else: <treat as customer>`. Decide each case: user.is_staff_member (any
+  staff), user.is_customer, user.can(key). user.can() is False for every customer and True
+  for every super administrator. Querysets use `if user.is_staff_member: return all` and
+  leave "who may reach this endpoint at all" to the permission class.
+  NOTIFICATIONS: a staff notification is one shared row; who sees it depends on type and on
+  what the account can see elsewhere (NETWORK <- any network view permission, PAYMENT <-
+  payments.view, SUBSCRIPTION <- subscriptions.view, CUSTOMER <- customers.manage,
+  SUGGESTION <- suggestions.view). notifications.send sees all, including those addressed to
+  individual customers. "Read" is shared by everyone who can see the row.
+  DASHBOARD: GET /api/dashboard/admin/ always returns every key (zeros for sections the account
+  can't see) plus visible_sections - the frontend draws only those.
+
+  PASSWORDS - what a super administrator can and cannot do. Passwords are stored ONLY as
+  one-way hashes; nobody, super administrator included, can read one. (An earlier design that
+  stored a reversible copy was dropped on purpose.) A super administrator can:
+    - see a masked password-state indicator in account management (no hash viewing endpoint);
+    - RESET an account's password to the default, settings.DEFAULT_RESET_PASSWORD (env,
+      default "0000"), behind a three-step confirmation enforced by the SERVER: tick
+      "I understand", type the account's email exactly, re-enter the super administrator's OWN
+      password. Limited to 30 attempts/hour. You cannot reset your own (use change password).
+  Because the default is not secret, a reset account is flagged User.must_change_password and
+  can do NOTHING but change its password: backend accounts/authentication.py
+  (PasswordChangeAwareJWTAuthentication) refuses every request except profile,
+  change-password, logout and refresh (403 with code password_change_required), and the
+  frontend holds the person on /customer/account or /admin/account. A reset also revokes every
+  session of that account. The default can never be CHOSEN as a new password. New staff
+  accounts are created the same way by default (starting password -> must change at first
+  sign-in; unticking is possible). A suspended customer can't change a password (writes are
+  blocked) - restore them first.
+
+  SAFETY RULES (server-side): you cannot change your own role or deactivate yourself; there
+  must always be at least one active super administrator; accounts are only DEACTIVATED, never
+  deleted (so the audit log keeps pointing at a real person); staff cannot be made customers.
+  `manage.py createsuperuser` now makes a SUPER administrator. Migration accounts/0002
+  promotes existing Django superusers who were ADMIN to SUPERADMIN; anyone else:
+  `python manage.py promote_superadmin <email>`.
+
+  THE SUPER ADMINISTRATOR'S SCREENS (under /admin/superadmin/, reached from the top-bar Admin Menu):
+    Staff Accounts      pages/admin/superadmin/staff.vue - create, edit role/permissions,
+                        deactivate/reactivate, reset password. The permission
+                        picker is components/domain/PermissionPicker.vue.
+    Customer Accounts   .../credentials.vue - customer identity/account details, masked password state, and reset.
+    Audit Log           .../audit-log.vue - needs audit.view (a super administrator has it).
+  Everybody on staff has My Account (pages/admin/account.vue): profile, what the account may
+  do, change password. API (all /api/auth/): permissions/ (catalog), staff/, staff/<id>/,
+  staff/<id>/reset-password/, customer-credentials/,
+  customer-credentials/<id>/reset-password/ (password-hash routes removed 2026-11-05).
+  audit-logs/. Everything except audit-logs/ requires the SUPERADMIN role itself (not a
+  permission) and is invisible to everyone else (403).
+
+  WHAT THE FRONTEND DOES WITH IT. Login and /api/auth/profile/ return `permissions` (the full
+  effective list) and must_change_password. The sidebar shows only pages the account may open
+  (layouts/admin.vue filters by canOpen); buttons that change things are hidden unless the
+  account holds the matching "manage" permission (usePermissions().can); big device/network pages
+  show a "view-only" notice (components/feedback/ReadOnlyNotice.vue) instead of hiding every
+  control - the server refuses any change the account may not make. The permission list
+  is refreshed from the server when the admin layout opens, when the tab regains focus (max
+  once a minute) and after any 403 (max once per 30 s), and a page the account just lost is left
+  automatically. THIS IS ONLY WHAT IS SHOWN; the server checks every request again.
+  To ADD A PAGE: add it to ADMIN_PAGE_RULES in authPaths.ts (a page with no rule is
+  super-administrator-only; check-access.mjs fails if a page under pages/admin has none).
+  To ADD A PERMISSION: add it to accounts/access.py (and to a template if it belongs in one),
+  use it in the endpoint's permission class, copy it into check-access.mjs, add tests.
+
+2.5 AUDIT TRAIL AND LOGGING
+  AUDIT TRAIL (common.AuditLog). One append-only table answering "who changed what, when, from
+  where": action, the actor (a link AND a copy of their email, name and role - so the record
+  stays true after the account is renamed, demoted or deleted), the target record, `changes`
+  (before/after), IP address, browser, HTTP method and URL, status code, and the REQUEST ID.
+  Rows can't be edited or deleted by the application (AuditLog.save/delete refuse).
+  Everything funnels through common/audit.py write_entry(), which NEVER raises: if the audit
+  write fails, the failure is logged ("isms.audit", ERROR) and the real action carries on.
+  THREE THINGS WRITE ROWS:
+    1. log_action(actor, "ACTION", obj, changes) - hand-written rows for meaningful events
+       (these existed before; they now also record IP/request id automatically).
+    2. Model signals (common/audit_signals.py) - whenever a signed-in STAFF member creates,
+       edits or deletes a tracked record, a row "<model>.created/updated/deleted" with the
+       exact fields changed {field: [before, after]}. Tracked: User, Customer, Plan,
+       Subscription, Payment, Device, AccessPoint, DeviceConfiguration, DeviceCustomerAccess,
+       UnregisteredDeviceSighting, MikroTikRouter, Announcement, Suggestion (TRACKED_MODELS -
+       add a model there to audit it). NOT tracked: changes by customers or by the system
+       (heartbeats, router reports, the expiry sweep - there is no staff member in the request),
+       and derived rows (leases, queued router commands, device commands, metrics, notifications).
+    3. Request middleware (common/middleware.py) - the safety net: a staff WRITE
+       (POST/PUT/PATCH/DELETE under /api/) that produced no row gets "API_WRITE"; a refused one
+       (401/403) gets "API_DENIED"; a server error gets "API_ERROR". Ordinary validation
+       failures (400/404) change nothing and are not audited. Reading is never audited.
+  SECRETS NEVER ENTER THE TRAIL (common/audit_helpers.py): any field whose name contains
+  password, token, secret, credential, encrypted, signature, private_key or api_key is shown only
+  as ["(hidden)", "(changed)"] - the fact it changed is kept (compared internally by real
+  value), the value never is. Fix a leak by editing SECRET_NAME_PARTS there.
+  Other action names: STAFF_LOGIN (every staff sign-in), STAFF_CREATED, STAFF_UPDATED,
+  STAFF_PASSWORD_RESET / CUSTOMER_PASSWORD_RESET (+ _REFUSED when the confirmations failed),
+  PASSWORD_HASH_VIEWED, LOGIN_WRONG_PORTAL, and the pre-existing CUSTOMER_*, MIKROTIK_* ones.
+  READING IT: GET /api/auth/audit-logs/ (needs audit.view) and the Audit Log page - filter by
+  person, role, action, record, date range, request, free-text search; "Show everything from this
+  request" follows one click across rows.
+  The client IP comes from X-Forwarded-For counted from the END by AUDIT_TRUSTED_PROXY_COUNT
+  (default 1 = one proxy such as Heroku's router; 0 = ignore the header) because a client can
+  forge the start of that header.
+
+  LOGGING (for debugging). Every request gets a REQUEST ID (a sane caller-sent X-Request-ID
+  is kept, else one is generated) which is on every log line, on every audit row and in the
+  X-Request-ID response header (the frontend appends a short form to server-error messages:
+  "(reference 4f9c2a1b)"). Log lines look like
+    2026-11-02 10:15:03,214 INFO isms.audit [req=4f9c... user=ada@isp.com] AUDIT action=customer.updated ...
+  Loggers: isms.request (one line per request: method, path, status, ms, who, IP; 4xx auth
+  refusals WARNING, 5xx ERROR, Node's/routers' routine polling DEBUG), isms.audit (one line per
+  audit row, and any failure to write one), isms.security (refused sign-ins - never the
+  password - permission denials, password resets), plus each module's own logger.
+  Env: LOG_LEVEL (default INFO; DEBUG shows the polling), LOG_FILE (also write a rotating file;
+  LOG_FILE_MAX_BYTES default 10 MB, LOG_FILE_BACKUPS default 10). Console always. To trace a
+  problem: take the reference from the error (or the X-Request-ID header), grep the log for it,
+  and filter the audit log by it.
 
 
 3. HOW THE CORE BUSINESS FLOW WORKS
@@ -783,8 +994,18 @@ nav label to the page file, for a developer.)
                                                           command history
   Suggestions        pages/admin/suggestions.vue       - customer feedback
   Announcements      pages/admin/announcements.vue     - broadcast messages
-  Notifications      pages/admin/notifications.vue     - the admin's own
+  Notifications      pages/admin/notifications.vue     - the staff
                                                           notification feed
+                                                          (what you see depends
+                                                          on your permissions)
+  My Account         pages/admin/account.vue           - profile, what you may
+                                                          do, change password
+  Staff Accounts     pages/admin/superadmin/staff.vue  - super admin only (2.4)
+  Customer Accounts  pages/admin/superadmin/credentials.vue - super admin only
+  Audit Log          pages/admin/superadmin/audit-log.vue - needs audit.view (2.5)
+
+Each item is shown only if the account may open it (ADMIN_PAGE_RULES in
+app/utils/authPaths.ts).
 
 Customer nav (pages/customer/...):
   Dashboard, Subscription (buy/renew/history), Suggestions, Notifications,
@@ -803,13 +1024,47 @@ has its own icon - keep it that way when adding pages (lucide-vue-next):
   Payments CreditCard | Revenue TrendingUp | Devices Radio
   Unregistered Devices ScanSearch | Device Map MapPinned
   Access Points RadioTower | MikroTik Routers Router
-  Suggestions Lightbulb | Announcements Megaphone | Notifications Bell
+  Communications Settings2 (tabs: Suggestions, Announcements, Notifications)
+  Admin Menu: Staff Accounts | Customer Accounts | Audit Log; sidebar Communications tabs: Suggestions | Announcements | Notifications
+  My Account User
   (customer: Dashboard LayoutDashboard, Subscription CalendarClock,
   Notifications Bell, Suggestions Lightbulb, Account User)
 
 
 5. THINGS THAT ARE EASY TO GET WRONG (READ BEFORE CHANGING)
 ---------------------------------------------------------------
+- PERMISSIONS, NOT ROLES. Never compare a role string ("ADMIN") to decide what someone may do;
+  ask user.can("some.key") (backend) or hasPermission/can() (frontend). A role is only a label
+  and a template (2.4). And "not an administrator" no longer means "a customer": a technician
+  is neither - decide each case explicitly (is_staff_member / is_customer / can(key)).
+- A NEW ENDPOINT needs a permission class that names its permission, or any signed-in user
+  could reach it. A NEW PAGE needs an entry in ADMIN_PAGE_RULES (otherwise it is
+  super-administrator-only, and npm run check:access fails). A NEW PERMISSION must be added to
+  accounts/access.py, the endpoint, and the copy in scripts/check-access.mjs.
+- THE FRONTEND ONLY SHOWS; THE SERVER DECIDES. Hiding a button or page is courtesy. Never rely on
+  it for security, and never skip the server-side check because the UI hides something.
+- PASSWORDS CANNOT BE READ BACK, by design. Do not "add a reveal" by storing a reversible copy
+  (an earlier design did; it was removed): a database leak would then expose every customer's
+  password, and many people reuse theirs. The supported tools are: reset to the
+  default (which forces a change). Resetting must keep revoking sessions and setting
+  must_change_password.
+- must_change_password is enforced in accounts/authentication.py, which replaced the default
+  JWT authentication class in settings. If you add an endpoint a person must be able to use
+  while locked to the change-password step, add its path to
+  ALLOWED_WHILE_PASSWORD_CHANGE_REQUIRED there - nothing else.
+- AUDITING MUST NEVER BREAK A REQUEST. write_entry/log_action swallow and log their own errors;
+  keep it that way. Don't put business logic inside audit handlers, and don't record secrets:
+  extend SECRET_NAME_PARTS (common/audit_helpers.py) if you add a field that holds one. A secret
+  field's real value is compared internally (SecretValue) but only a marker is ever stored -
+  an earlier version masked both sides identically and so MISSED password changes entirely.
+- Audit signals only record changes made while a signed-in STAFF member is in the request.
+  A change made by a script, a management command or the Node service is intentionally not
+  attributed to anyone. If a management command should be audited, call log_action yourself.
+- Audit rows are append-only (AuditLog.save/delete raise). Don't add code that edits them; a
+  bulk QuerySet.update/delete would bypass this guard, so don't write one either.
+- X-Forwarded-For can be forged at its start. The audit IP is taken from the END, counting
+  AUDIT_TRUSTED_PROXY_COUNT proxies; change that setting if the hosting setup changes (0 when the
+  app is reached directly).
 - A MikroTik lease's access_state (Allowed/Blocked/Pending/Unknown) is
   DERIVED from the router's own report, never set directly by Django
   except to PENDING when a command is queued. Don't add code that sets
@@ -940,6 +1195,15 @@ Backend (Django):
                                         - TARGET_PATH/CONTROLLER_URL are
                                         placeholders pending the real
                                         adoption script
+  DEFAULT_RESET_PASSWORD               what "reset password" sets (default 0000);
+                                        the account must change it at next
+                                        sign-in (2.4). Must not be empty.
+  AUDIT_TRUSTED_PROXY_COUNT            reverse proxies in front of the app, for
+                                        the audit/log client IP (default 1; 0 =
+                                        ignore X-Forwarded-For) (2.5)
+  LOG_LEVEL, LOG_FILE,
+  LOG_FILE_MAX_BYTES, LOG_FILE_BACKUPS logging (2.5): default INFO to the
+                                        console; LOG_FILE adds a rotating file
   (check backend/isms_backend/settings.py for the full, current list -
   this is not guaranteed exhaustive)
 
@@ -967,13 +1231,77 @@ Backend: `python manage.py test` runs the full Django test suite
     python -m unittest common.test_durations      (minutes/hours/days
                                                     formatting and reminder
                                                     timing math)
+    python -m unittest accounts.test_access       (the permission catalog,
+                                                    role templates, dependency
+                                                    handling, notification and
+                                                    dashboard visibility)
+    python -m unittest common.test_audit_helpers  (what the audit trail
+                                                    records - and that secrets
+                                                    never appear in it)
+  Django tests added with the permissions/audit work (need `manage.py test`):
+    accounts.test_role_access     every endpoint, every role and customised accounts
+    accounts.test_superadmin      staff accounts, permissions, resets, forced change, hashes
+    common.test_audit             the audit trail end to end, request ids, logging, fail-safety
+  NOTE: the stale nested copies of apps (see KNOWN ISSUES) make plain `manage.py test`
+  fail to import; pass app labels, e.g.
+    python manage.py test accounts common customers plans subscriptions payments \
+        notifications suggestions announcements dashboard devices microtik
 
-Frontend: no automated test suite exists yet. Testing is manual -
-  exercise the page in a browser against a running backend.
+Frontend: there is no browser/component test suite. One script checks the access logic
+  (which page each permission opens, the route guard, redirect loops, the permission
+  picker's rules):
+    npm run check:access        (Node 22.6+; runs scripts/check-access.mjs)
+  PASSWORD LENGTH: customer accounts require at least 4 characters; staff accounts require at least 8. No uppercase/lowercase/digit/symbol combination is imposed. Frontend password-entry controls hide by default and provide reveal/hide buttons.
+
+  Everything else is manual - exercise the page in a browser against a running backend.
 
 
 8. RECENT CHANGES (most recent first - keep this updated)
 ---------------------------------------------------------------
+- 2026-11-05  ADMIN NAVIGATION, CUSTOMER ACCOUNT DETAILS, PASSWORD POLICY.
+              Sidebar now groups Suggestions, Announcements, and Notifications under
+              Communications with tabs. Super-admin links (Customer Accounts, Staff Accounts,
+              Audit Log) moved to topbar Admin Menu. Customer account admin view exposes profile,
+              contact, location, router fields, and internal notes, never password/hash data.
+              Hash inspection routes removed. Customer passwords minimum 4 characters; staff
+              passwords minimum 8; no composition requirement. All password-entry fields offer
+              reveal/hide controls. Documentation updated with the current design.
+- 2026-11-04  SUPER ADMINISTRATOR, PER-ACCOUNT PERMISSIONS, AUDIT TRAIL, LOGGING.
+              ROLES: SUPERADMIN, TECHNICIAN and FINANCE join ADMIN and CUSTOMER (migration
+              accounts/0002 widens `role`, adds staff_permissions and must_change_password,
+              and promotes existing Django-superuser ADMINs to SUPERADMIN). `createsuperuser`
+              now makes a super administrator; new command `promote_superadmin <email>`.
+              PERMISSIONS: a catalog of 25 grantable permissions (accounts/access.py); each
+              staff account holds a list, pre-filled from its role's template and editable
+              by the super administrator when creating or editing it. Every endpoint now
+              asks `user.can(key)` instead of checking the role (customers, plans,
+              subscriptions, payments, revenue, devices, access points, unregistered devices,
+              MikroTik, suggestions, announcements, notifications, dashboard). Existing
+              accounts have staff_permissions NULL = follow their role's template, so an ADMIN
+              keeps exactly the access it had. Notifications and dashboard sections follow
+              permissions. Frontend: permission-based route guard/menu (authPaths.ts),
+              usePermissions(), write buttons hidden without the matching permission,
+              view-only notice on big pages, My Account page, Staff Accounts page with the
+              permission picker, Customer Accounts page, Audit Log page.
+              PASSWORDS: passwords remain masked and are never sent back to account-management screens.
+              Password-hash inspection was removed. Reset to the default (DEFAULT_RESET_PASSWORD,
+              0000) remains audited and behind three
+              confirmations; the account is then forced to choose a new password
+              (accounts/authentication.py; sessions revoked).
+              AUDIT: AuditLog gained actor email/name/role snapshot, IP, browser, method, URL,
+              status and request id (common/0002); model signals record before/after of every
+              staff change, a middleware guarantees every staff write/refusal leaves a row,
+              secrets never recorded. NEW: GET /api/auth/audit-logs/ and the Audit Log page.
+              LOGGING: request ids (X-Request-ID), structured log lines with request id and user,
+              loggers isms.request / isms.audit / isms.security, optional rotating log file.
+              TESTS: accounts.test_access, common.test_audit_helpers (pure Python, run
+              anywhere), accounts.test_role_access / test_superadmin / common.test_audit (Django),
+              and `npm run check:access` for the frontend. The three tests in accounts/tests.py
+              that assumed "admin account == role ADMIN" were updated to SUPERADMIN.
+              NOT VERIFIED IN A LIVE ENVIRONMENT: this work was written where Django and
+              node_modules could not be installed, so the Django tests and the Nuxt build were
+              NOT RUN. Run `python manage.py migrate`, the Django tests above and `npm run build`
+              before deploying - see KNOWN ISSUES.
 - 2026-10-29  Sign-in overhaul. (1) Separate administrator sign-in at /staff/login with its
               own endpoint, enforced on the server so a customer-door login can never
               produce an administrator session, with refusals indistinguishable from a
@@ -1128,6 +1456,32 @@ Frontend: no automated test suite exists yet. Testing is manual -
 
 9. KNOWN ISSUES / NOT YET DONE
 ---------------------------------------------------------------
+- THE PERMISSIONS/AUDIT WORK HAS NOT BEEN RUN END TO END. It was developed without a Django
+  install or node_modules, so only the pure-Python tests (accounts.test_access,
+  common.test_audit_helpers), the frontend access script and static checks were executed. Before
+  deploying: run `python manage.py migrate` and the Django test modules listed in section 7,
+  run `npm run build`, then click through each role (super administrator, administrator,
+  technician, financial manager, a customised account, a reset account) once.
+- On the big device/network pages (device detail, configure, unregistered devices, access
+  points, MikroTik) only a "view-only" notice is shown to accounts without the "manage"
+  permission; the individual buttons are NOT all hidden. The server refuses any change the
+  account may not make, with a clear message, so this is cosmetic - but a tidy-up would gate each
+  button with usePermissions().can(...). The device page also still shows its console and
+  credentials panels to accounts lacking devices.console / devices.credentials (the server
+  refuses them).
+- Staff notification "read" state is shared by everyone who can see a notification (one row, one
+  flag). One person marking a network notification read marks it read for the other staff who
+  can see it. Per-person read state would need a small extra table.
+- The audit log grows without limit and has no purge/archive job. Rows are small, but plan for
+  retention (e.g. archive rows older than N months) before the table gets large.
+- A reset password is "0000" by default. It is protected by the forced change at next sign-in
+  (and only works until then), but anyone who learns the convention AND whose account is reset
+  and not yet used could sign in as them in that window. Tell the person straight away, or set
+  DEFAULT_RESET_PASSWORD to something less guessable.
+- A suspended customer cannot change their password (suspension blocks writes), so a reset
+  suspended customer is stuck on the change-password page until restored.
+- check-access.mjs holds a COPY of the permission catalog; if accounts/access.py changes and the
+  copy doesn't, the script can pass while the real rules differ. Update both together.
 - No real payment gateway integration. Every payment (customer purchase
   or admin-recorded) is written straight to the database as COMPLETED;
   there is no actual charge against MTN MoMo / Orange Money / a bank

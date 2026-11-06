@@ -32,6 +32,9 @@ const columns = (showCustomer: boolean) => [
   { key: 'speed', label: 'Speed limit' },
   { key: 'actions', label: '' },
 ]
+
+// Customer names link to the customer's page only if this account may open it.
+const { can, canOpen } = usePermissions()
 </script>
 
 <template>
@@ -45,9 +48,10 @@ const columns = (showCustomer: boolean) => [
         </template>
         <template #cell-ip="{ row }">{{ row.ip_address || '—' }}</template>
         <template #cell-customer="{ row }">
-          <NuxtLink v-if="row.customer" :to="`/admin/customers/${row.customer}`" class="hover:underline" @click.stop>
+          <NuxtLink v-if="row.customer && canOpen('/admin/customers')" :to="`/admin/customers/${row.customer}`" class="hover:underline" @click.stop>
             {{ row.customer_name }}
           </NuxtLink>
+          <span v-else-if="row.customer">{{ row.customer_name }}</span>
           <span v-else class="text-warning">Not allocated</span>
         </template>
         <template #cell-router="{ row }">{{ row.router_identity || 'Unnamed MikroTik' }}</template>
@@ -70,6 +74,7 @@ const columns = (showCustomer: boolean) => [
         </template>
         <template #cell-actions="{ row }">
           <LeaseActions
+            v-if="can('microtik.manage')"
             :lease="row" :busy="actingId === row.id"
             @allocate="emit('allocate', row as MikroTikLease)" @reallocate="emit('reallocate', row as MikroTikLease)"
             @block="emit('block', row as MikroTikLease)" @connect="emit('connect', row as MikroTikLease)"
@@ -94,7 +99,8 @@ const columns = (showCustomer: boolean) => [
           <div v-if="showCustomer" class="col-span-2">
             <dt class="text-xs text-text-secondary">Customer</dt>
             <dd class="text-text-primary">
-              <NuxtLink v-if="lease.customer" :to="`/admin/customers/${lease.customer}`" class="hover:underline">{{ lease.customer_name }}</NuxtLink>
+              <NuxtLink v-if="lease.customer && canOpen('/admin/customers')" :to="`/admin/customers/${lease.customer}`" class="hover:underline">{{ lease.customer_name }}</NuxtLink>
+              <span v-else-if="lease.customer">{{ lease.customer_name }}</span>
               <span v-else class="text-warning">Not allocated</span>
             </dd>
           </div>
@@ -124,7 +130,7 @@ const columns = (showCustomer: boolean) => [
           </div>
         </dl>
 
-        <div class="mt-4 border-t border-border pt-3">
+        <div v-if="can('microtik.manage')" class="mt-4 border-t border-border pt-3">
           <LeaseActions
             :lease="lease" :busy="actingId === lease.id"
             @allocate="emit('allocate', lease)" @reallocate="emit('reallocate', lease)"

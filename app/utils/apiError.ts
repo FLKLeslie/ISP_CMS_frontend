@@ -6,6 +6,15 @@
 // to `fallback` when nothing usable is found, so callers never show a
 // blank message.
 export function apiErrorMessage(err: unknown, fallback: string): string {
+  const message = apiErrorBaseMessage(err, fallback)
+  // A server error (5xx) carries the id of the request that failed: show a short form of it, so
+  // "it broke when I clicked Save" can be matched to the server's log lines and audit rows.
+  const status = (err as { response?: { status?: number } })?.response?.status
+  const requestId = (err as { response?: { headers?: { get?: (name: string) => string | null } } })?.response?.headers?.get?.('x-request-id')
+  return status !== undefined && status >= 500 && requestId ? `${message} (reference ${requestId.slice(0, 8)})` : message
+}
+
+function apiErrorBaseMessage(err: unknown, fallback: string): string {
   const data = (err as { data?: unknown })?.data
   if (!data || typeof data !== 'object') return fallback
 

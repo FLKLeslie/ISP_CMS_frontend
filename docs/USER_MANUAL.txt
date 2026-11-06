@@ -1,13 +1,29 @@
 AIRFIBER - USER MANUAL
-Last updated: 2026-10-08
+Last updated: 2026-11-04
 =================================================================
 
 This guide explains how to use AirFiber, the ISP management system.
-There are two kinds of accounts:
+There are two kinds of accounts - staff and customers - and staff come in
+four kinds:
 
-  ADMINISTRATOR  - runs the ISP: manages customers, plans, payments,
-                   devices and routers.
-  CUSTOMER       - a person buying internet access from the ISP.
+  SUPER ADMINISTRATOR - the owner of the system. Can do everything, and is
+                        the only one who creates staff accounts and decides
+                        what each may do, resets passwords and reads the
+                        audit log.
+  ADMINISTRATOR       - runs the ISP day to day: customers, plans,
+                        payments, devices and routers.
+  TECHNICIAN          - looks after the network: devices, access points,
+                        routers. Can look at customers but not change them.
+  FINANCIAL MANAGER   - looks after the money: payments and revenue. Can
+                        look at customers and subscriptions but not change
+                        them.
+  CUSTOMER            - a person buying internet access from the ISP.
+
+Administrators, technicians and financial managers start with the access
+described above, but the super administrator can add or remove individual
+permissions for each person, so what YOU can do may differ. The menu only
+shows what your account is allowed to open (see "My Account" for the full
+list of what you may do).
 
 Which one you see when you log in depends on your account. If something
 on screen doesn't match this guide, the application may have changed
@@ -22,14 +38,15 @@ only accepts its own kind of account:
 
   Customers       sign in at the site's normal address, the page called
                   "Welcome back" (/login).
-  Administrators  sign in on their own page, "Administrator sign in"
-                  (/staff/login). This address is not linked from the
-                  customer page - bookmark it. Keep it to yourselves.
+  Staff           (super administrators, administrators, technicians,
+                  financial managers) sign in on their own page, "Staff
+                  sign in" (/staff/login). This address is not linked from
+                  the customer page - bookmark it. Keep it to yourselves.
 
 If you enter correct details on the wrong page, it will simply say it
 couldn't sign you in, exactly as if the password were wrong. That is
 deliberate: it means a customer can never reach the administrator area,
-even if they somehow learned an administrator's email and password.
+even if they somehow learned a staff member's email and password.
 
 Enter your Email and Password and press "Sign in". The key at the right
 of the password box shows the password while you type it (and hides it
@@ -39,32 +56,47 @@ is rejected. The sun / moon / monitor switch at the top right of the page
 chooses a light or dark appearance.
 
 When you log out, or if your session runs out, you're returned to the
-sign-in page you came in by (administrators to the administrator page).
+sign-in page you came in by (staff to the staff page).
 
-There is currently no "forgot password" link. If you're an
-administrator and you've lost access, you'll need another administrator
-to change it for you, or direct database/console access. If you're a
-customer and you've lost your password, contact the ISP's administrator
-- they can set you a new one from your account page.
+There is currently no "forgot password" link. If you've lost your password,
+contact a super administrator - they can RESET it to the default password
+(see 2.13). You'll then be asked to choose a new one the moment you sign in.
+Nobody, super administrator included, can read your password: it is stored
+in a form that can't be turned back into the original.
 
-Once logged in, an administrator lands on the admin Dashboard; a
-customer lands on their own Dashboard. You can change your own password
-at any time (Administrator: your profile menu / Customer: the Account
-page).
+Once logged in, staff land on their first available page (normally the
+Dashboard); a customer lands on their own Dashboard. You can change your own
+password at any time (staff: My Account / customers: the Account page).
+
+IF YOU ARE TOLD YOUR PASSWORD WAS RESET: sign in with the temporary password
+you were given (the default is 0000). You'll be taken straight to a page that
+asks you to choose a new password - nothing else works until you do, and you
+can't choose the temporary one again. You are also signed out of any other
+device when a reset happens.
 
 
 =================================================================
-PART 2: FOR ADMINISTRATORS
+PART 2: FOR STAFF
 =================================================================
 The left-hand menu has: Dashboard, Customers, Subscriptions, Payments,
 Revenue, Devices, Unregistered Devices, Device Map, Access Points,
-MikroTik Routers, Suggestions, Announcements, Notifications. Each item
+MikroTik Routers, Suggestions, Announcements, Notifications and My
+Account - plus, for super administrators, Staff Accounts, Customer
+Accounts and Audit Log. You only see the items your account may open: a
+technician won't see Payments, a financial manager won't see Devices, and
+so on. If something you need is missing, ask a super administrator. Each item
 has its own icon so you can find it at a glance: Dashboard (panels),
 Customers (people), Subscriptions (calendar and clock), Payments (card),
 Revenue (rising line), Devices (radio), Unregistered Devices (scanner),
 Device Map (map pin), Access Points (mast), MikroTik Routers (router),
 Suggestions (light bulb), Announcements (megaphone), Notifications
-(bell).
+(bell), Admin Menu (Staff Accounts, Customer Accounts, Audit Log); Communications sidebar tabs (Suggestions, Announcements, Notifications)
+(scroll), My Account (person).
+
+Where a page says you have "view-only access", you can look but any change
+you try will be refused. The Dashboard likewise shows only the figures for
+the areas you may see. Everything any staff member changes is recorded in
+the audit log with their name, so changes can always be traced.
 
 -----------------------------------------------------------------
 2.1 Dashboard
@@ -495,6 +527,70 @@ means a customer's connection didn't update the way the system
 intended, and needs a manual check from the MikroTik page.
 
 
+-----------------------------------------------------------------
+2.12 My Account (everyone on staff)
+-----------------------------------------------------------------
+Shows your name, email (your username), your role and - listed one by one -
+everything your account is allowed to do. Anything not listed is refused.
+You can change your own password here: enter your current password, then
+the new one twice. Your name and email can only be changed by a super
+administrator.
+
+-----------------------------------------------------------------
+2.13 Super administrators: Staff Accounts, Customer Accounts, Audit Log
+-----------------------------------------------------------------
+STAFF ACCOUNTS (menu: Staff Accounts)
+  Lists everyone on staff with their role, how many permissions they hold
+  (and whether that is the role's default or customised), whether they are
+  active, and when they last signed in.
+
+  To CREATE someone: press "New staff account", fill in their name, email
+  and a starting password (at least 8 characters), and choose a ROLE. The
+  list of permissions below is filled in with what that role normally needs.
+  TICK extra permissions or UNTICK ones they shouldn't have - what you save
+  is exactly what the person gets. Some permissions need others (you can't
+  record payments without being able to see customers, payments and
+  subscriptions); the page ticks those for you and unticks dependants when
+  you remove one. "Reset to ... defaults" puts the role's list back. A
+  super administrator has no list - they can do everything. By default the
+  new person must choose their own password the first time they sign in.
+
+  To CHANGE someone: press "Edit". Changing their role starts the permission
+  list again from the new role's defaults. Changes apply immediately.
+
+  DEACTIVATE removes someone's access without deleting them (their history
+  stays in the audit log); REACTIVATE restores it. You can't deactivate
+  yourself or change your own role, and there must always be at least one
+  active super administrator.
+
+  RESET PASSWORD sets the person's password to the default (see below).
+  MASKED PASSWORD STATUS displays the scrambled form of their password, if you want to
+  see it - it is hidden until you press it, and every look is recorded.
+
+CUSTOMER ACCOUNTS (menu: Customer Accounts)
+  Lists every customer with their username (their email address). For each
+  you can view account details with the password kept masked, or RESET TO DEFAULT. Passwords are stored one-way and cannot be read back.
+
+  RESETTING A PASSWORD (customers and staff) takes three deliberate steps,
+  because it locks the person out of their current password and is easy to do
+  to the wrong person:
+    1. Read what will happen and tick "I understand".
+    2. Type the account's email address exactly.
+    3. Enter YOUR OWN password.
+  The password becomes the default (0000). The page then tells you what to
+  say to the person. The person is signed out everywhere, and at their next
+  sign-in must choose a new password before anything else works.
+
+AUDIT LOG (menu: Audit Log - needs the "View the audit log" permission,
+which a super administrator always has and can give to others)
+  A record of everything staff do: who, what, when, and from where (IP
+  address and browser). Press an entry's "Details" to see exactly which
+  fields changed from what to what. Passwords are never shown - only that
+  one changed. You can filter by role, action, date or free text, and "Show
+  everything from this request" gathers every entry made by the same click.
+  Entries can't be edited or deleted. Refused attempts (someone trying
+  something their account isn't allowed to do) are recorded too.
+
 =================================================================
 PART 3: FOR CUSTOMERS
 =================================================================
@@ -559,6 +655,19 @@ self-service "forgot password" - if you're locked out, contact the ISP.
 =================================================================
 PART 4: QUICK ANSWERS TO COMMON QUESTIONS
 =================================================================
+"Someone forgot their password"
+  A super administrator opens Customer Accounts (or Staff Accounts), finds
+  them, and presses Reset. Tell them the temporary password (0000); they
+  choose their own at sign-in. Nobody can look up the old one.
+
+"A staff member can't see a page they need"
+  Their account doesn't include that permission. A super administrator can
+  add it in Staff Accounts > Edit.
+
+"Who changed this customer / plan / payment?"
+  Open Audit Log and search for the customer's name or filter by action
+  (e.g. "customer"). Each entry shows who, when, and what changed.
+
 "A customer paid but isn't online yet"
   Check MikroTik > Command history for their device. If it shows
   "Waiting for router", give it a little time - the router hasn't
@@ -581,3 +690,6 @@ PART 4: QUICK ANSWERS TO COMMON QUESTIONS
   Yes - when creating or editing a plan, set the duration in Minutes
   instead of Days. The system disconnects the customer at the exact
   moment the plan ends, not just "sometime that day".
+
+PASSWORD LENGTH
+  Customer passwords must be at least 4 characters. Staff passwords must be at least 8 characters. No special mix of uppercase, lowercase, digits, or symbols is required. Password inputs have a show/hide control.

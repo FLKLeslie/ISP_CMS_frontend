@@ -5,6 +5,7 @@ definePageMeta({ layout: 'admin' })
 
 const { listNotifications, sendNotification } = useNotificationsApi()
 const { listCustomers } = useCustomersApi()
+const { can } = usePermissions()
 
 const page = ref(1)
 const typeFilter = ref('')
@@ -88,9 +89,11 @@ async function handleSend() {
 
 <template>
   <div class="space-y-6">
+    <AdminCommunicationTabs />
     <div class="flex flex-wrap items-center justify-between gap-3">
       <h1 class="text-2xl font-semibold text-text-primary">Notifications</h1>
       <button
+        v-if="can('notifications.send')"
         type="button"
         class="rounded-card bg-secondary px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
         @click="showForm = !showForm"

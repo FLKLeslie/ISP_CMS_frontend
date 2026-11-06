@@ -138,10 +138,7 @@ async function copyPassword() {
               <input v-model="mode" type="radio" value="set"> I'll set it myself
             </label>
           </div>
-          <input
-            v-if="mode === 'set'" v-model="newPassword" type="text" autocomplete="off" placeholder="New password"
-            class="w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
-          >
+          <RevealPasswordInput v-if="mode === 'set'" id="device-new-password" v-model="newPassword" label="New device password" autocomplete="off" placeholder="New password" />
           <p v-if="saveError" role="alert" class="text-sm text-error">{{ saveError }}</p>
         </div>
       </template>

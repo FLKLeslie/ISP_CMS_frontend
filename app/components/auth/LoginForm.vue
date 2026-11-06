@@ -3,7 +3,7 @@
 // knocks on:
 //
 //   portal="customer"  -> POST /api/auth/login/         (pages/login.vue)
-//   portal="admin"     -> POST /api/auth/admin/login/   (pages/staff/login.vue)
+//   portal="admin"     -> POST /api/auth/admin/login/   (pages/staff/login.vue) - every staff role
 //
 // The server only admits the matching kind of account at each door (see
 // backend accounts/serializers.py). This form adds one more check of its own - it
@@ -11,14 +11,11 @@
 // otherwise just handles the experience: a visible busy state, one calm error message,
 // and focus returned to the password field after a failure.
 import { CircleAlert, Loader2, Mail } from 'lucide-vue-next'
-import type { UserRole } from '~/types/api/auth'
 
 const props = defineProps<{ portal: 'customer' | 'admin' }>()
 
 const { login, adminLogin } = useAuthApi()
 const authStore = useAuthStore()
-
-const expectedRole: UserRole = props.portal === 'admin' ? 'ADMIN' : 'CUSTOMER'
 
 const email = ref('')
 const password = ref('')
@@ -44,9 +41,11 @@ async function submit() {
     const response = await signIn(email.value.trim(), password.value)
     // The server never returns the other kind of account at this door; if it ever did,
     // that is a bug, and the safe answer is to keep nothing.
-    if (response.user.role !== expectedRole) throw { statusCode: 400 }
+    // (The staff door admits all four staff roles; the customer door only customers.)
+    const rightKind = props.portal === 'admin' ? isStaffRole(response.user.role) : response.user.role === 'CUSTOMER'
+    if (!rightKind) throw { statusCode: 400 }
     authStore.setSession(response)
-    await navigateTo(homeForRole(response.user.role))
+    await navigateTo(resolveAuthRedirect('/', response.user) ?? homeFor(response.user))
   } catch (e) {
     error.value = loginErrorMessage(e)
     password.value = '' // never leave a rejected password sitting in the field

@@ -78,6 +78,7 @@ async function toggleActive(row: { id: string; is_active: boolean }) {
 
 <template>
   <div class="space-y-6">
+    <AdminCommunicationTabs />
     <div class="flex flex-wrap items-center justify-between gap-3">
       <h1 class="text-2xl font-semibold text-text-primary">Announcements</h1>
       <button
