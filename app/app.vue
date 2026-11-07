@@ -9,7 +9,17 @@ useHead({ titleTemplate: (title) => (title ? `${title} · ${brand.name}` : brand
   <div>
     <NuxtRouteAnnouncer />
     <NuxtLayout>
-      <NuxtPage />
+      <NuxtPage :transition="{ name: 'page-soft', mode: 'out-in' }" />
     </NuxtLayout>
   </div>
 </template>
+
+<style>
+.page-soft-enter-active,
+.page-soft-leave-active { transition: opacity 150ms ease, transform 150ms ease; }
+.page-soft-enter-from { opacity: 0; transform: translateY(4px); }
+.page-soft-leave-to { opacity: 0; transform: translateY(-3px); }
+@media (prefers-reduced-motion: reduce) {
+  .page-soft-enter-active, .page-soft-leave-active { transition: none; }
+}
+</style>

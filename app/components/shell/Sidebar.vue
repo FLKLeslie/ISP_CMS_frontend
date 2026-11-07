@@ -2,7 +2,8 @@
 import type { NavItem } from '~/types/nav'
 // `sectionLabel` is the small tag under the application name, e.g. "Admin" - the name
 // and logo themselves come from branding.config.ts (see useBrand / BrandLogo).
-const props = defineProps<{ items: NavItem[]; sectionLabel?: string; open: boolean }>()
+import { Star } from 'lucide-vue-next'
+const props = defineProps<{ items: NavItem[]; sectionLabel?: string; isMainSuperadmin?: boolean; open: boolean }>()
 const brand = useBrand()
 const route = useRoute()
 const emit = defineEmits<{ close: [] }>()
@@ -15,7 +16,7 @@ const emit = defineEmits<{ close: [] }>()
       <BrandLogo size="sm" tile />
       <div class="min-w-0 leading-tight">
         <span class="block truncate text-base font-semibold tracking-tight">{{ brand.name }}</span>
-        <span v-if="props.sectionLabel" class="block truncate text-[11px] font-medium uppercase tracking-wider text-white/90">{{ props.sectionLabel }}</span>
+        <span v-if="props.sectionLabel" class="flex items-center gap-1 truncate text-[11px] font-medium uppercase tracking-wider text-white/90">{{ props.sectionLabel }}<Star v-if="props.isMainSuperadmin" class="h-3 w-3 fill-amber-300 text-amber-300" aria-label="Main administrator" /></span>
       </div>
     </div>
     <nav class="flex-1 space-y-0.5 overflow-y-auto px-2.5 py-2" aria-label="Primary">

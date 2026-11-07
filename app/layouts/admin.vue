@@ -110,19 +110,22 @@ const navItems = computed<NavItem[]>(() => {
   return allNavItems.value.filter((item) => item.label === 'Communications' ? can('suggestions.view') || canOpen('/admin/announcements') || can('notifications.view') : canOpen(item.to))
 })
 const sectionLabel = computed(() => (authStore.user ? ROLE_LABELS[authStore.user.role] : 'Staff'))
+const isMainSuperadmin = computed(() => !!authStore.user?.is_main_superadmin)
 const notificationsTo = computed(() => (canOpen('/admin/notifications') ? '/admin/notifications' : '/admin/account'))
 const { logout } = useAuthApi()
 const userName = computed(() => authStore.user ? `${authStore.user.first_name} ${authStore.user.last_name}`.trim() : '')
 const unreadNotifications = 0
-async function handleLogout() {
+async function handleLogout(reason?: 'idle') {
   if (authStore.refreshToken) { try { await logout(authStore.refreshToken) } catch { /* ignore */ } }
-  // Back to the door this person came in by (staff to the staff sign-in).
+  // Back to the staff sign-in. Include a short reason for an inactivity-triggered logout.
   const signInPath = loginPathForRole(authStore.user?.role)
-  authStore.clearSession(); await navigateTo(signInPath)
+  authStore.clearSession()
+  await navigateTo(reason ? `${signInPath}?reason=session_timeout` : signInPath)
 }
+useStaffIdleTimeout(() => handleLogout('idle'), 20 * 60 * 1000)
 </script>
 <template>
-  <AppShell :nav-items="navItems" :admin-menu-items="adminMenuItems" :section-label="sectionLabel" :user-name="userName" :unread-notifications="unreadNotifications" :notifications-to="notificationsTo" @logout="handleLogout">
+  <AppShell :nav-items="navItems" :admin-menu-items="adminMenuItems" :section-label="sectionLabel" :is-main-superadmin="isMainSuperadmin" :user-name="userName" :unread-notifications="unreadNotifications" :notifications-to="notificationsTo" @logout="handleLogout">
     <slot />
   </AppShell>
 </template>

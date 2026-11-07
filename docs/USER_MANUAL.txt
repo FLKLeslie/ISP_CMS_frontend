@@ -11,7 +11,8 @@ four kinds:
                         what each may do, resets passwords and reads the
                         audit log.
   ADMINISTRATOR       - runs the ISP day to day: customers, plans,
-                        payments, devices and routers.
+                        payments, devices and routers. Staff-account tools
+                        appear only when separately enabled.
   TECHNICIAN          - looks after the network: devices, access points,
                         routers. Can look at customers but not change them.
   FINANCIAL MANAGER   - looks after the money: payments and revenue. Can
@@ -20,10 +21,8 @@ four kinds:
   CUSTOMER            - a person buying internet access from the ISP.
 
 Administrators, technicians and financial managers start with the access
-described above, but the super administrator can add or remove individual
-permissions for each person, so what YOU can do may differ. The menu only
-shows what your account is allowed to open (see "My Account" for the full
-list of what you may do).
+described above. The menu shows the pages available to the account; My Account
+presents the available features.
 
 Which one you see when you log in depends on your account. If something
 on screen doesn't match this guide, the application may have changed
@@ -693,3 +692,32 @@ PART 4: QUICK ANSWERS TO COMMON QUESTIONS
 
 PASSWORD LENGTH
   Customer passwords must be at least 4 characters. Staff passwords must be at least 8 characters. No special mix of uppercase, lowercase, digits, or symbols is required. Password inputs have a show/hide control.
+
+
+## Staff account security — November 2026
+
+- **Main superadmin:** The account marked “Main superadmin” owns the leadership-transfer control. It cannot be deleted or deactivated while it holds that designation. Transfer leadership only to another active superadmin after confirming their email, entering your own current password, and acknowledging the transfer.
+- **Delete staff:** Use the Delete action and complete both confirmation stages. The target email must match exactly; then enter your own current password and acknowledge that deletion is permanent. Deletion is recorded in the audit trail.
+- **Administrator permissions:** An Administrator can delete subordinate technician/finance accounts only when their account includes the `staff.delete_subordinates` permission. They cannot delete superadmins or same-level administrators.
+- **Session timeout:** Staff are signed out after 20 minutes without active use. Sign in again to continue.
+- **Django admin:** Use the AirFiber staff portal. Old Django `/admin/` URLs redirect to staff sign-in.
+
+
+=================================================================
+STAFF ACCOUNT MANAGEMENT (SUPERADMIN)
+=================================================================
+
+The Staff Accounts page presents each account as a compact row. Select its
+chevron to open the account details and the available actions. Opening a
+different account closes the previous one. If an account workflow is open,
+the application asks whether to cancel it before switching.
+
+The main superadministrator is marked with a star rather than a text label.
+The Grant main authority action is available inside the details of another
+active superadministrator. Only the main superadministrator may transfer
+this designation.
+
+Administrators do not manage staff accounts by default. A superadministrator
+may grant staff.manage for subordinate account management; staff.delete_subordinates
+is separately required for permanent deletion. Staff creation and permission
+assignment remain superadministrator-only.

@@ -6,13 +6,14 @@
 // password (or created it with a starting one): until a new password is chosen this is the only
 // page that works (utils/authPaths.ts, and the server refuses everything else).
 definePageMeta({ layout: 'admin' })
-const { changePassword } = useAuthApi()
+const { changePassword, updateProfile } = useAuthApi()
 const authStore = useAuthStore()
 
 const user = computed(() => authStore.user)
 const roleLabel = computed(() => (user.value ? ROLE_LABELS[user.value.role] : ''))
 const isTop = computed(() => isSuperAdmin(user.value?.role))
 // "devices.manage" -> "Devices · manage" (the picker the super administrator used has the full descriptions)
+const visiblePermissions = computed(() => (user.value?.permissions ?? []).filter(key => !key.startsWith('audit.')))
 const prettyPermission = (key: string) => {
   const [area, action] = key.split('.')
   const name = (area ?? key).replace(/_/g, ' ')
@@ -22,6 +23,15 @@ const prettyPermission = (key: string) => {
 const oldPassword = ref(''); const newPassword = ref(''); const confirmPassword = ref('')
 const changing = ref(false); const error = ref(''); const success = ref(false)
 const showPasswordForm = ref(authStore.mustChangePassword)
+const firstName = ref(authStore.user?.first_name ?? '')
+const lastName = ref(authStore.user?.last_name ?? '')
+const savingProfile = ref(false); const profileError = ref(''); const profileSuccess = ref(false)
+async function saveProfile() {
+  profileError.value = ''; profileSuccess.value = false; savingProfile.value = true
+  try { authStore.setUser(await updateProfile({ first_name: firstName.value.trim(), last_name: lastName.value.trim() })); profileSuccess.value = true }
+  catch { profileError.value = 'Could not update your name. Please try again.' }
+  finally { savingProfile.value = false }
+}
 watch(() => authStore.mustChangePassword, (mustChange) => {
   if (mustChange) showPasswordForm.value = true
 }, { immediate: true })
@@ -67,27 +77,25 @@ const inputClass = 'w-full rounded-card border border-border bg-background px-3 
 
     <div v-if="user" class="space-y-4 w-full rounded-card border border-border bg-surface p-5">
       <h2 class="text-sm font-semibold text-text-primary">Profile</h2>
-      <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-        <div><dt class="text-xs text-text-secondary">Name</dt><dd class="text-text-primary">{{ user.first_name }} {{ user.last_name }}</dd></div>
-        <div><dt class="text-xs text-text-secondary">Email (your username)</dt><dd class="break-all text-text-primary">{{ user.email }}</dd></div>
-        <div><dt class="text-xs text-text-secondary">Role</dt><dd class="text-text-primary">{{ roleLabel }}</dd></div>
-        <div><dt class="text-xs text-text-secondary">Phone</dt><dd class="text-text-primary">{{ user.phone_number || '—' }}</dd></div>
-      </dl>
-      <p class="text-xs text-text-secondary">Your name and email can only be changed by a super administrator.</p>
+      <form class="grid grid-cols-1 gap-3 sm:grid-cols-2" @submit.prevent="saveProfile">
+        <label class="text-xs text-text-secondary">First name<input v-model="firstName" maxlength="150" required class="mt-1 w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary" /></label>
+        <label class="text-xs text-text-secondary">Last name<input v-model="lastName" maxlength="150" required class="mt-1 w-full rounded-card border border-border bg-background px-3 py-2 text-sm text-text-primary" /></label>
+        <div><dt class="text-xs text-text-secondary">Email (username)</dt><dd class="mt-1 break-all text-sm text-text-primary">{{ user.email }}</dd><p class="mt-1 text-xs text-text-secondary">Email changes are managed by the main superadministrator.</p></div>
+        <div><dt class="text-xs text-text-secondary">Role</dt><dd class="mt-1 text-sm text-text-primary">{{ roleLabel }}</dd></div>
+        <p v-if="profileError" class="text-sm text-danger sm:col-span-2">{{ profileError }}</p><p v-if="profileSuccess" class="text-sm text-success sm:col-span-2">Name updated.</p>
+        <div class="sm:col-span-2"><button type="submit" class="btn-primary" :disabled="savingProfile">{{ savingProfile ? 'Saving…' : 'Save name' }}</button></div>
+      </form>
     </div>
 
     <div v-if="user && !authStore.mustChangePassword" class="space-y-3 rounded-card border border-border bg-surface p-5">
       <h2 class="text-sm font-semibold text-text-primary">What your account can do</h2>
       <p v-if="isTop" class="text-sm text-text-secondary">As a super administrator you can do everything, including managing staff accounts and their permissions, resetting passwords and reading the audit log.</p>
       <template v-else>
-        <p class="text-sm text-text-secondary">
-          Your role is a starting point; the list below is exactly what a super administrator has allowed your account.
-          Anything not listed will be refused. Every change you make is recorded in the audit log under your name.
-        </p>
-        <ul v-if="user.permissions.length" class="flex flex-wrap gap-2">
-          <li v-for="key in user.permissions" :key="key" class="rounded-full border border-border px-2.5 py-0.5 text-xs text-text-primary">{{ prettyPermission(key) }}</li>
+        <p class="text-sm text-text-secondary">Available features</p>
+        <ul v-if="visiblePermissions.length" class="flex flex-wrap gap-2">
+          <li v-for="key in visiblePermissions" :key="key" class="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-text-primary">{{ prettyPermission(key) }}</li>
         </ul>
-        <p v-else class="text-sm text-warning">Your account hasn't been given any permissions yet. Ask a super administrator.</p>
+        <p v-else class="text-sm text-text-secondary">No additional features are currently available.</p>
       </template>
     </div>
 

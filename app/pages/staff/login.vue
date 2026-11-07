@@ -16,6 +16,7 @@ useHead({
 
 <template>
   <AuthShell variant="admin" heading="Staff sign in" subheading="Authorised staff only.">
+    <p v-if="sessionMessage" role="status" class="mb-4 rounded-card border border-warning/30 bg-warning/5 px-3 py-2 text-sm text-text-primary">{{ sessionMessage }}</p>
     <LoginForm portal="admin" />
   </AuthShell>
 </template>

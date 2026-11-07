@@ -1,3 +1,17 @@
+# 2026-11-07 - Main-superadmin-only staff edits and profile self-service
+
+* Staff account management actions are shown only to the main superadministrator; staff may edit their own name on My Account, while email stays read-only and password changes remain self-service.
+* Main-superadmin star is a brighter custom SVG anchored to the corner of the staff account avatar.
+
+# 2026-11-07 - Staff account hierarchy, access presentation, and navigation polish
+
+* Main superadministrator identity is shown discreetly with a star in staff account rows and the staff navigation/top bar; the explicit text badge is removed. Authority transfer is launched from the expanded details of a superadministrator account.
+* Replaced per-row action buttons with one responsive account accordion. Only one account is expanded at a time; when a destructive/edit/reset/transfer workflow is open, switching prompts whether to cancel the active workflow. Dropdown/page transitions are subtle and respect reduced-motion settings.
+* Administrators do not see Staff Accounts by default. The account page displays capability labels without mentioning audit logging or how permissions were assigned; audit capability is omitted for non-superadmins.
+* Staff account detail dropdown presents identity, role, phone, status, permission summary, password status, creation date, and last sign-in, along with only permitted actions.
+* Fixed the backend subordinate-list serializer failure by adding `StaffAccountSerializer` and aligned the frontend access check with explicit `staff.manage`.
+* Normal staff cannot edit their own name, email, or phone through the profile API.
+
 # 2026-11-05 - Admin navigation, account detail visibility, and password UX
 
 * Admin sidebar now groups Suggestions, Announcements, and Notifications under Communications, with permission-aware tabs between their existing pages.
@@ -65,3 +79,15 @@ otherwise start blocking real customers immediately.
 
 ## Tests
 `python -m unittest microtik.test_parsing` (pure Python, 21 tests) and `python manage.py test microtik`.
+
+
+## 2026-11 — Staff leadership controls and inactivity session timeout
+
+- Added main-superadmin status to staff profile/account types and UI.
+- Added the main-superadmin transfer dialog, requiring a recipient, exact email, current password, and acknowledgement.
+- Added a staged permanent staff deletion dialog (email confirmation followed by current-password and acknowledgement confirmation).
+- Added administrator access to a scoped subordinate staff list and delete-only controls when `staff.delete_subordinates` is present. Superadmin create/edit/reset controls remain hidden from administrators.
+- Hid delete/deactivate controls for the main-superadmin account; the UI also distinguishes the main account.
+- Added a 20-minute staff inactivity timeout with a return-to-sign-in message.
+- Added a redirect notice for old Django admin URLs.
+- Refreshed the Audit Log interface with responsive filters, structured detail panels, field-change tables, and improved visual hierarchy.

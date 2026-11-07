@@ -9,6 +9,8 @@ export interface StaffAccount {
   permissions: string[]
   /** True when the account has never been customised and simply follows its role's template. */
   uses_role_template: boolean
+  /** The discreet leadership marker; rendered as a star rather than a text label. */
+  is_main_superadmin: boolean
 }
 
 export interface StaffCreatePayload {
@@ -62,4 +64,16 @@ export interface AuditEntry {
   changes: Record<string, any>
   request_id: string; ip_address: string | null; user_agent: string
   method: string; path: string; status_code: number | null
+}
+
+export interface StaffDeletePayload {
+  confirm_email: string
+  admin_password: string
+  acknowledged: boolean
+}
+export interface MainSuperadminTransferPayload {
+  target_uuid: string
+  confirm_email: string
+  admin_password: string
+  acknowledged: boolean
 }

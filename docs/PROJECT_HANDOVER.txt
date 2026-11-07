@@ -292,12 +292,12 @@ COLORS (the brand blue and the rest of the palette)
 
   THE MODEL. There are five roles, but a role is a LABEL AND A STARTING POINT. What an
   account may actually do is its list of PERMISSIONS:
-    SUPERADMIN   everything, always, plus the two things only they can do (below). Not
-                 governed by a list - nothing in the app can take a super administrator's
-                 access away. The only role that may open the Django admin site
-                 (is_staff/is_superuser are kept in step by User.save()).
-    ADMIN        starting template: everything operational except the audit log. (The
-                 stored value stayed "ADMIN" - the original role.)
+    SUPERADMIN   everything, always, plus superadministrator-only operations. Not governed by
+                 a list - nothing in the app can take this access away. Django's /admin/ site
+                 is not exposed to AirFiber staff; its URL redirects to the Nuxt staff sign-in.
+    ADMIN        starting template: operational access except the audit log and staff-account
+                 management/deletion. A superadministrator may explicitly grant staff.manage;
+                 permanent subordinate deletion separately requires staff.delete_subordinates.
     TECHNICIAN   template: devices (incl. console and device passwords), access points,
                  unregistered devices, MikroTik routers, a read-only look at customers.
     FINANCE      template: payments (view + record), revenue, read-only customers and
@@ -343,9 +343,11 @@ COLORS (the brand blue and the rest of the palette)
   microtik.manage and the like need customers.view for the same reason). Ticking one ticks
   what it needs; unticking one unticks what needs it; the server applies the same closure
   when saving, so no account can end up half-working.
-  NOT GRANTABLE (super administrator only): staff.manage (staff accounts and their
-  permissions) and passwords.reset. They are not in the catalog; the server never accepts
-  them in a list.
+  passwords.reset remains superadministrator-only. staff.manage is grantable to an Administrator
+  for viewing/updating subordinate technician and finance accounts (and resetting their
+  passwords); staff.delete_subordinates is a separate grant required for permanent deletion.
+  Staff creation and permission grants remain superadministrator-only. The default ADMIN
+  template includes neither staff-management permission.
 
   HOW IT IS STORED. User.staff_permissions (JSON). NULL = "never customised, follow the
   role's template" - what every account that existed before this feature has, so they kept
@@ -1530,3 +1532,32 @@ Frontend: there is no browser/component test suite. One script checks the access
 - No automated frontend test suite.
 - If you find something else that's missing or broken, add it here
   rather than only mentioning it in chat/Slack, so it doesn't get lost.
+
+
+## 2026-11 update — staff security and audit UI
+
+### Django admin URL
+Application superadmins still carry Django's compatibility flags, but Django admin is not exposed. The backend redirects `/admin/` and nested `/admin/...` URLs to the Nuxt `/staff/login` page. Set `AIRFIBER_FRONTEND_URL` to the production Nuxt origin; otherwise the development default (`http://localhost:3000`) is used.
+
+### Main superadmin
+`User.is_main_superadmin` identifies the unique main superadmin. Migration `accounts.0004_main_superadmin` selects the oldest active superadmin from an existing database (oldest overall if none are active); verify the result after deployment. A conditional unique database constraint prevents multiple main accounts. Only the current main account can transfer the designation to another active superadmin, and the transfer requires recipient email, actor password, and acknowledgement. The main account cannot be demoted, deactivated, or deleted until it transfers authority.
+
+### Staff account management
+The Staff Accounts page uses a single expandable account row. Its chevron opens details and available actions; opening another account closes the previous one. If a confirmation/edit/reset/transfer workflow is open, the user is asked whether to cancel it before switching. The main superadmin is identified discreetly by a star (not a text label); the Grant main authority action appears in another superadmin's expanded details.
+
+By default, Administrators manage customer accounts but do not see Staff Accounts. A superadministrator may explicitly grant `staff.manage`, which permits managing subordinate technician/finance profiles and resetting their passwords. `staff.delete_subordinates` is a separate permission required for permanent deletion. Staff creation and permission assignment remain superadministrator-only. The backend subordinate-list endpoint explicitly sets `StaffAccountSerializer` to avoid DRF's missing-serializer 500.
+
+Deletion is a permanent staged process: type the target email, then enter the acting user's current password and acknowledge the consequence. Only the main superadmin can delete/deactivate another superadmin. The main account cannot be removed or deactivated until leadership is transferred. Deletion and leadership transfer are audited.
+
+### Staff profile and inactivity timeout
+Normal staff profile name, email, and phone are read-only in the UI and profile API. My Account presents the features available to the account without explaining permission administration or showing audit capabilities to non-superadmins. Staff sessions are signed out after 20 minutes without activity in the Nuxt staff layout. The timeout is a frontend control and does not replace JWT expiry, refresh-token revocation, or backend authorization.
+
+### Audit Log
+The Audit Log page now uses a responsive filter panel and expandable event cards with distinct field-change and request-context sections. Entries remain read-only, and secrets are not rendered.
+
+
+### Main-superadmin staff-account boundary (2026-11-07)
+Only the main superadministrator can create, edit, deactivate, delete, or reset the password of another staff account. The staff update endpoint includes email and is protected server-side. Individual staff can update their own first/last name and phone via the profile endpoint; their email is read-only there, and they can change their own password using the password-change endpoint. The staff-list avatar shows the main authority marker as a bright SVG star attached to its upper corner.
+
+### Private Django admin route
+The built-in Django admin remains redirected from `/admin/` and nested `/admin/...` paths. A configured `DJANGO_ADMIN_PATH` (default `airfiber-maintenance-7x9k2p/`) mounts the Django dashboard at the alternate path. Set a unique value in deployment environment. The URL is only obscurity; continue requiring Django superuser authentication and protect the server.

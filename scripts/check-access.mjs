@@ -27,11 +27,11 @@ const GRANTABLE = [
   'payments.view', 'payments.record', 'revenue.view', 'devices.view', 'devices.manage', 'devices.credentials',
   'devices.console', 'access_points.view', 'access_points.manage', 'unregistered_devices.view',
   'unregistered_devices.manage', 'microtik.view', 'microtik.manage', 'suggestions.view', 'suggestions.manage',
-  'announcements.manage', 'notifications.view', 'notifications.send', 'audit.view',
+  'announcements.manage', 'notifications.view', 'notifications.send', 'audit.view', 'staff.manage', 'staff.delete_subordinates',
 ]
-const SUPERADMIN_ONLY = ['staff.manage', 'passwords.reset']
+const SUPERADMIN_ONLY = ['passwords.reset']
 const TEMPLATES = {
-  ADMIN: GRANTABLE.filter((k) => k !== 'audit.view'),
+  ADMIN: GRANTABLE.filter((k) => !['audit.view', 'staff.manage', 'staff.delete_subordinates'].includes(k)),
   TECHNICIAN: [
     'dashboard.view', 'customers.view', 'devices.view', 'devices.manage', 'devices.credentials', 'devices.console',
     'access_points.view', 'access_points.manage', 'unregistered_devices.view', 'unregistered_devices.manage',
@@ -98,9 +98,11 @@ test('customised permissions, not the role name, decide what opens', () => {
     assert.equal(canAccessAdminPath(path, readOnlyAdmin), false, path)
   }
 
-  const auditor = staff([...TEMPLATES.ADMIN, 'audit.view'], 'ADMIN')
+  const auditor = staff(['dashboard.view', 'audit.view'], 'ADMIN')
   assert.equal(canAccessAdminPath('/admin/superadmin/audit-log', auditor), true)
-  assert.equal(canAccessAdminPath('/admin/superadmin/staff', auditor), false) // never grantable
+  assert.equal(canAccessAdminPath('/admin/superadmin/staff', auditor), false)
+  const subordinateManager = staff(['dashboard.view', 'staff.manage', 'staff.delete_subordinates'], 'ADMIN')
+  assert.equal(canAccessAdminPath('/admin/superadmin/staff', subordinateManager), true)
 })
 
 test('the unregistered-devices page has its own permission, separate from the device list', () => {
@@ -112,10 +114,10 @@ test('the unregistered-devices page has its own permission, separate from the de
   assert.equal(canAccessAdminPath('/admin/devices', unregisteredOnly), false)
 })
 
-test('the two superadmin-only keys cannot be obtained through a permission list', () => {
+test('staff management is grantable only when explicitly assigned; password resets remain superadmin-only', () => {
   const sneaky = staff([...GRANTABLE, ...SUPERADMIN_ONLY], 'ADMIN')
-  // (The server never sends these to a non-superadmin; even if it did, the frontend only ever
-  //  *shows* - the server refuses. This documents what the UI would do with such a list.)
+  // Password-reset power is never sent to a non-superadmin; the server rejects it from lists.
+  // staff.manage is grantable, but absent from the default ADMIN template.
   assert.equal(hasPermission(sneaky, 'staff.manage'), true)
   assert.equal(hasPermission(who('ADMIN'), 'staff.manage'), false)
   assert.equal(hasPermission(who('TECHNICIAN'), 'passwords.reset'), false)
@@ -340,6 +342,7 @@ const CATALOG = [
   { key: 'notifications.view', label: '', description: '', group: '', requires: [] },
   { key: 'notifications.send', label: '', description: '', group: '', requires: ['notifications.view', 'customers.view'] },
   { key: 'audit.view', label: '', description: '', group: '', requires: [] },
+  { key: 'staff.delete_subordinates', label: '', description: '', group: '', requires: [] },
 ]
 
 test('ticking a permission also ticks what it needs', () => {
